@@ -43,20 +43,20 @@ launch() {
 cmd=$1
 shift
 
-destination_ip=$(echo $1 | cut -d : -f 1)
-destination_port=$(echo $1 | cut -d : -f 2)
-if [ -z $destination_ip -o -z $destination_port ]; then
-    usage
-    exit -1
-fi
-shift
-
 case $cmd in
 	start)
 		if [ $# -lt 1 ]; then
 			usage
 			exit 1
 		fi
+
+		destination_ip=$(echo $1 | cut -d : -f 1)
+		destination_port=$(echo $1 | cut -d : -f 2)
+		if [ -z $destination_ip -o -z $destination_port ]; then
+			usage
+			exit -1
+		fi
+		shift
 
 		for i in $@; do
 			launch $i $destination_ip $destination_port
