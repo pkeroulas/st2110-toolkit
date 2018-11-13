@@ -4,12 +4,11 @@ usage(){
     echo "Usage: $0 interface"
 }
 
-# if [ -z $1 ]; then
-#     usage
-#     exit -1
-# fi
-# ETH=$1
-ETH=$(ip addr | grep 172 | awk '{print $NF}')
+if [ -z $1 ]; then
+    usage
+    exit -1
+fi
+ETH=$1
 
 echo "Setup interface $ETH"
 GATEWAY=$(sed -n 's/GATEWAY=\(.*\)/\1/p' /etc/sysconfig/network-scripts/ifcfg-$ETH)
