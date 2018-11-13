@@ -2,11 +2,15 @@ This collection of tools performs tasks that can't be integrated in
 FFmpeg for ST 2110 transcoding:
 
 * install all the FFmpeg dependencies
-* troubleshoot network issues: multicast group subscription and received
-  byte counter
+* setup network:
+  - route for multicast streams
+  - route for unicast source
+  - NIC buffer size...
 * analyse stream content like ptp clock
-* generate AV stream samples
-* automate tests: gstreamer sender and ffmpeg receiver
+
+-------------------------------------------------------------------
+Install ffmpeg and dependencies
+-------------------------------------------------------------------
 
 Install everything (tools, FFmpeg and all the dependencies) on Centos 7
 using the install scrip:
@@ -17,7 +21,9 @@ Or you cant install a single component:
 
  $ ./install.sh install_ffmpeg
 
+-------------------------------------------------------------------
 Network
+-------------------------------------------------------------------
 
 Find your live media interface name and execute:
 
@@ -28,7 +34,9 @@ You can validate the reception of the multicast join with the socket reader:
  $ gcc -o socket_reader  -std=c99 socket_reader.c
  $./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 
+-------------------------------------------------------------------
 Get an SDP file:
+-------------------------------------------------------------------
 
 FFmpeg needs an SDP file for stream description. A python script grabs
 the SDP from an Embrionix encapsulator:
@@ -37,11 +45,20 @@ the SDP from an Embrionix encapsulator:
 
 Make an SDP file from the entire or the partial output.
 
-Edit ./ffmpeg_launcher.sh to set the targeted monitor IP. And start:
+-------------------------------------------------------------------
+Execute
+-------------------------------------------------------------------
 
- $ ./ffmpeg_launcher.sh start sdp_161_video.file
+Use ./ffmpeg_launcher.sh to start the transcoder by giving the monitor
+IP:port:
 
-Additional resources:
+ $ ./ffmpeg_launcher.sh start 192.168.1.1:5000 ~/sdp/my.sdp
+
+ $ ./ffmpeg_launcher.sh stop
+
+-------------------------------------------------------------------
+Additional resources
+-------------------------------------------------------------------
 
 Fox Network provides Wireshark dissectors:
 * https://github.com/FOXNEOAdvancedTechnology/smpte2110-20-dissector
