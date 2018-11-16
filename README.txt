@@ -53,7 +53,7 @@ Use ./ffmpeg_launcher.sh to start the transcoder by giving the monitor
 IP:port:
 
  $ ./ffmpeg_launcher.sh start 192.168.1.1:5000 ~/sdp/my.sdp
-
+ $ ./ffmpeg_launcher.sh log
  $ ./ffmpeg_launcher.sh stop
 
 -------------------------------------------------------------------

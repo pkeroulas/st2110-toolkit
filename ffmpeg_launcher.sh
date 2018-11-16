@@ -6,11 +6,12 @@
 # same destination but with different ports.
 
 FFMPEG=ffmpeg
+LOG=/tmp/ffmpeg.log
 
 if ! which $FFMPEG > /dev/null 2>&1
 then
-    echo "$FFMPEG is not installed"
-    exit -1
+	echo "$FFMPEG is not installed"
+	exit -1
 fi
 
 # input buffer size: maximum value permitted by setsockopt
@@ -37,6 +38,7 @@ launch() {
 		-c:v libx264 -preset ultrafast -pass 1 \
 		-c:a libfdk_aac -ac 2 \
 		-f mpegts udp://$ip:$port \
+		> $LOG 2> $LOG \
 		&
 }
 
@@ -58,13 +60,18 @@ case $cmd in
 		fi
 		shift
 
+		echo "==================== $(date) ===================="
 		for i in $@; do
 			launch $i $destination_ip $destination_port
 			destination_port=$((destination_port+1))
 		done
 		;;
 	stop)
+		echo "==================== $(date) ===================="
 		killall $FFMPEG
+		;;
+	log)
+		tail -f $LOG
 		;;
 	*)
 		usage
