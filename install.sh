@@ -119,6 +119,9 @@ install_ffmpeg()
     cd FFmpeg
     git checkout mainline/pkeroulas/master
 
+    # for some reason pkg-config path is sometimes reset
+    export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
+
     ./configure --prefix=$PREFIX \
         --extra-cflags=-I$PREFIX/include \
         --extra-ldflags=-L$PREFIX/lib \
