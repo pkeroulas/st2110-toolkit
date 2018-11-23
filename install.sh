@@ -117,7 +117,7 @@ install_ffmpeg()
     cd $DIR/
     git clone https://github.com/cbcrc/FFmpeg.git
     cd FFmpeg
-    git checkout mainline/pkeroulas/master
+    git checkout SMPTE2110/master
 
     # for some reason pkg-config path is sometimes reset
     export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
