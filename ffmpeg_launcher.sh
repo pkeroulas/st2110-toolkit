@@ -19,7 +19,14 @@ BUF_SIZE=671088640
 FIFO_SIZE=1000000000
 
 usage() {
-	echo "$0 <start|stop> target_ip:target_port [<sdp_file1> <sdp_file2> ... <sdp_fileN>]"
+	script=$(basename $0)
+	echo "$script <start|stop|log> target_ip:target_port [<sdp_file1> <sdp_file2> ... <sdp_fileN>]
+
+ example:
+	$script start ./sdp./file./sdp
+	$script log
+	$script stop
+"
 }
 
 launch() {
@@ -34,6 +41,7 @@ launch() {
 		-buffer_size $BUF_SIZE \
 		-protocol_whitelist 'file,udp,rtp' \
 		-i $sdp -fifo_size $FIFO_SIZE \
+		-smpte2110_timestamp 1 \
 		-vf yadif=0:-1:0,scale=1280:720 \
 		-c:v libx264 -preset ultrafast -pass 1 \
 		-c:a libfdk_aac -ac 2 \
@@ -71,7 +79,7 @@ case $cmd in
 		killall $FFMPEG
 		;;
 	log)
-		tail -f $LOG
+		tail -n 500 -f $LOG
 		;;
 	*)
 		usage
