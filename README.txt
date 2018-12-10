@@ -1,11 +1,19 @@
+-------------------------------------------------------------------
+ST-2110 software toolkit
+-------------------------------------------------------------------
+
+Author: Patrick Keroulas <patrick.keroulas@radio-canada.ca>
+
 This collection of tools performs tasks that can't be integrated in
 FFmpeg for ST 2110 transcoding:
 
-* install all the FFmpeg dependencies
+* install FFmpeg and dependencies
 * setup network:
   - route for multicast streams
-  - route for unicast source
-  - NIC buffer size...
+  - route to unicast source
+  - NIC parameters
+  - buffer size
+  - etc
 * analyse stream content like ptp clock
 
 -------------------------------------------------------------------
@@ -17,22 +25,9 @@ using the install scrip:
 
  $ ./install.sh install_all
 
-Or you cant install a single component:
+Or you can install a single component:
 
  $ ./install.sh install_ffmpeg
-
--------------------------------------------------------------------
-Network
--------------------------------------------------------------------
-
-Find your live media interface name and execute:
-
- $ ./network_setup.sh <interface>
-
-You can validate the reception of the multicast join with the socket reader:
-
- $ gcc -o socket_reader  -std=c99 socket_reader.c
- $./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 
 -------------------------------------------------------------------
 Get an SDP file:
@@ -46,6 +41,20 @@ the SDP from an Embrionix encapsulator:
 Make an SDP file from the entire or the partial output.
 
 -------------------------------------------------------------------
+Network
+-------------------------------------------------------------------
+
+Find your live media interface name and execute:
+
+ $ ./network_setup.sh <interface>
+
+You can validate that the multicast IGMP group is joined and that data
+is received thanks to the socket reader:
+
+ $ gcc -o socket_reader  -std=c99 socket_reader.c
+ $./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
+
+-------------------------------------------------------------------
 Execute
 -------------------------------------------------------------------
 
@@ -55,6 +64,15 @@ IP:port:
  $ ./ffmpeg_launcher.sh start 192.168.1.1:5000 ~/sdp/my.sdp
  $ ./ffmpeg_launcher.sh log
  $ ./ffmpeg_launcher.sh stop
+
+-------------------------------------------------------------------
+TODO
+-------------------------------------------------------------------
+
+* separate NIC setup from network setup
+* network setup should be automatically performed from SDP info
+* use the proper FFmpeg option to dump logfile
+* add script/doc for GPU installation
 
 -------------------------------------------------------------------
 Additional resources
