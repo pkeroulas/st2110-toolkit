@@ -32,6 +32,8 @@ install_common_tools()
         net-tools \
         openssl-devel \
         perl \
+        linuxptp \
+        socat \
         tar \
         wget \
         which \
@@ -49,7 +51,6 @@ install_monitoring_tools()
         tig \
         psmisc \
         tcpdump \
-        socat \
         ethtool
 }
 

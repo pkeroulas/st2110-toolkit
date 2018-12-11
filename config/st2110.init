@@ -1,0 +1,85 @@
+#!/bin/sh -e
+### BEGIN INIT INFO
+# Provides:          st2110
+# Required-Start:
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Start st2110-related services: EBU-LIST, linuxptp
+### END INIT INFO
+
+# To enable the initscript on Debian:
+#  Copy to /etc/init.d/st2110 with root ownership
+#  $ update-rc.d st2110 defaults
+#  $ update-rc.d st2110 enable
+
+LIST_USER=ebulist
+
+start_list()
+{
+    # TODO: verify that LIST is installed before
+    logger "Start EBU LIST server."
+    su $LIST_USER -c "cd /home/$LIST_USER/LIST/release && ./start.sh"
+}
+
+stop_list()
+{
+    logger "Stop EBU LIST server."
+    su $LIST_USER -c "cd /home/$LIST_USER/LIST/release && ./stop.sh"
+}
+
+PTP_IFACE=enp101s0f1
+PTP_CONFIG=/etc/linuxptp/ptp4l.conf 
+PTP_DOMAIN=$(sed -n 's/domainNumber\t\+\([0-9]*\)/\1/p' $PTP_CONFIG)
+PTP_PTP4L_PID=/var/run/ptp4l.pid
+PTP_PHC2SYS_PID=/var/run/phc2sys.pid
+
+start_ptp()
+{
+    logger "Start linuxptp"
+     start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PTP4L_PID --exec /usr/sbin/ptp4l -- -f $PTP_CONFIG -s -i $PTP_IFACE
+     start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID --exec /usr/sbin/phc2sys -- -s $PTP_IFACE -c CLOCK_REALTIME -w -n $PTP_DOMAIN
+}
+
+stop_ptp()
+{
+    logger "Stop linuxptp"
+    start-stop-daemon --stop --pidfile $PTP_PTP4L_PID --oknodo
+    start-stop-daemon --stop --pidfile $PTP_PHC2SYS_PID --oknodo
+    rm -f $PTP_PHC2SYS_PID $PTP_PTP4L_PID
+}
+
+start_mellanox()
+{
+    mst start
+    MLNX_DEV=$(mst status -v | tr -s ' ' | grep f1 | cut -d ' ' -f2)
+    mcra $MLNX_DEV 0xd8068 3
+    ethtool --set-priv-flags $PTP_IFACE sniffer on
+}
+
+stop_mellanox()
+{
+    mst stop
+}
+
+case "$1" in
+    start)
+	start_mellanox
+        start_ptp
+        start_list
+        ;;
+
+    stop)
+        stop_mellanox
+        stop_ptp
+        stop_list
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
+
