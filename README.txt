@@ -58,12 +58,12 @@ is received thanks to the socket reader:
 Execute
 -------------------------------------------------------------------
 
-Use ./ffmpeg_launcher.sh to start the transcoder by giving the monitor
+Use ./transcoder.sh to start the transcoder by giving the monitor
 IP:port:
 
- $ ./ffmpeg_launcher.sh start 192.168.1.1:5000 ~/sdp/my.sdp
- $ ./ffmpeg_launcher.sh log
- $ ./ffmpeg_launcher.sh stop
+ $ ./transcoder.sh start 192.168.1.1:5000 ~/sdp/my.sdp
+ $ ./transcoder.sh log
+ $ ./transcoder.sh stop
 
 -------------------------------------------------------------------
 TODO
