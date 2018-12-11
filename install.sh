@@ -49,6 +49,7 @@ install_monitoring_tools()
         tig \
         psmisc \
         tcpdump \
+        socat \
         ethtool
 }
 

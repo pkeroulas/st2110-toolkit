@@ -46,12 +46,12 @@ Network
 
 Find your live media interface name and execute:
 
- $ ./network_setup.sh <interface>
+ $ ./network_setup.sh file.sdp <interface>
 
 You can validate that the multicast IGMP group is joined and that data
 is received thanks to the socket reader:
 
- $ gcc -o socket_reader  -std=c99 socket_reader.c
+ $ gcc -o socket_reader -std=c99 socket_reader.c
  $./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 
 -------------------------------------------------------------------
@@ -70,7 +70,6 @@ TODO
 -------------------------------------------------------------------
 
 * separate NIC setup from network setup
-* network setup should be automatically performed from SDP info
 * use the proper FFmpeg option to dump logfile
 * add script/doc for GPU installation
 
