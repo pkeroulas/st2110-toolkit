@@ -83,6 +83,14 @@ If error message is returned, see 'Troubleshoot' section below.
  $ ./transcoder.sh stop
 
 -------------------------------------------------------------------
+Capture
+-------------------------------------------------------------------
+
+Join a multicast group and create a pcap file from the incoming stream
+
+ $ sudo ./capture.sh enp101s0f1 239.0.0.15 20000 2
+
+-------------------------------------------------------------------
 Troubleshoot
 -------------------------------------------------------------------
 
@@ -100,6 +108,7 @@ is received thanks to the socket reader:
 TODO
 -------------------------------------------------------------------
 
+* capture: get multicast info from sender SDP
 * separate NIC setup from network setup
 * add script/doc for GPU installation
 
