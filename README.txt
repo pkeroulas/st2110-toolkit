@@ -70,7 +70,7 @@ Example:
 Transcode
 -------------------------------------------------------------------
 
-Use ./transcoder.sh to start the transcoder by giving the destination
+Use ./transcode.sh to start the transcoder by giving the destination
 monitor IP and port:
 
  $ ./transcoder.sh help
