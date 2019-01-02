@@ -20,11 +20,11 @@ Usage:
 # read param from either argument or conf file
 if [ $# -eq 3 ]; then
     IFACE=$1
-    MCAST_LIST=$2
+    MCAST_IPs=$2
     DURATION=$3
 elif [ -f $CONF_FILE ]; then
     source $CONF_FILE
-    if [ -z $IFACE -o -z $MCAST_LIST ]; then
+    if [ -z $IFACE -o -z $MCAST_IPs ]; then
         echo "Missing variable in $CONF_FILE"
         exit 1
     fi
@@ -35,12 +35,12 @@ fi
 
 echo "------------------------------------------
 Mcast IPs:
-$MCAST_LIST" | tr ' ' '\n'
+$MCAST_IPs" | tr ' ' '\n'
 
 echo "------------------------------------------
 Joining"
 
-for m in $MCAST_LIST; do
+for m in $MCAST_IPs; do
     smcroute -j $IFACE $m
 done
 
@@ -60,7 +60,7 @@ kill -0 $tcpdump_pid 2>/dev/null && kill $tcpdump_pid
 echo "------------------------------------------
 Leaving"
 
-for m in $MCAST_LIST; do
+for m in $MCAST_IPs; do
     smcroute -l $IFACE $m
 done
 

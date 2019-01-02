@@ -27,26 +27,27 @@ def get_from_url(url):
 
 def write_confile(sdp, filename):
     print("{}".format(sdp))
-    # TODO: parse mcast properly
-    mcip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', sdp)
 
-    # print("mcip:" + str(mcip))
+    # get sender IP
+    lines = re.findall(r'o=.*', sdp)
+    source_ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', lines[0])[0]
+
+    # get mcast IPs
+    lines = re.findall(r'a=source-filter.*', sdp)
+    mcast_ips=""
+    for l in lines:
+        mcast_ips += re.findall(r'[0-9]+(?:\.[0-9]+){3}',l)[0] + ' '
+
     file = open(filename, 'w')
-
-    file.write('# This is where you put the multicast ipaddresses you want to access.\n')
-    file.write('# You can only put 3 IP addresses\n')
-    file.write('# x.x.0.x = video\n')
-    file.write('# x.x.1.x = audio\n')
-    file.write('# x.x.17.x = anc\n')
-    file.write('\n')
-    file.write('#mcast IPs\n')
-    file.write('MCAST_LIST="'+ mcip[2] + ' ' + mcip[6] + ' ' + mcip[10] + '"\n')
-    file.write('\n')
-    file.write('#SDP source IP\n')
-    file.write('SOURCE_IP=' + mcip[0] + '\n')
-    file.write('\n')
     file.write('# Media Interface\n')
     file.write('IFACE=enp101s0f1\n')
+    file.write('\n')
+    file.write('# Multicast IPs of 1st video, audio and anc found.\n')
+    file.write('MCAST_IPs="'+ mcast_ips[:-1] + '"\n')
+    file.write('\n')
+    file.write('#SDP sender IP\n')
+    file.write('SOURCE_IP=' + source_ip + '\n')
+    file.write('\n')
     file.write('# packet capture duration\n')
     file.write('DURATION=2\n')
     file.write('\n')
