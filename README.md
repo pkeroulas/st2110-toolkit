@@ -30,17 +30,15 @@ $ ./install.sh install_ffmpeg
 ## Get an SDP file:
 
 FFmpeg needs an SDP file for stream description. A python script grabs
-the SDP from an Embrionix encapsulator using its unicast address:
+the SDP from an Embrionix encapsulator given its unicast address:
 
 ```sh
-$ ./embrionix_sfp_get_sdp.py 172.30.64.161
+$ ./get_sdp.py 172.30.64.161
 ```
+The result is 'capture.conf' which contains info for the 1st video, audio,
+ancillary essences provided by the source.
 
-Make an SDP file from the entire or the partial output.
-Example:
-
-```sh
-$ cat file.sdp
+```
 v=0
 o=- 1443716955 1443716955 IN IP4 172.30.64.176
 s=st2110 stream
@@ -85,10 +83,16 @@ $ ./transcoder.sh stop
 
 ## Capture
 
-Join a multicast group and create a pcap file from the incoming stream
+Create a pcap using 'capture.conf'.
 
 ```sh
-$ sudo ./capture.sh enp101s0f1 239.0.0.15 20000 2
+$ sudo ./capture.sh
+```
+
+Or join any multicast group and create a pcap file from the incoming stream
+
+```sh
+$ sudo ./capture.sh enp101s0f1 239.0.0.15 2
 ```
 
 ## Troubleshoot
@@ -109,7 +113,8 @@ $./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 
 ## Todos
 
-* capture: get multicast info from sender SDP
+* sdp: parse mcast IP properly
+* install: make it work for Debian
 * separate NIC setup from network setup
 * add script/doc for GPU installation
 

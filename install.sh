@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # Compile & Install everything for FFMPEG transcoding
+# and tcpdump capturing
 
 # set -euo pipefail
 # set -x
@@ -33,7 +34,6 @@ install_common_tools()
         openssl-devel \
         perl \
         linuxptp \
-        socat \
         tar \
         wget \
         which \
@@ -50,6 +50,7 @@ install_monitoring_tools()
         vim \
         tig \
         psmisc \
+        smcroute \
         tcpdump \
         ethtool
 }
