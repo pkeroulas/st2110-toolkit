@@ -1,13 +1,20 @@
 #!/bin/sh
 
 FFMPEG=ffmpeg
+SERVER=mkvserver
 LOG=/tmp/ffmpeg.log
 DIR=$(dirname $0)
 SCRIPT=$(basename $0)
 
 if ! which $FFMPEG > /dev/null 2>&1
 then
-	echo "$FFMPEG is not installed"
+	echo "$FFMPEG is not installed, see install.sh"
+	exit -1
+fi
+
+if ! which $SERVER > /dev/null 2>&1
+then
+	echo "$SERVER is not installed, see install.sh"
 	exit -1
 fi
 
@@ -21,20 +28,19 @@ same destination but with different ports.
 Usage:
   $SCRIPT help
   $SCRIPT setup <interface_name> <sdp_file>
-  $SCRIPT start <target_ip:target_port> <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
+  $SCRIPT start <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
   $SCRIPT log
   $SCRIPT stop"
 }
 
 start() {
 	sdp=$1
-	ip=$2
-	port=$3
-	echo "streaming to destination = $ip:$port"
+	echo "Transcoding from $sdp"
 
 	# input buffer size: maximum value permitted by setsockopt
 	buffer_size=671088640
 	fifo_size=1000000000
+	proxy_port=500$2
 
 	FFREPORT=file=$LOG:level=48 \
 	$FFMPEG \
@@ -47,9 +53,13 @@ start() {
 		-vf yadif=0:-1:0,scale=1280:720 \
 		-c:v libx264 -preset ultrafast -pass 1 \
 		-c:a libfdk_aac -ac 2 \
-		-f mpegts udp://$ip:$port \
+		-f mpegts udp://localhost:$proxy_port \
 		> /dev/null 2> /dev/null \
 		&
+
+	server_port=800$2
+	echo "Stream available on port $server_port"
+	nc -l -p $server_port | $SERVER &
 }
 
 cmd=$1
@@ -69,28 +79,23 @@ case $cmd in
 		sudo $DIR/network_setup.sh $sdp $iface
 		;;
 	start)
-		if [ $# -lt 2 ]; then
+		if [ $# -lt 1 ]; then
 			help
 			exit 1
 		fi
 
-		destination_ip=$(echo $1 | cut -d : -f 1)
-		destination_port=$(echo $1 | cut -d : -f 2)
-		if [ -z $destination_ip -o -z $destination_port ]; then
-			help
-			exit -1
-		fi
-		shift
-
-		echo "==================== $(date) ===================="
-		for i in $@; do
-			start $i $destination_ip $destination_port
-			destination_port=$((destination_port+1))
+		echo "==================== Start $(date) ===================="
+		i=0
+		for sdp in $@; do
+			start $sdp $i
+			i=$((i+1))
 		done
 		;;
 	stop)
-		echo "==================== $(date) ===================="
+		echo "==================== Stop $(date) ===================="
 		killall $FFMPEG
+		killall $SERVER
+		killall nc
 		;;
 	log)
 		tail -n 500 -f $LOG

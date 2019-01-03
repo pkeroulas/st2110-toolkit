@@ -29,12 +29,15 @@ install_common_tools()
         gcc-c++ \
         git \
         libtool \
+        linuxptp \
         make \
+        nc \
         net-tools \
         openssl-devel \
         perl \
-        linuxptp \
+        smcroute \
         tar \
+        tcpdump \
         wget \
         which \
         zlib-devel
@@ -49,10 +52,7 @@ install_monitoring_tools()
         nload \
         vim \
         tig \
-        psmisc \
-        smcroute \
-        tcpdump \
-        ethtool
+        psmisc
 }
 
 install_yasm()
@@ -112,7 +112,6 @@ install_fdkaac()
     rm -rf $DIR
 }
 
-
 install_ffmpeg()
 {
     echo "Installing ffmpeg"
@@ -142,6 +141,18 @@ install_ffmpeg()
     rm -rf $DIR
 }
 
+install_server()
+{
+    echo "Installing mkvserver"
+    DIR=$(mktemp -d)
+    cd $DIR/
+    git clone https://github.com/klaxa/mkvserver_mk2.git
+    cd mkvserver_mk2
+    make
+    cp ./server ${PREFIX}/bin/mkvserver
+    rm -rf $DIR
+}
+
 install_all()
 {
     install_common_tools
@@ -151,4 +162,5 @@ install_all()
     install_x264
     install_fdkaac
     install_ffmpeg
+    install_server
 }

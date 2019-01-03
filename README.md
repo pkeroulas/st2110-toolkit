@@ -85,20 +85,32 @@ IP addresses extracted and written to capture.conf
 
 ## Transcode
 
-Use ./transcode.sh to start the transcoder by giving the destination
-monitor IP and port:
+Use ./transcode.sh to start the transcoding from one or multiple SDP
+files:
 
 ```sh
 $ ./transcoder.sh help
-$ ./transcoder.sh setup ens224 file.sdp
+$ ./transcoder.sh setup eth0 file.sdp
 ```
 
 If error message is returned, see 'Troubleshoot' section below.
 
 ```sh
-$ ./transcoder.sh start 192.168.1.1:5000 file.sdp
+$ ./transcoder.sh start file.sdp
+==================== Start ... ====================
+Transcoding from file.sdp
+Stream available on port 8000
 $ ./transcoder.sh log
+[...]
 $ ./transcoder.sh stop
+```
+
+## Monitor
+
+On a monitoring host:
+
+```sh
+$ ffplay <transcoder_IP>:8000
 ```
 
 ## Capture
