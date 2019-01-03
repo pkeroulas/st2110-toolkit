@@ -25,9 +25,7 @@ def get_from_url(url):
 
     return sdp
 
-def write_confile(sdp, filename):
-    print("{}".format(sdp))
-
+def write_conf_file(sdp, filename):
     # get sender IP
     lines = re.findall(r'o=.*', sdp)
     source_ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', lines[0])[0]
@@ -56,12 +54,23 @@ def write_confile(sdp, filename):
     file.write('\n')
     file.close()
 
-    print("""
------------------------------------------------------------------------------
+    print("-" * 72)
+    print("IP addresses extracted and written to " + filename)
 
-SDP IP addresses extracted and writen to capture.conf
+def write_sdp_file(sdp):
+    print("{}".format(sdp))
 
-""")
+    # get last digit of sender IP
+    lines = re.findall(r'o=.*', sdp)
+    source_ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', lines[0])[0]
+    filename="emb_encap_" + source_ip.split(".")[3] + ".sdp"
+
+    file = open(filename, 'w')
+    file.write(sdp)
+    file.close()
+
+    print("-" * 72)
+    print("SDP written to " + filename)
 
 def main():
     if len(sys.argv) < 2:
@@ -86,7 +95,8 @@ def main():
         url = get_sdp_url(ip_address) + str(sdp_list[s])
         sdp_filtered += get_from_url(url)+'\r\n'
 
-    write_confile(sdp_filtered, 'capture.conf')
+    write_sdp_file(sdp_filtered)
+    write_conf_file(sdp_filtered, 'capture.conf')
 
 if __name__ == "__main__":
     main()

@@ -27,22 +27,33 @@ Or you can install a single component:
 $ ./install.sh install_ffmpeg
 ```
 
-## Get an SDP file:
+## Setup
 
-FFmpeg needs an SDP file for stream description. A python script grabs
-the SDP from an Embrionix encapsulator given its unicast address:
+The capture can work with a config file for easy use, and on the other
+hand, the transcoder (FFmpeg) needs an SDP file for stream description.
+
+A python script grabs SDP from Embrionix encapsulator given its unicast
+address. The result is 'capture.conf' and and a SDP file which both
+contains info for the 1st video, audio, ancillary essences provided by
+the source.
 
 ```sh
-$ ./get_sdp.py 172.30.64.161
-```
-The result is 'capture.conf' which contains info for the 1st video, audio,
-ancillary essences provided by the source.
-
-```
+$ ./get_sdp.py <sender_IP>
 v=0
 o=- 1443716955 1443716955 IN IP4 172.30.64.176
 s=st2110 stream
+t=0 0
+m=video 20000 RTP/AVP 96
+c=IN IP4 225.16.0.16/64
+a=source-filter: incl IN IP4 225.16.0.16 172.30.64.176
+a=rtpmap:96 raw/90000
+a=fmtp:96 sampling=YCbCr-4:2:2; width=1920; height=1080; exactframerate=30000/1001; depth=10; TCS=SDR; colorimetry=BT709; PM=2110GPM; SSN=ST2110-20:2017; TP=2110TPN; interlace=1
+a=mediaclk:direct=0
+a=ts-refclk:ptp=IEEE1588-2008:00-02-c5-ff-fe-21-60-5c:127
 
+v=0
+o=- 1443716955 1443716955 IN IP4 172.30.64.176
+s=st2110 stream
 t=0 0
 m=audio 20000 RTP/AVP 97
 c=IN IP4 225.0.1.16/64
@@ -53,14 +64,23 @@ a=framecount:48
 a=ptime:1
 a=ts-refclk:ptp=IEEE1588-2008:00-02-c5-ff-fe-21-60-5c:127
 
+v=0
+o=- 1443716955 1443716955 IN IP4 172.30.64.176
+s=st2110 stream
 t=0 0
-m=video 20000 RTP/AVP 96
-c=IN IP4 225.16.0.16/64
-a=source-filter: incl IN IP4 225.16.0.16 172.30.64.176
-a=rtpmap:96 raw/90000
-a=fmtp:96 sampling=YCbCr-4:2:2; width=1920; height=1080; exactframerate=30000/1001; depth=10; TCS=SDR; colorimetry=BT709; PM=2110GPM; SSN=ST2110-20:2017; TP=2110TPN; interlace=1
-a=mediaclk:direct=0
+m=video 20000 RTP/AVP 100
+c=IN IP4 225.17.0.16/64
+a=source-filter: incl IN IP4 225.17.0.16 172.30.64.176
+a=rtpmap:100 smpte291/90000
+a=fmtp:100 VPID_Code=133
+a=mediaclk:direct=0 rate=90000
 a=ts-refclk:ptp=IEEE1588-2008:00-02-c5-ff-fe-21-60-5c:127
+
+
+------------------------------------------------------------------------
+SDP written to emb_encap_176.sdp
+------------------------------------------------------------------------
+IP addresses extracted and written to capture.conf
 ```
 
 ## Transcode
@@ -92,7 +112,7 @@ $ sudo ./capture.sh
 Or join any multicast group and create a pcap file from the incoming stream
 
 ```sh
-$ sudo ./capture.sh enp101s0f1 239.0.0.15 2
+$ sudo ./capture.sh eth0 239.0.0.15 2
 ```
 
 ## Troubleshoot
