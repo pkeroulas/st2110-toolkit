@@ -57,7 +57,7 @@ case $cmd in
 			exit 1
 		fi
 
-		source_ip=$(sed -n 's/^o=.*IN IP4 \(.*\)$/\1/p' $sdp | head 1)
+		source_ip=$(sed -n 's/^o=.*IN IP4 \(.*\)$/\1/p' $sdp | head -1)
 		mcast_ips=$(sed -n 's/^a=.*IN IP4 \(.*\) .*$/\1/p' $sdp)
 		;;
 	manual)
@@ -77,14 +77,14 @@ case $cmd in
 		;;
 esac
 
-if [ -z $mcast_ips ]; then
+if [ -z "$mcast_ips" ]; then
 	echo "Missing multicast group"
 	exit 1
 fi
 
 if [ $(cat /sys/class/net/$IFACE/operstate) != "up" ]; then
-    echo "$IFACE is not up, exit."
-    exit 1
+	echo "$IFACE is not up, exit."
+	exit 1
 fi
 
 echo "------------------------------------------

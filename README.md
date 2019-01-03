@@ -8,8 +8,8 @@ Features:
 * install tools and dependencies for Centos
 * setup network (routes, firewall)
 * setup NIC (Rx buffer size, checksum, timestamping)
-* capture streams
-* transcode st2110-to-h264
+* capture streams from SDP
+* transcode st2110-to-h264 from SDP
 * analyse stream content like ptp clock
 
 ## Install ffmpeg and dependencies
@@ -33,9 +33,9 @@ The capture can work with a config file for easy use, and on the other
 hand, the transcoder (FFmpeg) needs an SDP file for stream description.
 
 A python script grabs SDP from Embrionix encapsulator given its unicast
-address. The result is 'capture.conf' and and a SDP file which both
-contains info for the 1st video, audio, ancillary essences provided by
-the source.
+address. The result is a SDP file which contains info for the 1st video,
+audio, ancillary essences provided by the source. See 'Embrionix flows'
+section for details.
 
 ```sh
 $ ./get_sdp.py <sender_IP>
@@ -104,6 +104,7 @@ Stream available on port 8000
 $ ./transcoder.sh log
 [...]
 $ ./transcoder.sh stop
+==================== Stop ... ====================
 ```
 
 If error message is returned, see 'Troubleshoot' section below.
@@ -116,18 +117,18 @@ $ ffplay <transcoder_IP>:8000
 
 ## Capture
 
-Create a pcap using 'capture.conf'.
+Create a pcap given a SDP file and using default interface.
 
 ```sh
 $ sudo ./capture.sh help
 [...]
-$ sudo ./capture.sh
+$ sudo ./capture.sh sdp file.sdp
 ```
 
-Or join any multicast group and create a pcap file from the incoming stream
+Or manually select any multicast group:
 
 ```sh
-$ sudo ./capture.sh eth0 239.0.0.15 2
+$ sudo ./capture.sh manual eth0 239.0.0.15 2
 ```
 
 ## Troubleshoot
@@ -145,6 +146,28 @@ is received thanks to the socket reader:
 $ gcc -o socket_reader -std=c99 socket_reader.c
 $./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 ```
+## Embrionix flows
+
+Embrionix encapsulator:
+
+* has 2 SDI inputs A and B
+* encapsulates 1 video, 8 audio and 1 ancillary essence for each input
+* ouputs 2 (1 and 2) RTP streams par essence
+
+The 40 essences are ordered this way:
+
+* video A1 <------------------ selected by get_sdp.py
+* video A2
+* audio ch1 A1 <-------------- selected by get_sdp.py
+* audio ch1 A2
+* [...]
+* audio ch8 A1
+* audio ch8 A2
+* ancillary A1 <-------------- selected by get_sdp.py
+* ancillary A2
+* video B1
+* [...]
+* ancillary B2
 
 ## Todos
 

@@ -19,7 +19,7 @@ def get_sdp_url(ip):
 
 def get_from_url(url):
     try:
-        sdp = urllib2.urlopen(url).read()
+        sdp = urllib2.urlopen(url, timeout=1).read()
     except urllib2.HTTPError:
         print("Unable to fetch SDP")
 
@@ -56,9 +56,9 @@ def main():
         print("Unable to parse json")
         return
 
-    # Let's keep the 1st video, audio and anc sections
     sdp_filtered=""
-    # TODO: filter this properly or at least document structure
+    # Let's keep the 1st video, audio and anc sections
+    # See README.md:'Embrionix flows' for details
     sdp_indexes = [0, 2, 18]
     for s in sdp_indexes:
         url = get_sdp_url(ip_address) + str(sdp_list[s])

@@ -91,13 +91,14 @@ echo "Address: $source_ip
 Multicast Groups: " $multicast_groups
 
 if [ -z "$source_ip" -o -z "$multicast_groups" ]; then
-    echo "missing info in $sdp_file"
+    echo "Missing info in $sdp_file"
     exit 1
 fi
 
 # ip route add $subnet/$cidr via $gateway dev $iface
 if ! ping -W 1 -I $iface -c 1 -q $source_ip > /dev/null; then
-    echo "Couln't ping source @ $source_ip, exit. Maybe blocked by the swith."
+    echo "Couln't ping source @ $source_ip, exit."
+    exit 1
 fi
 
 for gr in $multicast_groups;do
@@ -155,5 +156,3 @@ fi
 size=$(stat $dumpfile | sed -n 's/.*Size: \(.*\)\tBlocks:.*/\1/p')
 echo "Received $size bytes in 1 sec"
 rm -rf $dumpfile
-
-exit 0
