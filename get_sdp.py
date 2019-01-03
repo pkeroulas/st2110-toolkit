@@ -7,8 +7,8 @@ import re
 
 def usage():
     print("""
-getsdp.py - helper script to fetch SDP file from Embrionix sender and extract IP address
-            for video, audio and anc and write to capture.conf that is used to do PCAP's
+getsdp.py - helper script to fetch SDP file from Embrionix sender and
+\tkeep the 1st video, audio and anc essences.
 
 Usage:
 \tgetsdp.py <sender_ip>
@@ -24,38 +24,6 @@ def get_from_url(url):
         print("Unable to fetch SDP")
 
     return sdp
-
-def write_conf_file(sdp, filename):
-    # get sender IP
-    lines = re.findall(r'o=.*', sdp)
-    source_ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', lines[0])[0]
-
-    # get mcast IPs
-    lines = re.findall(r'a=source-filter.*', sdp)
-    mcast_ips=""
-    for l in lines:
-        mcast_ips += re.findall(r'[0-9]+(?:\.[0-9]+){3}',l)[0] + ' '
-
-    file = open(filename, 'w')
-    file.write('# Media Interface\n')
-    file.write('IFACE=enp101s0f1\n')
-    file.write('\n')
-    file.write('# Multicast IPs of 1st video, audio and anc found.\n')
-    file.write('MCAST_IPs="'+ mcast_ips[:-1] + '"\n')
-    file.write('\n')
-    file.write('#SDP sender IP\n')
-    file.write('SOURCE_IP=' + source_ip + '\n')
-    file.write('\n')
-    file.write('# packet capture duration\n')
-    file.write('DURATION=2\n')
-    file.write('\n')
-    file.write('#SDP content\n')
-    file.write('SDP="' + sdp + '"')
-    file.write('\n')
-    file.close()
-
-    print("-" * 72)
-    print("IP addresses extracted and written to " + filename)
 
 def write_sdp_file(sdp):
     print("{}".format(sdp))

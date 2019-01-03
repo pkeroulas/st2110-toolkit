@@ -118,6 +118,8 @@ $ ffplay <transcoder_IP>:8000
 Create a pcap using 'capture.conf'.
 
 ```sh
+$ sudo ./capture.sh help
+[...]
 $ sudo ./capture.sh
 ```
 
