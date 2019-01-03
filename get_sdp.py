@@ -58,13 +58,13 @@ def main():
 
     # Let's keep the 1st video, audio and anc sections
     sdp_filtered=""
+    # TODO: filter this properly or at least document structure
     sdp_indexes = [0, 2, 18]
     for s in sdp_indexes:
         url = get_sdp_url(ip_address) + str(sdp_list[s])
         sdp_filtered += get_from_url(url)+'\r\n'
 
     write_sdp_file(sdp_filtered)
-    write_conf_file(sdp_filtered, 'capture.conf')
 
 if __name__ == "__main__":
     main()

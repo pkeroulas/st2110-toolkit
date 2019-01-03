@@ -105,8 +105,8 @@ tcpdump -vvv -j adapter -i $IFACE -n "multicast" -c $MAX_COUNT -w $CAPTURE &
 tcpdump_pid=$!
 
 for i in $(seq $DURATION); do
-    echo "$i sec ..."
-    sleep 1
+	echo "$i sec ..."
+	sleep 1
 done
 
 kill -0 $tcpdump_pid 2>/dev/null && kill $tcpdump_pid
@@ -114,16 +114,16 @@ kill -0 $tcpdump_pid 2>/dev/null && kill $tcpdump_pid
 echo "------------------------------------------
 Leaving"
 
-for m in $MCAST_IPs; do
-    smcroute -l $IFACE $m
+for m in $mcast_ips; do
+	sudo smcroute -l $IFACE $m
 done
 
 if [ ! -f $CAPTURE ]; then
-    echo "No capture file."
-    exit 1
+	echo "No capture file."
+	exit 1
 fi
 
-FILENAME="$(date +%F_%T)_$(hostname)_$(echo $SOURCE_IP | tr . _).pcap"
+FILENAME="$(date +%F_%T)_$(hostname)_$(echo $source_ip | tr . _).pcap"
 mv $CAPTURE $FILENAME
 
 echo "------------------------------------------

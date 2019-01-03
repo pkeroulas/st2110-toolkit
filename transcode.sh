@@ -19,18 +19,18 @@ then
 fi
 
 help() {
-	echo "
+	echo -e "
 $SCRIPT opens multiple instances of ffmpeg transcoders.
 Each of them reads an SDP file decode a specific SMPTE ST 2110
 stream, re-encodes it to h264. All the streams are redirected to the
 same destination but with different ports.
 
 Usage:
-  $SCRIPT help
-  $SCRIPT setup <interface_name> <sdp_file>
-  $SCRIPT start <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
-  $SCRIPT log
-  $SCRIPT stop"
+\t$SCRIPT help
+\t$SCRIPT setup <interface_name> <sdp_file>
+\t$SCRIPT start <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
+\t$SCRIPT log
+\t$SCRIPT stop"
 }
 
 start() {
@@ -76,7 +76,8 @@ case $cmd in
 		fi
 		iface=$1
 		sdp=$2
-		sudo $DIR/network_setup.sh $sdp $iface
+		sudo $DIR/network_setup.sh $iface $sdp
+		exit $?
 		;;
 	start)
 		if [ $# -lt 1 ]; then

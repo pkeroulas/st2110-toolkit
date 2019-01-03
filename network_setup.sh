@@ -1,7 +1,14 @@
 #!/bin/bash
-#
-# This script create routes to accept multicast traffic
-# on a given interface.
+
+
+SCRIPT=$(basename $0)
+
+usage (){
+    echo -e "$SCRIPT create routes to accept multicast traffic on a
+given interface. The user must have privileged rights.
+
+\t$SCRIPT <media_interface> <sdp_file>"
+}
 
 # network functions
 mask2cdr ()
@@ -30,23 +37,28 @@ cdr2mask ()
    echo ${1-0}.${2-0}.${3-0}.${4-0}
 }
 
-usage (){
-    echo "Usage: $(basename $0) sdp_file media_interface
-Example: $(basename $0) ~/sdp/embrionix.sdp eth0
-The user must have privileged rights."
-}
-
 if [ $# -ne 2 ]; then
     usage
     exit 1
 fi
-sdp_file=$1
-iface=$2
+
+iface=$1
+sdp_file=$2
+
+echo "-------------------------------------------"
+echo "Check interface:"
+
+if [ ! -d /sys/class/net/$iface ]; then
+    echo "$iface is not a network interface."
+    exit 1
+fi
 
 if [ $(cat /sys/class/net/$iface/operstate) != "up" ]; then
     echo "$iface is not up, exit."
     exit 1
 fi
+
+echo "$iface: OK"
 
 echo "-------------------------------------------"
 echo "Local info:"
@@ -60,8 +72,7 @@ subnet=$(subnet $ipaddr $netmask)
 echo "Address: $ipaddr
 Gateway: $gateway
 Netmask: $netmask
-Subnet:  $subnet
-"
+Subnet:  $subnet"
 
 if [ -z $gateway -o -z $ipaddr -o -z $subnet ]; then
     echo "Missing network info, exit."
@@ -71,7 +82,7 @@ fi
 # The unicast IP of the source should be accessible through the gateway.
 # This is necessary for the reverse path resolution of the source in
 # order to accept traffic. Let's find source and media info in the SDP.
-source_ip=$(sed -n 's/^o=.*IN IP4 \(.*\)$/\1/p' $sdp_file)
+source_ip="$(sed -n 's/^o=.*IN IP4 \(.*\)$/\1/p' $sdp_file | head -1)"
 multicast_groups=$(sed -n 's/^a=.*IN IP4 \(.*\) .*$/\1/p' $sdp_file)
 
 echo "-------------------------------------------"
@@ -85,9 +96,8 @@ if [ -z "$source_ip" -o -z "$multicast_groups" ]; then
 fi
 
 # ip route add $subnet/$cidr via $gateway dev $iface
-if ! ping -I $iface -c 1 -q $source_ip > /dev/null; then
-    echo "Couln't ping source @ $source_ip, exit."
-    exit 1
+if ! ping -W 1 -I $iface -c 1 -q $source_ip > /dev/null; then
+    echo "Couln't ping source @ $source_ip, exit. Maybe blocked by the swith."
 fi
 
 for gr in $multicast_groups;do
@@ -95,7 +105,7 @@ for gr in $multicast_groups;do
         echo "Add route for $gr"
         ip route add $gr dev $iface
     else
-        echo "route for $gr already exists."
+        echo "Route for $gr already exists."
     fi
 done
 

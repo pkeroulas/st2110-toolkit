@@ -79,8 +79,14 @@ a=ts-refclk:ptp=IEEE1588-2008:00-02-c5-ff-fe-21-60-5c:127
 
 ------------------------------------------------------------------------
 SDP written to emb_encap_176.sdp
-------------------------------------------------------------------------
-IP addresses extracted and written to capture.conf
+```
+
+In some situations, it is necessary to setup the media network interface,
+the IP routes and firewall rules:
+
+```sh
+$ sudo ./network_setup.sh eth0 sdp.file
+[...]
 ```
 
 ## Transcode
@@ -90,12 +96,7 @@ files:
 
 ```sh
 $ ./transcoder.sh help
-$ ./transcoder.sh setup eth0 file.sdp
-```
-
-If error message is returned, see 'Troubleshoot' section below.
-
-```sh
+[...]
 $ ./transcoder.sh start file.sdp
 ==================== Start ... ====================
 Transcoding from file.sdp
@@ -105,7 +106,7 @@ $ ./transcoder.sh log
 $ ./transcoder.sh stop
 ```
 
-## Monitor
+If error message is returned, see 'Troubleshoot' section below.
 
 On a monitoring host:
 
@@ -134,7 +135,7 @@ $ sudo ./capture.sh eth0 239.0.0.15 2
 Find your live media interface name and execute:
 
 ```sh
-$ sudo ./network_setup.sh file.sdp <interface>
+$ sudo ./network_setup.sh eth0 file.sdp
 ```
 
 You can validate that the multicast IGMP group is joined and that data
@@ -147,7 +148,7 @@ $./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 
 ## Todos
 
-* sdp: parse mcast IP properly
+* sdp: filter essence properly or at least document structure
 * install: make it work for Debian
 * separate NIC setup from network setup
 * add script/doc for GPU installation
