@@ -76,7 +76,6 @@ a=fmtp:100 VPID_Code=133
 a=mediaclk:direct=0 rate=90000
 a=ts-refclk:ptp=IEEE1588-2008:00-02-c5-ff-fe-21-60-5c:127
 
-
 ------------------------------------------------------------------------
 SDP written to emb_encap_176.sdp
 ```
@@ -146,6 +145,14 @@ is received thanks to the socket reader:
 $ gcc -o socket_reader -std=c99 socket_reader.c
 $./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 ```
+
+When capturing, if `smcroute` returns this error, restart the daemon:
+
+```
+Daemon error: Join multicast group, unknown interface eth0
+$ sudo /etc/init.d/smcroute restart
+```
+
 ## Embrionix flows
 
 Embrionix encapsulator:

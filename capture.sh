@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # default param
-DURATION=2 # in sec
+DURATION=10 # in sec
 IFACE=enp101s0f1 # media interface
 
 # const
@@ -14,7 +14,8 @@ help() {
 	echo -e "
 $SCRIPT joins multicast groups and captures the incoming traffic in
 file: <date>_<hostname>_<source_ip>.pcap. The user must have
-privileged rights.
+privileged rights. Tcpdump command uses 'adapter_unsynced' to let the
+NIC timestamp the arriving packet.
 
 Usage:
 \t$SCRIPT help
@@ -77,31 +78,43 @@ case $cmd in
 		;;
 esac
 
-if [ -z "$mcast_ips" ]; then
-	echo "Missing multicast group"
-	exit 1
-fi
+echo "------------------------------------------
+Interface:
+$IFACE"
 
 if [ $(cat /sys/class/net/$IFACE/operstate) != "up" ]; then
-	echo "$IFACE is not up, exit."
+	echo "Not up, exit."
 	exit 1
 fi
 
+echo "ok"
+
 echo "------------------------------------------
-Mcast IPs:
-$mcast_ips" | tr ' ' '\n'
+Mcast IPs:"
+
+if [ -z "$mcast_ips" ]; then
+	echo "Missing multicast group, exit."
+	exit 1
+fi
+
+echo "$mcast_ips" | tr ' ' '\n'
 
 echo "------------------------------------------
 Joining"
 
 for m in $mcast_ips; do
 	sudo smcroute -j $IFACE $m
+	if netstat -ng | grep -q "$IFACE.*$m"; then
+		echo "$m"
+	else
+		echo "Can't joint $m"
+	fi
 done
 
 echo "------------------------------------------
 Capturing"
 
-tcpdump -vvv -j adapter -i $IFACE -n "multicast" -c $MAX_COUNT -w $CAPTURE &
+tcpdump -vvv -j adapter_unsynced -i $IFACE -n "multicast" -c $MAX_COUNT -w $CAPTURE &
 tcpdump_pid=$!
 
 for i in $(seq $DURATION); do
@@ -123,7 +136,7 @@ if [ ! -f $CAPTURE ]; then
 	exit 1
 fi
 
-FILENAME="$(date +%F_%T)_$(hostname)_$(echo $source_ip | tr . _).pcap"
+FILENAME="$(date +%F_%T)_$(hostname)_$(echo $source_ip | tr . _ | sed 's/\r//').pcap"
 mv $CAPTURE $FILENAME
 
 echo "------------------------------------------

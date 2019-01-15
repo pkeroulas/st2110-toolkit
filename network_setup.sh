@@ -156,3 +156,5 @@ fi
 size=$(stat $dumpfile | sed -n 's/.*Size: \(.*\)\tBlocks:.*/\1/p')
 echo "Received $size bytes in 1 sec"
 rm -rf $dumpfile
+
+exit 0
