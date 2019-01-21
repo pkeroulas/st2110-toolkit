@@ -57,9 +57,8 @@ start() {
 		> /dev/null 2> /dev/null \
 		&
 
-	server_port=800$2
-	echo "Stream available on port $server_port"
-	nc -l -p $server_port | $SERVER &
+	nc -l -p $proxy_port | $SERVER > /dev/null &
+	echo "Stream available on port 8080 (harcoded in $SERVER)"
 }
 
 cmd=$1

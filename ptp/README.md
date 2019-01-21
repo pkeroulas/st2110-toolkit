@@ -1,25 +1,36 @@
 # PTP utilities
 
-A good synchronization is mandatory to make a capture device precise
-while timestamping arriving packets.
+A good synchronization is mandatory to make a capture device precise.
+Mellanox NIC capabilities include hardware timestamping of Tx and Rx
+packets to allow both a reliable synchronization to PTP grand master
+and accurate timestamp in captures.
 
 ## ptp4l
 
 There are tones of online documentation to setup `ptp4l` to sync
-NIC clock to a grand master clock and then, to use `pch2sys` to sync
-system/OS time to NIC clock.
+NIC clock to a grand master clock and then, use `pch2sys` to sync
+system/OS time to NIC clock. Verify that offset are no more than a few
+tens of ns.
+
+```
+$ journalctl -f | grep 'ptp4\|phc2'
+Jan 21 10:07:28 server1-PowerEdge-R540 phc2sys: [601998.702] phc offset        -9 s2 freq   -1108 delay   1100
+Jan 21 10:07:28 server1-PowerEdge-R540 ptp4l: [601999.078] rms   20 max   32 freq  -3106 +/-  28 delay   159 +/-   2
+Jan 21 10:07:29 server1-PowerEdge-R540 phc2sys: [601999.702] phc offset        25 s2 freq   -1077 delay   1094
+Jan 21 10:07:29 server1-PowerEdge-R540 ptp4l: [602000.090] rms   18 max   28 freq  -3107 +/-  24 delay   157 +/-   6
+```
 
 ## Hardware Clock
 
-`testptp` is can interact with NIC HW clock to set it manually and get
-offset with system time. It was really usefull to verify that NIC was
-the actual source of timestamp for `tcpdump`/`libcap`.
+It is important to verify that the HW clock on the NIC is the actual
+source of timestamp for `tcpdump`/`libcap`. `testptp` can interact with
+this clock to set it manually and measure offset with system time.
 
 * get this utility from [Linux sources](https://elixir.bootlin.com/linux/v4.8.17/source/Documentation/ptp/testptp.c).
 * compile it using `librt`
-* make sure `phc2sys` is off
+* make sure that `ptp4l` and `phc2sys` are off
 * find the proper ptp device id
-* use the utility
+* try the utility
 
 ```sh
 $ gcc -o testptp testptp.c -lrt
@@ -31,12 +42,16 @@ $ ./testptp -d /dev/ptp3 -g
 clock time: 3333336.759303339 or Sun Feb  8 08:55:36 1970
 ```
 
+Then `tcpdump -j adapter_unsynced ...` will provide capture from 1970
+regardless of the local system time. Turn on `ptp4l` to restore PTP
+current time.
+
 ## linuxptp_sync_graph.py
 
 This tool measures the precision of a system clock regarding of a grand
-master.  This script which is supposed to run on a workstation executes
-`pmc` (Ptp Management Client) on remote a node to provide time offset and
-plot it on a graph.
+master. It is supposed to run on a workstation and remotely executes
+`pmc` (Ptp Management Client) to provide time offset of remote nodes and
+plot on a graph.
 
 ## TODOs
 

@@ -5,12 +5,13 @@ Author: [Patrick Keroulas](mailto:patrick.keroulas@radio-canada.ca)
 This toolkit provides scripts and config to test, monitor and transcode ST-2110 streams.
 Features:
 
-* install tools and dependencies for Centos
 * setup network (routes, firewall)
 * setup NIC (Rx buffer size, checksum, timestamping)
+* get SDP file from Embrionix encapsulator
 * capture streams from SDP
 * transcode st2110-to-h264 from SDP
 * analyse stream content like ptp clock
+* install common tools and ffmpeg dependencies for Centos
 
 ## Install ffmpeg and dependencies
 
@@ -179,9 +180,10 @@ The 40 essences are ordered this way:
 ## Todos
 
 * sdp: filter essence properly or at least document structure
+* sdp: correct syntax by keeping one "o=", "v=", "t=", "s="
 * install: make it work for Debian
 * separate NIC setup from network setup
-* add script/doc for GPU installation
+* transcoder: add script/doc for GPU/CUDA setup
 
 ## Additional resources
 
