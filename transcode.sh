@@ -28,10 +28,16 @@ same destination but with different ports.
 Usage:
 \t$SCRIPT help
 \t$SCRIPT setup <interface_name> <sdp_file>
-\t$SCRIPT start <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
+\t$SCRIPT start [--soft|--gpu] <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
 \t$SCRIPT log
 \t$SCRIPT stop"
 }
+
+FFMPEG_SOFT_SCALE_OPTIONS="scale=1280:720"
+FFMPEG_SOFT_ENCODE_OPTIONS="libx264 -preset ultrafast -pass 1"
+
+FFMPEG_GPU_SCALE_OPTIONS="format=yuv420p,hwupload_cuda,scale_npp=w=1080:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
+FFMPEG_GPU_ENCODE_OPTIONS="h264_nvenc -preset slow -cq 10 -bf 2 -g 150"
 
 start() {
 	sdp=$1
@@ -42,6 +48,18 @@ start() {
 	fifo_size=1000000000
 	proxy_port=500$2
 
+	if [ $3 = "soft" ]; then
+		scale_option=$FFMPEG_SOFT_SCALE_OPTIONS
+		encode_option=$FFMPEG_SOFT_ENCODE_OPTIONS
+	elif [ $3 = "gpu" ]; then
+		scale_option=$FFMPEG_GPU_SCALE_OPTIONS
+		encode_option=$FFMPEG_GPU_ENCODE_OPTIONS
+	else
+		echo "Encoding not supported: $3"
+		return 1
+	fi
+	echo "Scaling and encoding is $3."
+
 	FFREPORT=file=$LOG:level=48 \
 	$FFMPEG \
 		-strict experimental \
@@ -50,8 +68,8 @@ start() {
 		-protocol_whitelist 'file,udp,rtp' \
 		-i $sdp -fifo_size $fifo_size \
 		-smpte2110_timestamp 1 \
-		-vf yadif=0:-1:0,scale=1280:720 \
-		-c:v libx264 -preset ultrafast -pass 1 \
+		-vf yadif=0:-1:0,$scale_option \
+		-c:v $encode_option \
 		-c:a libfdk_aac -ac 2 \
 		-f mpegts udp://localhost:$proxy_port \
 		> /dev/null 2> /dev/null \
@@ -84,10 +102,20 @@ case $cmd in
 			exit 1
 		fi
 
+		if [ $1 = "--gpu" ]; then
+			encode="gpu"
+			shift
+		elif [ $1 = "--soft" ]; then
+			encode="soft"
+			shift
+		else
+			encode="soft"
+		fi
+
 		echo "==================== Start $(date) ===================="
 		i=0
 		for sdp in $@; do
-			start $sdp $i
+			start $sdp $i $encode
 			i=$((i+1))
 		done
 		;;
