@@ -43,7 +43,7 @@ case $cmd in
 		fi
 		IFACE=$1
 		sdp=$2
-		sudo $DIR/network_setup.sh $IFACE $sdp
+		$DIR/network_setup.sh $IFACE $sdp
 		exit $?
 		;;
 	sdp)
@@ -103,7 +103,7 @@ echo "------------------------------------------
 Joining"
 
 for m in $mcast_ips; do
-	sudo smcroute -j $IFACE $m
+	smcroute -j $IFACE $m
 	if netstat -ng | grep -q "$IFACE.*$m"; then
 		echo "$m"
 	else
@@ -128,7 +128,7 @@ echo "------------------------------------------
 Leaving"
 
 for m in $mcast_ips; do
-	sudo smcroute -l $IFACE $m
+	smcroute -l $IFACE $m
 done
 
 if [ ! -f $CAPTURE ]; then
