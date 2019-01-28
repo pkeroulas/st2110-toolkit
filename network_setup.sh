@@ -31,10 +31,10 @@ subnet ()
 
 cdr2mask ()
 {
-   # Number of args to shift, 255..255, first non-255 byte, zeroes
-   set -- $(( 5 - ($1 / 8) )) 255 255 255 255 $(( (255 << (8 - ($1 % 8))) & 255 )) 0 0 0
-   [ $1 -gt 1 ] && shift $1 || shift
-   echo ${1-0}.${2-0}.${3-0}.${4-0}
+    # Number of args to shift, 255..255, first non-255 byte, zeroes
+    set -- $(( 5 - ($1 / 8) )) 255 255 255 255 $(( (255 << (8 - ($1 % 8))) & 255 )) 0 0 0
+    [ $1 -gt 1 ] && shift $1 || shift
+    echo ${1-0}.${2-0}.${3-0}.${4-0}
 }
 
 if [ $# -ne 2 ]; then
@@ -59,6 +59,18 @@ if [ $(cat /sys/class/net/$iface/operstate) != "up" ]; then
 fi
 
 echo "$iface: OK"
+
+# save interface
+ST2110_CONF_FILE=/etc/st2110.conf
+if [ ! -f $ST2110_CONF_FILE ]; then
+    echo "IFACE=$iface" > $ST2110_CONF_FILE
+elif grep -q -v "IFACE=.*" $ST2110_CONF_FILE; then
+    echo "IFACE=$iface" > $ST2110_CONF_FILE
+else
+    sed -i 's/\(IFACE=\).*/\1'$iface'/' $ST2110_CONF_FILE
+fi
+
+exit
 
 echo "-------------------------------------------"
 echo "Local info:"

@@ -2,7 +2,7 @@
 
 # default param
 DURATION=10 # in sec
-IFACE=enp101s0f1 # media interface
+IFACE=eth0 # media interface if not set in /etc/st2110.conf
 
 # const
 CAPTURE=tmp.pcap
@@ -21,7 +21,7 @@ Usage:
 \t$SCRIPT help
 \t$SCRIPT setup <interface_name> <sdp_file>
 \t$SCRIPT sdp <sdp_file>
-\t$SCRIPT manual <network_interface> <mgroup> <duration(sec)>"
+\t$SCRIPT manual <mgroup> <duration(sec)>"
 }
 
 if [ -z $1 ]; then
@@ -67,9 +67,8 @@ case $cmd in
 			exit 1
 		fi
 
-		IFACE=$1
-		mcast_ips=$2
-		DURATION=$3
+		mcast_ips=$1
+		DURATION=$2
 		source_ip="unknown"
 		;;
 	*)
@@ -78,16 +77,24 @@ case $cmd in
 		;;
 esac
 
-echo "------------------------------------------
-Interface:
-$IFACE"
+echo "------------------------------------------"
 
-if [ $(cat /sys/class/net/$IFACE/operstate) != "up" ]; then
-	echo "Not up, exit."
+ST2110_CONF_FILE=/etc/st2110.conf
+if [ -f $ST2110_CONF_FILE ]; then
+	source $ST2110_CONF_FILE
+fi
+
+if [ ! -d /sys/class/net/$IFACE ]; then
+	echo "$IFACE doesn't exist, exit."
 	exit 1
 fi
 
-echo "ok"
+if [ $(cat /sys/class/net/$IFACE/operstate) != "up" ]; then
+	echo "$IFACE is not up, exit."
+	exit 1
+fi
+
+echo "$IFACE: OK"
 
 echo "------------------------------------------
 Mcast IPs:"

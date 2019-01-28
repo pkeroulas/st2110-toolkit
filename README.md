@@ -187,7 +187,7 @@ $ sudo ./capture.sh sdp file.sdp
 Or manually select any multicast group:
 
 ```sh
-$ sudo ./capture.sh manual eth0 239.0.0.15 2
+$ sudo ./capture.sh manual 239.0.0.15 2
 ```
 
 ## Troubleshoot
