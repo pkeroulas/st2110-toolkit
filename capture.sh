@@ -121,7 +121,10 @@ done
 echo "------------------------------------------
 Capturing"
 
-tcpdump -vvv -j adapter_unsynced -i $IFACE -n "multicast" -c $MAX_COUNT -w $CAPTURE &
+export LD_PRELOAD=libvma.so VMA_LOG_FILE=/tmp/vmastat VMA_TRACELEVEL=DEBUG
+tcpdump_cmd="tcpdump -vvv --time-stamp-precision=nano -j adapter_unsynced -i $IFACE -n multicast -c $MAX_COUNT -w $CAPTURE"
+echo "$tcpdump_cmd"
+$tcpdump_cmd &
 tcpdump_pid=$!
 
 for i in $(seq $DURATION); do

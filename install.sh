@@ -55,6 +55,29 @@ install_monitoring_tools()
         psmisc
 }
 
+install_mellanox()
+{
+    echo "Installing Mellanox libvma"
+    VMA_VERSION=8.8.1
+
+    yum -y update && yum install -y \
+        libibverbs-dev \
+        libnl-3-dev \
+        libnl-route-3-dev \
+        librdmacm-dev
+
+    DIR=$(mktemp -d)
+    cd $DIR/
+    wget https://github.com/Mellanox/libvma/archive/$VMA_VERSION.tar.gz
+    tar xaf $VMA_VERSION.tar.gz
+    cd libvma-$VMA_VERSION/
+    ./install.sh
+    rm -rf $DIR
+
+    echo "/usr/lib64/" >> /etc/ld.so.conf
+    ldconfig
+}
+
 install_yasm()
 {
     echo "Installing YASM"
