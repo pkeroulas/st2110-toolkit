@@ -17,6 +17,8 @@ LIST_USER=ebulist
 
 start_list()
 {
+    # LIST is a st2110 stream analyser which can run on a network
+    # capturing host. https://github.com/ebu/pi-list
     # TODO: verify that LIST is installed before
     logger "Start EBU LIST server."
     su $LIST_USER -c "cd /home/$LIST_USER/LIST/release && ./start.sh"
@@ -28,8 +30,23 @@ stop_list()
     su $LIST_USER -c "cd /home/$LIST_USER/LIST/release && ./stop.sh"
 }
 
-PTP_IFACE=enp101s0f1
-PTP_CONFIG=/etc/linuxptp/ptp4l.conf 
+ST2110_CONF_FILE=/etc/st2110.conf
+if [ -f $ST2110_CONF_FILE ]; then
+    source $ST2110_CONF_FILE
+fi
+
+if [ ! -d /sys/class/net/$IFACE ]; then
+    echo "$IFACE doesn't exist, exit."
+    exit 1
+fi
+
+if [ $(cat /sys/class/net/$IFACE/operstate) != "up" ]; then
+    echo "$IFACE is not up, exit."
+    exit 1
+fi
+
+PTP_IFACE=$IFACE
+PTP_CONFIG=/etc/linuxptp/ptp4l.conf
 PTP_DOMAIN=$(sed -n 's/domainNumber\t\+\([0-9]*\)/\1/p' $PTP_CONFIG)
 PTP_PTP4L_PID=/var/run/ptp4l.pid
 PTP_PHC2SYS_PID=/var/run/phc2sys.pid
