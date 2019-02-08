@@ -62,7 +62,7 @@ case $cmd in
 		mcast_ips=$(sed -n 's/^a=.*IN IP4 \(.*\) .*$/\1/p' $sdp)
 		;;
 	manual)
-		if [ $# -lt 3 ]; then
+		if [ $# -lt 2 ]; then
 			help
 			exit 1
 		fi
@@ -112,7 +112,7 @@ Joining"
 for m in $mcast_ips; do
 	smcroute -j $IFACE $m
 	if netstat -ng | grep -q "$IFACE.*$m"; then
-		echo "$m"
+		echo "$m OK"
 	else
 		echo "Can't joint $m"
 	fi
