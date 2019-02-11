@@ -11,6 +11,7 @@ export LANG=en_US.utf8 \
     FDKAAC_VERSION=0.1.4 \
     YASM_VERSION=1.3.0 \
     NASM_VERSION=2.13.02 \
+    SMCROUTE_VERSION=2.4.3 \
     PREFIX=/usr/local \
     PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig \
     MAKEFLAGS="-j$[$(nproc) + 1]"
@@ -141,6 +142,21 @@ install_ffmpeg()
     rm -rf $DIR
 }
 
+install_smcroute()
+{
+    echo "Installing smcroute"
+    DIR=$(mktemp -d)
+    cd $DIR/
+    wget https://github.com/troglobit/smcroute/releases/download/2.4.3/smcroute-$SMCROUTE_VERSION.tar.gz
+    cd smcroute-$SMCROUTE_VERSION
+    ./autogen.sh
+    ./configure
+    make
+    make install
+    make distclean
+    rm -rf $DIR
+}
+
 install_server()
 {
     echo "Installing mkvserver"
@@ -163,4 +179,5 @@ install_all()
     install_fdkaac
     install_ffmpeg
     install_server
+    install_smcroute
 }

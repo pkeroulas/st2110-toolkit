@@ -244,7 +244,7 @@ The 40 essences are ordered this way:
 * separate NIC setup from network setup
 * transcoder: add script for GPU/CUDA setup
 * document Mellanox NIC installation
-* tcpdump without sudo:
+* tcpdump and smcroute without sudo:
 
 ```
 bin=$(which tcpdump)
