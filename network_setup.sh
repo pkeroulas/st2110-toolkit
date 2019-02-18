@@ -1,7 +1,7 @@
 #!/bin/bash
 
-
 SCRIPT=$(basename $0)
+ST2110_CONF_FILE=/etc/st2110.conf
 
 usage (){
     echo -e "$SCRIPT create routes to accept multicast traffic on a
@@ -61,7 +61,6 @@ fi
 echo "$iface: OK"
 
 # save interface
-ST2110_CONF_FILE=/etc/st2110.conf
 if [ ! -f $ST2110_CONF_FILE ]; then
     echo "IFACE=$iface" > $ST2110_CONF_FILE
 elif grep -q -v "IFACE=.*" $ST2110_CONF_FILE; then

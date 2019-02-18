@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # default param
-DURATION=10 # in sec
-IFACE=eth0 # media interface if not set in /etc/st2110.conf
+CAPTURE_DURATION=10 # in sec
+ST2110_CONF_FILE=/etc/st2110.conf
+IFACE=eth0
 
 # const
 CAPTURE=tmp.pcap
@@ -28,6 +29,12 @@ if [ -z $1 ]; then
 	help
 	exit 1
 fi
+
+#  override params with possibly existing conf file
+if [ -f $ST2110_CONF_FILE ]; then
+	source $ST2110_CONF_FILE
+fi
+
 cmd=$1
 shift
 
@@ -68,7 +75,7 @@ case $cmd in
 		fi
 
 		mcast_ips=$1
-		DURATION=$2
+		CAPTURE_DURATION=$2
 		source_ip="unknown"
 		;;
 	*)
@@ -78,11 +85,6 @@ case $cmd in
 esac
 
 echo "------------------------------------------"
-
-ST2110_CONF_FILE=/etc/st2110.conf
-if [ -f $ST2110_CONF_FILE ]; then
-	source $ST2110_CONF_FILE
-fi
 
 if [ ! -d /sys/class/net/$IFACE ]; then
 	echo "$IFACE doesn't exist, exit."
@@ -121,10 +123,21 @@ done
 echo "------------------------------------------
 Capturing"
 
-tcpdump -vvv -j adapter_unsynced -i $IFACE -n "multicast" -c $MAX_COUNT -w $CAPTURE &
+if [ $CAPTURE_TRUNCATE = "yes" ]; then
+	TCPDUMP_OPTIONS="--snapshot-length=100"
+fi
+
+tcpdump -vvv \
+	$TCPDUMP_OPTIONS \
+	-j adapter_unsynced \
+	-i $IFACE \
+	-n "multicast" \
+	-c $MAX_COUNT \
+	-w $CAPTURE \
+	&
 tcpdump_pid=$!
 
-for i in $(seq $DURATION); do
+for i in $(seq $CAPTURE_DURATION); do
 	echo "$i sec ..."
 	sleep 1
 done

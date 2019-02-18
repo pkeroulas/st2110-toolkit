@@ -30,8 +30,14 @@ $ ./install.sh install_ffmpeg
 
 ## Setup
 
-The capture can work with a config file for easy use, and on the other
-hand, the transcoder (FFmpeg) needs an SDP file for stream description.
+Both capture and transcoder scripts have default parameters but they can
+be overriden by a config filecan to be installed as `/etc/st2110.conf`.
+See the sample in `./config/`.
+
+## SDP file as an input
+
+ST2110 senders, like Embrionix encap, should provide an SDP file to
+describe every produced essences, i.e. RTP streams.
 
 A python script grabs SDP from Embrionix encapsulator given its unicast
 address. The result is a SDP file which contains info for the 1st video,
@@ -91,8 +97,8 @@ $ sudo ./network_setup.sh eth0 sdp.file
 
 ## Transcode
 
-Use ./transcode.sh to start the transcoding from one or multiple SDP
-files:
+Use ./transcode.sh to start the transcoding service in back ground from
+one or multiple SDP files, then show logs and, finally stop the service.
 
 ```sh
 $ ./transcoder.sh help
@@ -110,6 +116,9 @@ $ ./transcoder.sh stop
 
 If error message is returned, look at the actual ffmpeg command line at
 the begining of the log file or see 'Troubleshoot' section below.
+
+Additional params can be set in the conf file, i.e. `/etc/st2110.conf`.
+See sample `./config/st2110.conf` for details.
 
 On a monitoring host:
 
@@ -176,7 +185,8 @@ Device 0: "Quadro P4000"
 
 ## Capture
 
-Create a pcap given a SDP file and using default interface.
+If you already have an SDP file, it can be used as an input for the
+capture script which parses every RTP streams.
 
 ```sh
 $ sudo ./capture.sh help
@@ -189,6 +199,10 @@ Or manually select any multicast group:
 ```sh
 $ sudo ./capture.sh manual 239.0.0.15 2
 ```
+
+Additional params (capture duration, truncate) can be set in the conf
+file, i.e. `/etc/st2110.conf`. See sample `./config/st2110.conf` for
+details.
 
 ## Troubleshoot
 
