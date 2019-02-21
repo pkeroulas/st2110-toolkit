@@ -21,7 +21,12 @@ start_list()
     # capturing host. https://github.com/ebu/pi-list
     # TODO: verify that LIST is installed before
     logger "Start EBU LIST server."
-    su $LIST_USER -c "cd /home/$LIST_USER/LIST/release && ./start.sh"
+
+    # start either native or dockerized LIST
+    cd /home/$LIST_USER/LIST-native/
+    su $LIST_USER -c "tmux new-session -d -s list ./startup_server_live.sh"
+
+    # su $LIST_USER -c "cd /home/$LIST_USER/LIST/release && ./start.sh"
 }
 
 stop_list()

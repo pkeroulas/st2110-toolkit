@@ -39,6 +39,7 @@ install_common_tools()
         smcroute \
         tar \
         tcpdump \
+        tmux \
         wget \
         which \
         zlib-devel
