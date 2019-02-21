@@ -57,12 +57,25 @@ def main():
         return
 
     sdp_filtered=""
+    got_description = False
     # Let's keep the 1st video, audio and anc sections
     # See README.md:'Embrionix flows' for details
     sdp_indexes = [0, 2, 18]
     for s in sdp_indexes:
         url = get_sdp_url(ip_address) + str(sdp_list[s])
-        sdp_filtered += get_from_url(url)+'\r\n'
+        sdp = str(get_from_url(url)+'\n')
+
+        if not got_description:
+            # 1st flow: keep description but add a separator
+            expr = re.compile(r'(^t=.*\n)', re.MULTILINE)
+            sdp = re.sub(expr, r'\1\n', sdp)
+        else:
+            # other flows: skip description
+            expr = re.compile(r'^o=.*\n|^v=.*\n|s=.*\n|t=.*\n', re.MULTILINE)
+            sdp = re.sub(expr, '', sdp)
+
+        sdp_filtered += sdp
+        got_description = True
 
     write_sdp_file(sdp_filtered)
 

@@ -142,8 +142,6 @@ $ sudo /etc/init.d/smcroute restart
 
 ## Todos
 
-* sdp: filter essence properly or at least document structure
-* sdp: correct syntax by keeping one "o=", "v=", "t=", "s="
 * install: make it work for Debian
 * separate NIC setup from network setup
 * transcoder: add script for GPU/CUDA setup
