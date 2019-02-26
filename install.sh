@@ -149,6 +149,7 @@ install_smcroute()
     DIR=$(mktemp -d)
     cd $DIR/
     wget https://github.com/troglobit/smcroute/releases/download/2.4.3/smcroute-$SMCROUTE_VERSION.tar.gz
+    tar xaf smcroute-$SMCROUTE_VERSION.tar.gz
     cd smcroute-$SMCROUTE_VERSION
     ./autogen.sh
     ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
