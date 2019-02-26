@@ -159,18 +159,6 @@ install_smcroute()
     rm -rf $DIR
 }
 
-install_server()
-{
-    echo "Installing mkvserver"
-    DIR=$(mktemp -d)
-    cd $DIR/
-    git clone https://github.com/klaxa/mkvserver_mk2.git
-    cd mkvserver_mk2
-    make
-    cp ./server ${PREFIX}/bin/mkvserver
-    rm -rf $DIR
-}
-
 install_all()
 {
     install_common_tools
@@ -180,6 +168,5 @@ install_all()
     install_x264
     install_fdkaac
     install_ffmpeg
-    install_server
     install_smcroute
 }

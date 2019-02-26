@@ -1,7 +1,6 @@
 #!/bin/sh
 
 FFMPEG=ffmpeg
-SERVER=mkvserver
 LOG=/tmp/ffmpeg.log
 DIR=$(dirname $0)
 SCRIPT=$(basename $0)
@@ -9,12 +8,6 @@ SCRIPT=$(basename $0)
 if ! which $FFMPEG > /dev/null 2>&1
 then
 	echo "$FFMPEG is not installed, see install.sh"
-	exit -1
-fi
-
-if ! which $SERVER > /dev/null 2>&1
-then
-	echo "$SERVER is not installed, see install.sh"
 	exit -1
 fi
 
@@ -39,6 +32,9 @@ FFMPEG_SOFT_ENCODE_OPTIONS="libx264 -preset ultrafast -pass 1"
 FFMPEG_GPU_SCALE_OPTIONS="format=yuv420p,hwupload_cuda,scale_npp=w=1080:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
 FFMPEG_GPU_ENCODE_OPTIONS="h264_nvenc -preset slow -cq 10 -bf 2 -g 150"
 
+TRANSCODER_DST_IP=10.177.45.127
+TRANSCODER_DST_PORT=5000
+
 start() {
 	sdp=$1
 	echo "Transcoding from $sdp"
@@ -46,7 +42,7 @@ start() {
 	# input buffer size: maximum value permitted by setsockopt
 	buffer_size=671088640
 	fifo_size=1000000000
-	proxy_port=500$2
+    dst_port=$(($TRANSCODER_DST_PORT+$2))
 
 	if [ $3 = "soft" ]; then
 		scale_option=$FFMPEG_SOFT_SCALE_OPTIONS
@@ -71,12 +67,11 @@ start() {
 		-vf yadif=0:-1:0,$scale_option \
 		-c:v $encode_option \
 		-c:a libfdk_aac -ac 2 \
-		-f mpegts udp://localhost:$proxy_port \
+		-f mpegts udp://$TRANSCODER_DST_IP:$dst_port \
 		> /dev/null 2> /dev/null \
 		&
 
-	nc -l -p $proxy_port | $SERVER > /dev/null &
-	echo "Stream available on port 8080 (harcoded in $SERVER)"
+	echo "Stream available to $TRANSCODER_DST_IP:$dst_port"
 }
 
 cmd=$1
@@ -122,8 +117,6 @@ case $cmd in
 	stop)
 		echo "==================== Stop $(date) ===================="
 		killall $FFMPEG
-		killall $SERVER
-		killall nc
 		;;
 	log)
 		tail -n 500 -f $LOG
