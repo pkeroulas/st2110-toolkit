@@ -69,8 +69,6 @@ else
     sed -i 's/\(IFACE=\).*/\1'$iface'/' $ST2110_CONF_FILE
 fi
 
-exit
-
 echo "-------------------------------------------"
 echo "Local info:"
 # join multicast groups through the media gateway
@@ -93,7 +91,7 @@ fi
 # The unicast IP of the source should be accessible through the gateway.
 # This is necessary for the reverse path resolution of the source in
 # order to accept traffic. Let's find source and media info in the SDP.
-source_ip="$(sed -n 's/^o=.*IN IP4 \(.*\)$/\1/p' $sdp_file | head -1)"
+source_ip="$(sed -n 's/^o=.*IN IP4 \(.*\)$/\1/p' $sdp_file | sed 's/\r//')"
 multicast_groups=$(sed -n 's/^a=.*IN IP4 \(.*\) .*$/\1/p' $sdp_file)
 
 echo "-------------------------------------------"
@@ -108,8 +106,17 @@ fi
 
 # ip route add $subnet/$cidr via $gateway dev $iface
 if ! ping -W 1 -I $iface -c 1 -q $source_ip > /dev/null; then
-    echo "Couln't ping source @ $source_ip, exit."
-    exit 1
+    echo "Couln't ping source @ $source_ip, add a  route to source"
+    ip route add $source_ip via $gateway dev $iface
+
+    # disable reverse path filtering, useless if explicit route is added"
+    # sysctl -w net.ipv4.conf.all.rp_filter=0
+    # sysctl -w net.ipv4.conf.$iface.rp_filter=0
+
+    if ! ping -W 1 -I $iface -c 1 -q $source_ip > /dev/null; then
+        echo "Couln't ping source @ $source_ip, exit."
+        exit 1
+    fi
 fi
 
 for gr in $multicast_groups;do
@@ -130,10 +137,6 @@ else
     iptables -I INPUT 1 -d 224.0.0.0/4 -j ACCEPT
     echo "Add a rule in firewall to allow incoming multicast"
 fi
-
-# disable reverse path filtering, not necessary if reverse path are already routed
-# sysctl -w net.ipv4.conf.all.rp_filter=0
-# sysctl -w net.ipv4.conf.$iface.rp_filter=0
 
 echo "-------------------------------------------"
 echo "Setup input buffer:"

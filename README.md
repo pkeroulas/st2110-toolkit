@@ -123,6 +123,7 @@ Find your live media interface name and execute:
 
 ```sh
 $ sudo ./network_setup.sh eth0 file.sdp
+[...]
 ```
 
 You can validate that the multicast IGMP group is joined and that data
@@ -131,7 +132,10 @@ is received thanks to the socket reader:
 ```sh
 $ gcc -o socket_reader -std=c99 socket_reader.c
 $./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
+[...]
 ```
+
+Note that in certain setup, the initial join may take several second.
 
 When capturing, if `smcroute` returns this error, restart the daemon:
 
