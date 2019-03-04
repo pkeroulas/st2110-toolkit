@@ -4,6 +4,7 @@ FFMPEG=$(which ffmpeg)
 LOG=/tmp/ffmpeg.log
 DIR=$(dirname $0)
 SCRIPT=$(basename $0)
+ST2110_CONF_FILE=/etc/st2110.conf
 
 if ! which $FFMPEG > /dev/null 2>&1
 then
@@ -26,6 +27,7 @@ Usage:
 \t$SCRIPT stop"
 }
 
+# video
 FFMPEG_SOFT_SCALE_OPTIONS="scale=1280:720"
 # Sunday recommendation for IPTV
 #FFMPEG_SOFT_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
@@ -38,11 +40,19 @@ FFMPEG_SOFT_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
 	-x264-params b-pyramid=1 \
 	-g 30 -keyint_min 16 -pass 1 -refs 6"
 
+# audio
 FFMPEG_GPU_SCALE_OPTIONS="format=yuv420p,hwupload_cuda,scale_npp=w=1280:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
 FFMPEG_GPU_VIDEO_ENCODE_OPTIONS="-c:v h264_nvenc -preset slow -cq 10 -bf 2 -g 150"
 
-TRANSCODER_DST_IP=10.177.45.127
+# output
+TRANSCODER_DST_IP=localhost
 TRANSCODER_DST_PORT=5000
+TRANSCODER_DST_PKT_SIZE=1492
+
+#  override params with possibly existing conf file
+if [ -f $ST2110_CONF_FILE ]; then
+	source $ST2110_CONF_FILE
+fi
 
 start() {
 	sdp=$1
@@ -51,6 +61,8 @@ start() {
 	# input buffer size: maximum value permitted by setsockopt
 	buffer_size=671088640
 	fifo_size=1000000000
+
+	# increment port num for each output
     dst_port=$(($TRANSCODER_DST_PORT+$2))
 
 	if [ $3 = "soft" ]; then
@@ -77,7 +89,7 @@ start() {
 		-vf yadif=0:-1:0,$scale_option \
 		$video_encode_option \
 		-c:a libfdk_aac -ac 2 -b:a 128k \
-		-f mpegts udp://$TRANSCODER_DST_IP:$dst_port?pkt_size=1316 \
+		-f mpegts udp://$TRANSCODER_DST_IP:$dst_port?pkt_size=$TRANSCODER_DST_PKT_SIZE \
 	"
 
 	echo "$cmd" | sed 's/\t//g'
