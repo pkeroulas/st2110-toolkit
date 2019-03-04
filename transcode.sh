@@ -22,19 +22,19 @@ same destination but with different ports.
 Usage:
 \t$SCRIPT help
 \t$SCRIPT setup <interface_name> <sdp_file>
-\t$SCRIPT start [--soft|--gpu] <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
+\t$SCRIPT start [--cpu|--gpu] <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
 \t$SCRIPT log
 \t$SCRIPT stop"
 }
 
 # video
-FFMPEG_SOFT_SCALE_OPTIONS="scale=1280:720"
+FFMPEG_CPu_SCALE_OPTIONS="scale=1280:720"
 # Sunday recommendation for IPTV
-#FFMPEG_SOFT_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
+#FFMPEG_CPu_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
 #	-c:v libx264 -profile:v main -preset fast -level:v 3.1 \
 #	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
 #	-g 30 -keyint_min 16 -b-pyramid""
-FFMPEG_SOFT_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
+FFMPEG_CPu_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
 	-c:v libx264 -profile:v main -preset fast -level:v 3.1 \
 	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
 	-x264-params b-pyramid=1 \
@@ -70,9 +70,9 @@ start() {
 	# increment port num for each output
     dst_port=$(($TRANSCODER_DST_PORT+$2))
 
-	if [ $3 = "soft" ]; then
-		scale_option=$FFMPEG_SOFT_SCALE_OPTIONS
-		video_encode_option=$FFMPEG_SOFT_VIDEO_ENCODE_OPTIONS
+	if [ $3 = "cpu" ]; then
+		scale_option=$FFMPEG_CPu_SCALE_OPTIONS
+		video_encode_option=$FFMPEG_CPu_VIDEO_ENCODE_OPTIONS
 	elif [ $3 = "gpu" ]; then
 		scale_option=$FFMPEG_GPU_SCALE_OPTIONS
 		video_encode_option=$FFMPEG_GPU_VIDEO_ENCODE_OPTIONS
@@ -129,11 +129,11 @@ case $cmd in
 		if [ $1 = "--gpu" ]; then
 			encode="gpu"
 			shift
-		elif [ $1 = "--soft" ]; then
-			encode="soft"
+		elif [ $1 = "--cpu" ]; then
+			encode="cpu"
 			shift
 		else
-			encode="soft"
+			encode="cpu"
 		fi
 
 		echo "==================== Start $(date) ===================="
