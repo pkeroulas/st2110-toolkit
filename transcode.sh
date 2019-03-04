@@ -42,7 +42,12 @@ FFMPEG_SOFT_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
 
 # audio
 FFMPEG_GPU_SCALE_OPTIONS="format=yuv420p,hwupload_cuda,scale_npp=w=1280:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
-FFMPEG_GPU_VIDEO_ENCODE_OPTIONS="-c:v h264_nvenc -preset slow -cq 10 -bf 2 -g 150"
+FFMPEG_GPU_VIDEO_ENCODE_OPTIONS=" \
+	-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main -level:v 4.1 \
+	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
+	-g 30 -keyint_min 16 -pass 1 -refs 6"
+# cbr doesn't work. measure=1-10Mbps
+# -level 3.1 not accepted
 
 # output
 TRANSCODER_DST_IP=localhost
