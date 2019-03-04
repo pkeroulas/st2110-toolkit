@@ -1,6 +1,6 @@
 #!/bin/sh
 
-FFMPEG=ffmpeg
+FFMPEG=$(which ffmpeg)
 LOG=/tmp/ffmpeg.log
 DIR=$(dirname $0)
 SCRIPT=$(basename $0)
@@ -27,10 +27,19 @@ Usage:
 }
 
 FFMPEG_SOFT_SCALE_OPTIONS="scale=1280:720"
-FFMPEG_SOFT_ENCODE_OPTIONS="libx264 -preset ultrafast -pass 1"
+# Sunday recommendation for IPTV
+#FFMPEG_SOFT_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
+#	-c:v libx264 -profile:v main -preset fast -level:v 3.1 \
+#	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
+#	-g 30 -keyint_min 16 -b-pyramid""
+FFMPEG_SOFT_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
+	-c:v libx264 -profile:v main -preset fast -level:v 3.1 \
+	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
+	-x264-params b-pyramid=1 \
+	-g 30 -keyint_min 16 -pass 1 -refs 6"
 
-FFMPEG_GPU_SCALE_OPTIONS="format=yuv420p,hwupload_cuda,scale_npp=w=1080:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
-FFMPEG_GPU_ENCODE_OPTIONS="h264_nvenc -preset slow -cq 10 -bf 2 -g 150"
+FFMPEG_GPU_SCALE_OPTIONS="format=yuv420p,hwupload_cuda,scale_npp=w=1280:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
+FFMPEG_GPU_VIDEO_ENCODE_OPTIONS="-c:v h264_nvenc -preset slow -cq 10 -bf 2 -g 150"
 
 TRANSCODER_DST_IP=10.177.45.127
 TRANSCODER_DST_PORT=5000
@@ -46,30 +55,33 @@ start() {
 
 	if [ $3 = "soft" ]; then
 		scale_option=$FFMPEG_SOFT_SCALE_OPTIONS
-		encode_option=$FFMPEG_SOFT_ENCODE_OPTIONS
+		video_encode_option=$FFMPEG_SOFT_VIDEO_ENCODE_OPTIONS
 	elif [ $3 = "gpu" ]; then
 		scale_option=$FFMPEG_GPU_SCALE_OPTIONS
-		encode_option=$FFMPEG_GPU_ENCODE_OPTIONS
+		video_encode_option=$FFMPEG_GPU_VIDEO_ENCODE_OPTIONS
 	else
 		echo "Encoding not supported: $3"
 		return 1
 	fi
 	echo "Scaling and encoding is $3."
 
-	FFREPORT=file=$LOG:level=48 \
-	$FFMPEG \
+	cmd="$FFMPEG \
+		-loglevel 48 \
 		-strict experimental \
 		-threads 2 \
 		-buffer_size $buffer_size \
-		-protocol_whitelist 'file,udp,rtp' \
-		-i $sdp -fifo_size $fifo_size \
+		-protocol_whitelist file,udp,rtp \
+		-i $sdp \
+		-fifo_size $fifo_size \
 		-smpte2110_timestamp 1 \
 		-vf yadif=0:-1:0,$scale_option \
-		-c:v $encode_option \
-		-c:a libfdk_aac -ac 2 \
-		-f mpegts udp://$TRANSCODER_DST_IP:$dst_port \
-		> /dev/null 2> /dev/null \
-		&
+		$video_encode_option \
+		-c:a libfdk_aac -ac 2 -b:a 128k \
+		-f mpegts udp://$TRANSCODER_DST_IP:$dst_port?pkt_size=1316 \
+	"
+
+	echo "$cmd" | sed 's/\t//g'
+	tmux new-session -d -s transcoder "$cmd ; sleep 100"
 
 	echo "Stream available to $TRANSCODER_DST_IP:$dst_port"
 }
@@ -117,9 +129,13 @@ case $cmd in
 	stop)
 		echo "==================== Stop $(date) ===================="
 		killall $FFMPEG
+		tmux kill-session -t transcoder
 		;;
 	log)
-		tail -n 500 -f $LOG
+		tmux attach -t transcoder
+		;;
+	monitor)
+		glances
 		;;
 	*)
 		help

@@ -150,6 +150,9 @@ $ sudo /etc/init.d/smcroute restart
 * separate NIC setup from network setup
 * transcoder: add script for GPU/CUDA setup
 * document Mellanox NIC installation
+* transcoder: make audio codec configurable
+* transcoder: bump ffmpeg
+* transcoder: test multiple outputs
 * tcpdump and smcroute without sudo:
 
 ```
