@@ -20,11 +20,15 @@ stream, re-encodes it to h264. All the streams are redirected to the
 same destination but with different ports.
 
 Usage:
-\t$SCRIPT help
+\t$SCRIPT help      # show this message
+\t$SCRIPT log       # show live ffmpeg output
+\t$SCRIPT monitor   # show resource usage
 \t$SCRIPT setup <interface_name> <sdp_file>
+\t                  # generate conf from sdp and interface
 \t$SCRIPT start [--cpu|--gpu] <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
-\t$SCRIPT log
-\t$SCRIPT stop"
+\t                  # start ffmpeg instances
+\t$SCRIPT stop      # stop ffmpeg instances
+"
 }
 
 # video
@@ -48,6 +52,7 @@ FFMPEG_GPU_VIDEO_ENCODE_OPTIONS=" \
 	-g 30 -keyint_min 16 -pass 1 -refs 6"
 # cbr doesn't work. measure=1-10Mbps
 # -level 3.1 not accepted
+# 35% cpu, 21% mem, stable
 
 # output
 TRANSCODER_DST_IP=localhost
@@ -61,6 +66,7 @@ fi
 
 start() {
 	sdp=$1
+	id=$2
 	echo "Transcoding from $sdp"
 
 	# input buffer size: maximum value permitted by setsockopt
@@ -68,7 +74,7 @@ start() {
 	fifo_size=1000000000
 
 	# increment port num for each output
-    dst_port=$(($TRANSCODER_DST_PORT+$2))
+	dst_port=$(($TRANSCODER_DST_PORT+$id))
 
 	if [ $3 = "cpu" ]; then
 		scale_option=$FFMPEG_CPu_SCALE_OPTIONS
@@ -83,7 +89,7 @@ start() {
 	echo "Scaling and encoding is $3."
 
 	cmd="$FFMPEG \
-		-loglevel 48 \
+		-loglevel debug \
 		-strict experimental \
 		-threads 2 \
 		-buffer_size $buffer_size \
@@ -98,7 +104,7 @@ start() {
 	"
 
 	echo "$cmd" | sed 's/\t//g'
-	tmux new-session -d -s transcoder "$cmd ; sleep 100"
+	tmux new-session -d -s transcoder "$cmd 2>&1 | tee "$LOG"; sleep 100"
 
 	echo "Stream available to $TRANSCODER_DST_IP:$dst_port"
 }
@@ -136,7 +142,7 @@ case $cmd in
 			encode="cpu"
 		fi
 
-		echo "==================== Start $(date) ===================="
+		echo "==================== Start $(date) ====================" | tee $LOG
 		i=0
 		for sdp in $@; do
 			start $sdp $i $encode
@@ -144,12 +150,17 @@ case $cmd in
 		done
 		;;
 	stop)
-		echo "==================== Stop $(date) ===================="
 		killall $FFMPEG
 		tmux kill-session -t transcoder
+		echo "==================== Stop $(date) ====================" | tee $LOG
+		# cleanup log file
+		sed -i -e 's///g' $LOG
 		;;
 	log)
 		tmux attach -t transcoder
+		if [ ! $? -eq 0 ]; then
+			tail -100 $LOG
+		fi
 		;;
 	monitor)
 		glances
