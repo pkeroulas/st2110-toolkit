@@ -130,8 +130,9 @@ You can validate that the multicast IGMP group is joined and that data
 is received thanks to the socket reader:
 
 ```sh
+$ cd misc/
 $ gcc -o socket_reader -std=c99 socket_reader.c
-$./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
+$ ./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 [...]
 ```
 
