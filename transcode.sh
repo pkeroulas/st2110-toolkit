@@ -24,9 +24,9 @@ Usage:
 \t$SCRIPT log       # show live ffmpeg output
 \t$SCRIPT monitor   # show resource usage
 \t$SCRIPT setup <interface_name> <sdp_file>
-\t                  # generate conf from sdp and interface
-\t$SCRIPT start [--cpu|--gpu] <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
-\t                  # start ffmpeg instances
+\t\t                  # generate conf from sdp and interface
+\t$SCRIPT start [-e <cpu|gpu>] <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
+\t\t                  # start ffmpeg instances
 \t$SCRIPT stop      # stop ffmpeg instances
 "
 }
@@ -133,15 +133,20 @@ case $cmd in
 			exit 1
 		fi
 
-		if [ $1 = "--gpu" ]; then
-			encode="gpu"
-			shift
-		elif [ $1 = "--cpu" ]; then
-			encode="cpu"
-			shift
-		else
-			encode="cpu"
-		fi
+		# parse options
+		encode=cpu
+		while getopts ":e:" o; do
+			case "${o}" in
+				e)
+					encode=${OPTARG}
+					;;
+				*)
+					help
+					exit 1
+					;;
+			esac
+		done
+		shift $((OPTIND-1))
 
 		echo "==================== Start $(date) ====================" | tee $LOG
 		i=0
