@@ -31,6 +31,11 @@ Usage:
 "
 }
 
+TRANSCODER_LOGLEVEL=debug
+# input buffer size: maximum value permitted by setsockopt
+TRANSCODER_BUFFER_SIZE=671088640
+TRANSCODER_FIFO_SIZE=1000000000
+
 # video
 TRANSCODER_VIDEO_CPU_SCALE_OPTIONS="scale=1280:720"
 # Sunday recommendation for IPTV
@@ -75,10 +80,6 @@ start() {
 	audio=$4
 	echo "Transcoding from $sdp"
 
-	# input buffer size: maximum value permitted by setsockopt
-	buffer_size=671088640
-	fifo_size=1000000000
-
 	# increment port num for each output
 	dst_port=$(($TRANSCODER_DST_PORT+$id))
 
@@ -105,13 +106,13 @@ start() {
 	echo "Audio codec is $audio."
 
 	cmd="$FFMPEG \
-		-loglevel debug \
+		-loglevel $TRANSCODER_LOGLEVEL \
 		-strict experimental \
 		-threads 2 \
-		-buffer_size $buffer_size \
+		-buffer_size $TRANSCODER_BUFFER_SIZE \
 		-protocol_whitelist file,udp,rtp \
 		-i $sdp \
-		-fifo_size $fifo_size \
+		-fifo_size $TRANSCODER_FIFO_SIZE \
 		-smpte2110_timestamp 1 \
 		-vf yadif=0:-1:0,$video_scale_options \
 		$video_encode_options \

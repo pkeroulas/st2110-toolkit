@@ -82,15 +82,16 @@ $ ./transcoder.sh stop
 ```
 
 If error message is returned, look at the actual ffmpeg command line at
-the begining of the log file or see 'Troubleshoot' section below.
+the beginning of the log file or see 'Troubleshoot' section below.
 
-Additional params can be set in the conf file, i.e. `/etc/st2110.conf`.
-See sample `./config/st2110.conf` for details.
+Script constants, like destination IP, can be overridden by conf file,
+i.e. `/etc/st2110.conf`. See sample `./config/st2110.conf` for details.
 
 On a monitoring host:
 
 ```sh
-$ ffplay <transcoder_IP>:8080
+$ ffplay udp://@0.0.0.0:5000
+$ vlc --network-caching 4000  udp://@0.0.0.0:5000
 ```
 
 ## Hardware acceleration for transcoding
