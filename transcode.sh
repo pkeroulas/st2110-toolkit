@@ -105,8 +105,9 @@ start() {
 
 	echo "$cmd" | sed 's/\t//g'
 	tmux new-session -d -s transcoder "$cmd 2>&1 | tee "$LOG"; sleep 100"
-
-	echo "Stream available to $TRANSCODER_DST_IP:$dst_port"
+	if [ $? -eq 0 ]; then
+		echo "Stream available to $TRANSCODER_DST_IP:$dst_port"
+	fi
 }
 
 cmd=$1
@@ -150,7 +151,7 @@ case $cmd in
 		done
 		;;
 	stop)
-		killall $FFMPEG
+		killall -INT $(basename $FFMPEG)
 		tmux kill-session -t transcoder
 		echo "==================== Stop $(date) ====================" | tee $LOG
 		# cleanup log file
