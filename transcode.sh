@@ -25,7 +25,7 @@ Usage:
 \t$SCRIPT monitor   # show resource usage
 \t$SCRIPT setup <interface_name> <sdp_file>
 \t\t                  # generate conf from sdp and interface
-\t$SCRIPT start [-e <cpu|gpu>] <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
+\t$SCRIPT start [-e <cpu|gpu>] [-a <aac|ac3>] <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
 \t\t                  # start ffmpeg instances
 \t$SCRIPT stop      # stop ffmpeg instances
 "
@@ -54,6 +54,10 @@ TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS=" \
 # -level 3.1 not accepted
 # 35% cpu, 21% mem, stable
 
+# audio
+TRANSCODER_AUDIO_ENCODE_AC3="-c:a ac3 -ac 6 -b:a 340k"
+TRANSCODER_AUDIO_ENCODE_AAC="-c:a libfdk_aac -ac 2 -b:a 128k"
+
 # output
 TRANSCODER_DST_IP=localhost
 TRANSCODER_DST_PORT=5000
@@ -67,6 +71,8 @@ fi
 start() {
 	sdp=$1
 	id=$2
+	encode=$3
+	audio=$4
 	echo "Transcoding from $sdp"
 
 	# input buffer size: maximum value permitted by setsockopt
@@ -76,17 +82,27 @@ start() {
 	# increment port num for each output
 	dst_port=$(($TRANSCODER_DST_PORT+$id))
 
-	if [ $3 = "cpu" ]; then
+	if [ $encode = "cpu" ]; then
 		video_scale_options=$TRANSCODER_VIDEO_CPU_SCALE_OPTIONS
 		video_encode_options=$TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS
-	elif [ $3 = "gpu" ]; then
+	elif [ $encode = "gpu" ]; then
 		video_scale_options=$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS
 		video_encode_options=$TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS
 	else
-		echo "Encoding not supported: $3"
+		echo "Encoding not supported: $encode"
 		return 1
 	fi
-	echo "Scaling and encoding is $3."
+	echo "Scaling and encoding is $encode."
+
+	if [ $audio = "aac" ]; then
+		audio_encode_options=$TRANSCODER_AUDIO_ENCODE_AAC
+	elif [ $audio = "ac3" ]; then
+		audio_encode_options=$TRANSCODER_AUDIO_ENCODE_AAC
+	else
+		echo "Audio codec not supported: $audio"
+		return 1
+	fi
+	echo "Audio codec is $audio."
 
 	cmd="$FFMPEG \
 		-loglevel debug \
@@ -99,11 +115,12 @@ start() {
 		-smpte2110_timestamp 1 \
 		-vf yadif=0:-1:0,$video_scale_options \
 		$video_encode_options \
-		-c:a libfdk_aac -ac 2 -b:a 128k \
-		-f mpegts udp://$TRANSCODER_DST_IP:$dst_port?pkt_size=$TRANSCODER_DST_PKT_SIZE \
+		$audio_encode_options \
+		-f mpegts \
+		udp://$TRANSCODER_DST_IP:$dst_port?pkt_size=$TRANSCODER_DST_PKT_SIZE \
 	"
 
-	echo "$cmd" | sed 's/\t//g'
+	echo "Command:\n$cmd" | sed 's/\t//g'
 	tmux new-session -d -s transcoder "$cmd 2>&1 | tee "$LOG"; sleep 100"
 	if [ $? -eq 0 ]; then
 		echo "Stream available to $TRANSCODER_DST_IP:$dst_port"
@@ -135,10 +152,14 @@ case $cmd in
 
 		# parse options
 		encode=cpu
-		while getopts ":e:" o; do
+		audio=aac
+		while getopts ":e:a:" o; do
 			case "${o}" in
 				e)
 					encode=${OPTARG}
+					;;
+				a)
+					audio=${OPTARG}
 					;;
 				*)
 					help
@@ -151,7 +172,7 @@ case $cmd in
 		echo "==================== Start $(date) ====================" | tee $LOG
 		i=0
 		for sdp in $@; do
-			start $sdp $i $encode
+			start $sdp $i $encode $audio
 			i=$((i+1))
 		done
 		;;

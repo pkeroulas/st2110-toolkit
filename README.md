@@ -72,8 +72,9 @@ $ ./transcoder.sh help
 $ ./transcoder.sh start file.sdp
 ==================== Start ... ====================
 Transcoding from file.sdp
-Scaling and encoding: soft.
-Stream available on port 8080 (harcoded in mkserver)
+Scaling and encoding: cpu.
+Audio codec is aac.
+[...]
 $ ./transcoder.sh log
 [...]
 $ ./transcoder.sh stop
