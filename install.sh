@@ -13,8 +13,9 @@ export LANG=en_US.utf8 \
     NASM_VERSION=2.13.02 \
     SMCROUTE_VERSION=2.4.3 \
     PREFIX=/usr/local \
-    PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig \
     MAKEFLAGS="-j$[$(nproc) + 1]"
+
+export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig \
 
 echo "${PREFIX}/lib" >/etc/ld.so.conf.d/libc.conf
 
@@ -122,9 +123,6 @@ install_ffmpeg()
     git clone https://github.com/cbcrc/FFmpeg.git
     cd FFmpeg
     git checkout SMPTE2110/master
-
-    # for some reason pkg-config path is sometimes reset
-    export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
 
     ./configure --prefix=$PREFIX \
         --extra-cflags=-I$PREFIX/include \
