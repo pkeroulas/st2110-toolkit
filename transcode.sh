@@ -32,21 +32,21 @@ Usage:
 }
 
 # video
-FFMPEG_CPu_SCALE_OPTIONS="scale=1280:720"
+TRANSCODER_VIDEO_CPU_SCALE_OPTIONS="scale=1280:720"
 # Sunday recommendation for IPTV
-#FFMPEG_CPu_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
+#TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS="-pix_fmt yuv420p \
 #	-c:v libx264 -profile:v main -preset fast -level:v 3.1 \
 #	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
 #	-g 30 -keyint_min 16 -b-pyramid""
-FFMPEG_CPu_VIDEO_ENCODE_OPTIONS="-pix_fmt yuv420p \
+TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS="-pix_fmt yuv420p \
 	-c:v libx264 -profile:v main -preset fast -level:v 3.1 \
 	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
 	-x264-params b-pyramid=1 \
 	-g 30 -keyint_min 16 -pass 1 -refs 6"
+# 48% cpu, 21% mem, stable
 
-# audio
-FFMPEG_GPU_SCALE_OPTIONS="format=yuv420p,hwupload_cuda,scale_npp=w=1280:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
-FFMPEG_GPU_VIDEO_ENCODE_OPTIONS=" \
+TRANSCODER_VIDEO_GPU_SCALE_OPTIONS="format=yuv420p,hwupload_cuda,scale_npp=w=1280:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS=" \
 	-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main -level:v 4.1 \
 	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
 	-g 30 -keyint_min 16 -pass 1 -refs 6"
@@ -77,11 +77,11 @@ start() {
 	dst_port=$(($TRANSCODER_DST_PORT+$id))
 
 	if [ $3 = "cpu" ]; then
-		scale_option=$FFMPEG_CPu_SCALE_OPTIONS
-		video_encode_option=$FFMPEG_CPu_VIDEO_ENCODE_OPTIONS
+		video_scale_options=$TRANSCODER_VIDEO_CPU_SCALE_OPTIONS
+		video_encode_options=$TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS
 	elif [ $3 = "gpu" ]; then
-		scale_option=$FFMPEG_GPU_SCALE_OPTIONS
-		video_encode_option=$FFMPEG_GPU_VIDEO_ENCODE_OPTIONS
+		video_scale_options=$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS
+		video_encode_options=$TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS
 	else
 		echo "Encoding not supported: $3"
 		return 1
@@ -97,8 +97,8 @@ start() {
 		-i $sdp \
 		-fifo_size $fifo_size \
 		-smpte2110_timestamp 1 \
-		-vf yadif=0:-1:0,$scale_option \
-		$video_encode_option \
+		-vf yadif=0:-1:0,$video_scale_options \
+		$video_encode_options \
 		-c:a libfdk_aac -ac 2 -b:a 128k \
 		-f mpegts udp://$TRANSCODER_DST_IP:$dst_port?pkt_size=$TRANSCODER_DST_PKT_SIZE \
 	"
