@@ -48,7 +48,6 @@ TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS="-pix_fmt yuv420p \
 	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
 	-x264-params b-pyramid=1 \
 	-g 30 -keyint_min 16 -pass 1 -refs 6"
-# 48% cpu, 21% mem, stable
 
 TRANSCODER_VIDEO_GPU_SCALE_OPTIONS="format=yuv420p,hwupload_cuda,scale_npp=w=1280:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
 TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS=" \
@@ -57,7 +56,6 @@ TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS=" \
 	-g 30 -keyint_min 16 -pass 1 -refs 6"
 # cbr doesn't work. measure=1-10Mbps
 # -level 3.1 not accepted
-# 35% cpu, 21% mem, stable
 
 # audio
 TRANSCODER_AUDIO_ENCODE_AC3="-c:a ac3 -ac 6 -b:a 340k"

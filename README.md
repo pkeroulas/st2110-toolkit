@@ -99,6 +99,10 @@ $ vlc --network-caching 4000  udp://@0.0.0.0:5000
 
 [Nvidia setup.](./doc/hw_encoding.md)
 
+## Transcoding performance
+
+[Measurments](./doc/transcoder_perf.md) with CPU vs GPU.
+
 ## Capture
 
 If you already have an SDP file, it can be used as an input for the
@@ -152,10 +156,7 @@ $ sudo /etc/init.d/smcroute restart
 
 * install: make it work for Debian
 * separate NIC setup from network setup
-* transcoder: add script for GPU/CUDA setup
 * document Mellanox NIC installation
-* transcoder: make audio codec configurable
-* transcoder: bump ffmpeg
 * transcoder: test multiple outputs
 * tcpdump and smcroute without sudo:
 
