@@ -40,12 +40,13 @@ ST2110 senders, like Embrionix encap, should provide an SDP file to
 describe every produced essences, i.e. RTP streams.
 
 A python script grabs SDP from Embrionix encapsulator given its unicast
-address. The result is a SDP file which contains info for the 1st video,
-audio, ancillary essences provided by the source.
-See [flow description.](./doc/embrionix.md) for more details.
+address. The result is a SDP file which contains the selected flows
+provided by the source. See [flow description.](./doc/embrionix.md) for
+more details.
 
 ```sh
-$ ./get_sdp.py <sender_IP>
+$ ./get_sdp.py <sender_IP> <flows>
+$ ./get_sdp.py 192.168.1.176 0 2 18
 [...]
 ------------------------------------------------------------------------
 SDP written to emb_encap_176.sdp

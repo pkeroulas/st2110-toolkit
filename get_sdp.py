@@ -7,11 +7,17 @@ import re
 
 def usage():
     print("""
-getsdp.py - helper script to fetch SDP file from Embrionix sender and
-\tkeep the 1st video, audio and anc essences.
+get_sdp.py - helper script to fetch SDP file from Embrionix sender and
+\tand select multiple flows.
 
 Usage:
-\tgetsdp.py <sender_ip>
+\tget_sdp.py <sender_ip> [flow indexes]
+
+examples:
+\t$ ./get_sdp.py 192.168.1.10 # keep the flows from 1 SDI input: 0-19
+\t$ ./get_sdp.py 192.168.1.10 0 2 18 # typically 1st video, 1st audio and 1st anc
+
+See flow mapping in doc/embrionix.md
 """)
 
 def get_sdp_url(ip):
@@ -26,8 +32,6 @@ def get_from_url(url):
     return sdp
 
 def write_sdp_file(sdp):
-    print("{}".format(sdp))
-
     # get last digit of sender IP
     lines = re.findall(r'o=.*', sdp)
     source_ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', lines[0])[0]
@@ -56,14 +60,18 @@ def main():
         print("Unable to parse json")
         return
 
+    if sys.argv[2:]:
+        flow_indexes = [int(i) for i in sys.argv[2:]];
+    else:
+        flow_indexes = [i for i in range(20)];
+
+    print("-" * 72)
+    print("Go fetch flows: {}".format(flow_indexes))
     sdp_filtered=""
     got_description = False
-    # Let's keep the 1st video, audio and anc sections
-    # See README.md:'Embrionix flows' for details
-    sdp_indexes = [0, 2, 18]
-    for s in sdp_indexes:
-        url = get_sdp_url(ip_address) + str(sdp_list[s])
-        sdp = str(get_from_url(url)+'\n')
+    for i in flow_indexes:
+        url = get_sdp_url(ip_address) + str(sdp_list[i])
+        sdp = str(get_from_url(url))
 
         if not got_description:
             # 1st flow: keep description but add a separator
@@ -74,6 +82,8 @@ def main():
             expr = re.compile(r'^o=.*\n|^v=.*\n|s=.*\n|t=.*\n', re.MULTILINE)
             sdp = re.sub(expr, '', sdp)
 
+        print("-" * 72)
+        print("Flow:{}\n\n{}".format(i,sdp))
         sdp_filtered += sdp
         got_description = True
 

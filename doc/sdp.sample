@@ -2,6 +2,7 @@ v=0
 o=- 1443716955 1443716955 IN IP4 172.30.64.176
 s=st2110 stream
 t=0 0
+
 m=video 20000 RTP/AVP 96
 c=IN IP4 225.16.0.16/64
 a=source-filter: incl IN IP4 225.16.0.16 172.30.64.176
@@ -10,10 +11,6 @@ a=fmtp:96 sampling=YCbCr-4:2:2; width=1920; height=1080; exactframerate=30000/10
 a=mediaclk:direct=0
 a=ts-refclk:ptp=IEEE1588-2008:00-02-c5-ff-fe-21-60-5c:127
 
-v=0
-o=- 1443716955 1443716955 IN IP4 172.30.64.176
-s=st2110 stream
-t=0 0
 m=audio 20000 RTP/AVP 97
 c=IN IP4 225.0.1.16/64
 a=source-filter: incl IN IP4 225.0.1.16 172.30.64.176
@@ -23,10 +20,6 @@ a=framecount:48
 a=ptime:1
 a=ts-refclk:ptp=IEEE1588-2008:00-02-c5-ff-fe-21-60-5c:127
 
-v=0
-o=- 1443716955 1443716955 IN IP4 172.30.64.176
-s=st2110 stream
-t=0 0
 m=video 20000 RTP/AVP 100
 c=IN IP4 225.17.0.16/64
 a=source-filter: incl IN IP4 225.17.0.16 172.30.64.176
