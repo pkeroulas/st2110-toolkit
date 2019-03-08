@@ -115,6 +115,21 @@ install_fdkaac()
     rm -rf $DIR
 }
 
+install_ffnvcodec()
+{
+    echo "Installing ffnvcodev"
+    DIR=$(mktemp -d)
+    cd $DIR/
+    git clone https://git.videolan.org/git/ffmpeg/nv-codec-headers.git
+    cd nv-codec-headers
+    make
+    make install
+    make distclean
+    rm -rf $DIR
+    # provide new option to ffmpeg
+    ffmpeg_gpu_options="--enable-cuda --enable-cuvid --enable-nvenc --enable-libnpp --extra-cflags=-I$PREFIX/cuda/include --extra-ldflags=-L$PREFIX/cuda/lib64"
+}
+
 install_ffmpeg()
 {
     echo "Installing ffmpeg"
@@ -133,6 +148,7 @@ install_ffmpeg()
         --enable-postproc --enable-avresample \
         --enable-libx264 --enable-libfdk-aac \
         --disable-ffplay --disable-ffprobe \
+        $ffmpeg_gpu_options \
         --enable-small --disable-stripping --disable-debug
 
     make
