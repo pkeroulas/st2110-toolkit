@@ -183,7 +183,9 @@ case $cmd in
 		sed -i -e 's///g' $LOG
 		;;
 	log)
-		tmux attach -t transcoder
+		# attach to tmux session, read-only, Ctrl-b + d to detach
+		# Ctrl-b + Ctrl-b + d if tmux inside tmux
+		tmux attach -r -t transcoder
 		if [ ! $? -eq 0 ]; then
 			tail -100 $LOG
 		fi
