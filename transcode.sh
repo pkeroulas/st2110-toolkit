@@ -63,17 +63,25 @@ TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS=" \
 
 # audio
 TRANSCODER_AUDIO_ENCODE_AC3="-c:a ac3 -ac 6 -b:a 340k"
-TRANSCODER_AUDIO_ENCODE_AAC="-c:a libfdk_aac -ac 2 -b:a 128k"
+TRANSCODER_AUDIO_ENCODE_AAC="-c:a libfdk_aac -ac 2 -b:a 128k -bsf:a aac_adtstoasc"
 
-# output
-TRANSCODER_DST_IP=localhost
-TRANSCODER_DST_PORT=5000
-TRANSCODER_DST_PKT_SIZE=1492
+# default unicast TS output
+TRANSCODER_OUTPUT_TS_DST_IP=localhost
+TRANSCODER_OUTPUT_TS_DST_PORT=5000
+TRANSCODER_OUTPUT_TS_DST_PKT_SIZE=1492
 
-#  override params with possibly existing conf file
+# default rtmp destinations
+TRANSCODER_OUTPUT_RTMP_DST_IP_A=localhost
+TRANSCODER_OUTPUT_RTMP_DST_IP_B=localhost
+
+# override default params with possibly existing conf file
 if [ -f $ST2110_CONF_FILE ]; then
 	source $ST2110_CONF_FILE
 fi
+
+TRANSCODER_OUTPUT_MPEGTS="[select=\'v:0\':f=mpegts]udp://$TRANSCODER_OUTPUT_TS_DST_IP:$TRANSCODER_OUTPUT_TS_DST_PORT?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE"
+TRANSCODER_OUTPUT_RTMP_DST_A="[f=flv]rtmp://$TRANSCODER_OUTPUT_RTMP_DST_IP_A:1935/live/smpte2110"
+TRANSCODER_OUTPUT_RTMP_DST_B="[f=flv]rtmp://$TRANSCODER_OUTPUT_RTMP_DST_IP_B:1935/live/smpte2110"
 
 start() {
 	sdp=$1
@@ -81,9 +89,6 @@ start() {
 	encode=$3
 	audio=$4
 	echo "Transcoding from $sdp"
-
-	# increment port num for each output
-	dst_port=$(($TRANSCODER_DST_PORT+$id))
 
 	if [ $encode = "cpu" ]; then
 		video_scale_options=$TRANSCODER_VIDEO_CPU_SCALE_OPTIONS
@@ -107,6 +112,13 @@ start() {
 	fi
 	echo "Audio codec is $audio."
 
+	output="-f tee -map 0:v -map 0:a \
+\"
+$TRANSCODER_OUTPUT_RTMP_DST_A|
+$TRANSCODER_OUTPUT_RTMP_DST_B|
+$TRANSCODER_OUTPUT_MPEGTS
+\""
+
 	cmd="$FFMPEG \
 		-loglevel $TRANSCODER_LOGLEVEL \
 		-strict experimental \
@@ -117,16 +129,16 @@ start() {
 		-fifo_size $TRANSCODER_FIFO_SIZE \
 		-smpte2110_timestamp 1 \
 		-vf yadif=0:-1:0,$video_scale_options \
+		-r 30 \
 		$video_encode_options \
 		$audio_encode_options \
-		-f mpegts \
-		udp://$TRANSCODER_DST_IP:$dst_port?pkt_size=$TRANSCODER_DST_PKT_SIZE \
+		$output \
 	"
 
 	log $(echo "Command:\n$cmd" | sed 's/\t//g')
 	tmux new-session -d -s transcoder "$cmd 2>&1 | tee -a "$LOG"; date | tee -a "$LOG"; sleep 100"
 	if [ $? -eq 0 ]; then
-		echo "Stream available to $TRANSCODER_DST_IP:$TRANSCODER_DST_PORT"
+		echo "Stream available to $TRANSCODER_OUTPUT_TS_DST_IP:$TRANSCODER_OUTPUT_TS_DST_PORT"
 	fi
 }
 
