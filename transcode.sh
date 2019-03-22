@@ -12,6 +12,10 @@ then
 	exit -1
 fi
 
+log() {
+	echo $@ | tee -a $LOG
+}
+
 help() {
 	echo -e "
 $SCRIPT opens multiple instances of ffmpeg transcoders.
@@ -31,7 +35,7 @@ Usage:
 "
 }
 
-TRANSCODER_LOGLEVEL=debug
+TRANSCODER_LOGLEVEL=info
 # input buffer size: maximum value permitted by setsockopt
 TRANSCODER_BUFFER_SIZE=671088640
 TRANSCODER_FIFO_SIZE=1000000000
@@ -119,10 +123,10 @@ start() {
 		udp://$TRANSCODER_DST_IP:$dst_port?pkt_size=$TRANSCODER_DST_PKT_SIZE \
 	"
 
-	echo "Command:\n$cmd" | sed 's/\t//g'
-	tmux new-session -d -s transcoder "$cmd 2>&1 | tee "$LOG"; sleep 100"
+	log $(echo "Command:\n$cmd" | sed 's/\t//g')
+	tmux new-session -d -s transcoder "$cmd 2>&1 | tee -a "$LOG"; date | tee -a "$LOG"; sleep 100"
 	if [ $? -eq 0 ]; then
-		echo "Stream available to $TRANSCODER_DST_IP:$dst_port"
+		echo "Stream available to $TRANSCODER_DST_IP:$TRANSCODER_DST_PORT"
 	fi
 }
 
@@ -168,7 +172,9 @@ case $cmd in
 		done
 		shift $((OPTIND-1))
 
-		echo "==================== Start $(date) ====================" | tee $LOG
+		rm $LOG
+		log "==================== Start $(date) ===================="
+
 		i=0
 		for sdp in $@; do
 			start $sdp $i $encode $audio
@@ -178,7 +184,7 @@ case $cmd in
 	stop)
 		killall -INT $(basename $FFMPEG)
 		tmux kill-session -t transcoder
-		echo "==================== Stop $(date) ====================" | tee $LOG
+		log "==================== Stop $(date) ===================="
 		# cleanup log file
 		sed -i -e 's///g' $LOG
 		;;
