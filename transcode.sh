@@ -1,5 +1,6 @@
 #!/bin/sh
 
+PATH=$PATH:/usr/local/bin/
 FFMPEG=$(which ffmpeg)
 LOG=/tmp/ffmpeg.log
 DIR=$(dirname $0)
@@ -40,9 +41,9 @@ TRANSCODER_LOGLEVEL=info
 TRANSCODER_BUFFER_SIZE=671088640
 TRANSCODER_FIFO_SIZE=1000000000
 
-# video
-# recommendation for IPTV
-#TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS="-pix_fmt yuv420p -c:v libx264 -profile:v main -preset fast -level:v 3.1 -b:v 2500k -bufsize:v 7000k -maxrate:v 2500k -g 30 -keyint_min 16 -b-pyramid"
+# h264 profile recommendation for IPTV
+
+# video encode options for CPU
 TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_3500="-s 1280x720 -pix_fmt yuv420p -c:v libx264 -profile:v main -preset fast -level:v 3.1 -b:v 3500k -bufsize:v 7000k -maxrate:v 3500k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -pass 1 -refs 6"
 TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_2500="-s 1280x720 -pix_fmt yuv420p -c:v libx264 -profile:v main -preset fast -level:v 3.1 -b:v 2500k -bufsize:v 5000k -maxrate:v 2500k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -pass 1 -refs 6"
 TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_480_1200="-s 852x480  -pix_fmt yuv420p -c:v libx264 -profile:v main -preset fast -level:v 3.1 -b:v 1200k -bufsize:v 2500k -maxrate:v 1200k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -pass 1 -refs 6"
@@ -51,11 +52,18 @@ TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_360_500="-s 640x360 -pix_fmt yuv420p -c:v li
 TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_400="-s 480x270 -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 400k -bufsize:v 800k -maxrate:v 400k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -pass 1 -refs 6"
 TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250="-s 480x270 -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 250k -bufsize:v 500k -maxrate:v 250k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -pass 1 -refs 6"
 
-TRANSCODER_VIDEO_GPU_SCALE_OPTIONS=",format=yuv420p,hwupload_cuda,scale_npp=w=1280:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
-TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS=" \
-	-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main -level:v 4.1 \
-	-b:v 2500k -bufsize:v 7000k -maxrate:v 2500k \
-	-g 30 -keyint_min 16 -pass 1 -refs 6"
+# video rescaled by GPU
+TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_720="format=yuv420p,hwupload_cuda,scale_npp=w=1280:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
+TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_480="format=yuv420p,hwupload_cuda,scale_npp=w=852:h=480:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
+TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_360="format=yuv420p,hwupload_cuda,scale_npp=w=640:h=360:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
+TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_270="format=yuv420p,hwupload_cuda,scale_npp=w=480:h=270:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_3500="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main -level:v 4.1 -b:v 3500k -bufsize:v 7000k -maxrate:v 3500k -g 30 -keyint_min 16 -pass 1 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_2500="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main -level:v 4.1 -b:v 2500k -bufsize:v 5000k -maxrate:v 2500k -g 30 -keyint_min 16 -pass 1 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_1200="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main -level:v 4.1 -b:v 1200k -bufsize:v 2500k -maxrate:v 1200k -g 30 -keyint_min 16 -pass 1 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_800="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 4.1 -b:v 800k -bufsize:v 1600k -maxrate:v 800k -g 30 -keyint_min 16 -pass 1 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_500="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 4.1 -b:v 500k -bufsize:v 1000k -maxrate:v 500k -g 30 -keyint_min 16 -pass 1 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_400="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 3.1 -b:v 400k -bufsize:v 800k -maxrate:v 400k -g 30 -keyint_min 16 -pass 1 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_250="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 3.1 -b:v 250k -bufsize:v 800k -maxrate:v 250k -g 30 -keyint_min 16 -pass 1 -refs 6"
 # cbr doesn't work. measure=1-10Mbps
 # -level 3.1 not accepted
 
@@ -88,12 +96,13 @@ start() {
 	output=$4
 	echo "Transcoding from $sdp"
 
+	filter_options="-vf yadif=0:-1:0"
 	if [ $encode = "cpu" ]; then
-		filter_options=""
 		video_encode_options=$TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_2500
 	elif [ $encode = "gpu" ]; then
-		filter_options=$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS
-		video_encode_options=$TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS
+		# gpu can rescale
+		filter_options="$filter_options,$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_720"
+		video_encode_options=$TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_2500
 	else
 		echo "Encoding not supported: $encode"
 		return 1
@@ -112,22 +121,47 @@ start() {
 
 	output_dest="-f tee -map 0:v -map 0:a"
 	if [ $output = "ts" ]; then
+		# simple monitor
 		output_dest="$output_dest \"$TRANSCODER_OUTPUT_MPEGTS\""
 	elif [ $output = "rtmp" ]; then
-		output_dest="$output_dest \"$TRANSCODER_OUTPUT_RTMP_DST_A|$TRANSCODER_OUTPUT_RTMP_DST_B\""
-		# fit audio bitstream to flv
+		# fit audio bitstream (ADTS) to flv (ASC)
 		audio_encode_options="$audio_encode_options -ar 44100 -bsf:a aac_adtstoasc"
+		# ASC breaks audio TS, let's remove it for the monitoring
+		output_dest="$output_dest \"[select=\'v:0\':f=mpegts]udp://$TRANSCODER_OUTPUT_TS_DST_IP:$TRANSCODER_OUTPUT_TS_DST_PORT?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE|
+$TRANSCODER_OUTPUT_RTMP_DST_A|$TRANSCODER_OUTPUT_RTMP_DST_B\"
+"
 	elif [ $output = "multi" ]; then
+		# one ffmpeg instance for multiple output/bitrates (unicast TS)
+		# yadif is removed to make the graph not too complicated
 		# hackish
 		video_encode_options=""
-		output_dest="\
+		if [ $encode = "cpu" ]; then
+			output_dest="\
 $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_3500 -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+0))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
 $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_2500 -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+1))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
 $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_480_1200 -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+2))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
 $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_360_800  -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+3))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
 $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_360_500  -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+4))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
 $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_400  -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+5))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
-$TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+6))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE"
+$TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+6))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
+"
+		elif [ $encode = "gpu" ]; then
+			# combine scaling, encoding and ouput destination
+			filter_options="-filter_complex '[0:v]split=4[in0][in1][in2][in3];\
+[in0]$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_720,split=2[out0][out1];\
+[in1]$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_480[out2];\
+[in2]$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_360,split=2[out3][out4];\
+[in3]$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_270,split=2[out5][out6]'"
+			output_dest="\
+-map [out0] $TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_3500 -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+0))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
+-map [out1] $TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_2500 -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+1))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
+-map [out2] $TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_1200 -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+2))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
+-map [out3] $TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_800  -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+3))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
+-map [out4] $TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_500  -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+4))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
+-map [out5] $TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_400  -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+5))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
+-map [out6] $TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_250  -f mpegts udp://$TRANSCODER_OUTPUT_TS_DST_IP:$((TRANSCODER_OUTPUT_TS_DST_PORT+6))?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE \
+"
+		fi
 	else
 		echo "Output destination not recognized: $output"
 		return 1
@@ -143,18 +177,18 @@ $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT
 		-i $sdp \
 		-fifo_size $TRANSCODER_FIFO_SIZE \
 		-smpte2110_timestamp 1 \
-		-r 30 \
-		-vf yadif=0:-1:0$filter_options \
 		$audio_encode_options \
+		-r 30 \
+		$filter_options \
 		$video_encode_options \
 		$output_dest"
 
 	log $(echo -e "Command:\n$cmd" | sed 's/\t//g')
 	# start ffmpeg in a tmux session
 	tmux new-session -d -s transcoder \
-"$cmd 2>&1 | tee -a $LOG \
-date | tee -a $LOG\
-sleep 100"
+"$cmd 2>&1 | tee -a $LOG;
+date | tee -a $LOG;
+sleep 100;"
 }
 
 cmd=$1
