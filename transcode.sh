@@ -29,7 +29,7 @@ Usage:
 \t$SCRIPT monitor   # show resource usage
 \t$SCRIPT setup <interface_name> <sdp_file>
 \t\t                  # generate conf from sdp and interface
-\t$SCRIPT start [-e <cpu|gpu>] [-a <aac|ac3>] <sdp_file1> [<sdp_file2> ... <sdp_fileN>]
+\t$SCRIPT start [-e <cpu|gpu>] [-a <aac|ac3>] <sdp_file>
 \t\t                  # start ffmpeg instances
 \t$SCRIPT stop      # stop ffmpeg instances
 "
@@ -85,9 +85,8 @@ TRANSCODER_OUTPUT_RTMP_DST_B="[f=flv]rtmp://$TRANSCODER_OUTPUT_RTMP_DST_IP_B:193
 
 start() {
 	sdp=$1
-	id=$2
-	encode=$3
-	audio=$4
+	encode=$2
+	audio=$3
 	echo "Transcoding from $sdp"
 
 	if [ $encode = "cpu" ]; then
@@ -186,12 +185,7 @@ case $cmd in
 
 		rm $LOG
 		log "==================== Start $(date) ===================="
-
-		i=0
-		for sdp in $@; do
-			start $sdp $i $encode $audio
-			i=$((i+1))
-		done
+		start $1 $encode $audio
 		;;
 	stop)
 		killall -INT $(basename $FFMPEG)
