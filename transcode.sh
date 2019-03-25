@@ -63,7 +63,7 @@ TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS=" \
 
 # audio
 TRANSCODER_AUDIO_ENCODE_AC3="-c:a ac3 -ac 6 -b:a 340k"
-TRANSCODER_AUDIO_ENCODE_AAC="-c:a libfdk_aac -ac 2 -b:a 128k -bsf:a aac_adtstoasc"
+TRANSCODER_AUDIO_ENCODE_AAC="-c:a libfdk_aac -ac 2 -b:a 128k -ar 44100 -bsf:a aac_adtstoasc"
 
 # default unicast TS output
 TRANSCODER_OUTPUT_TS_DST_IP=localhost
