@@ -71,7 +71,7 @@ def main():
     got_description = False
     for i in flow_indexes:
         url = get_sdp_url(ip_address) + str(sdp_list[i])
-        sdp = str(get_from_url(url))
+        sdp = str(get_from_url(url)) + '\n'
 
         if not got_description:
             # 1st flow: keep description but add a separator
@@ -83,7 +83,7 @@ def main():
             sdp = re.sub(expr, '', sdp)
 
         print("-" * 72)
-        print("Flow:{}\n\n{}".format(i,sdp))
+        print("Flow:{}\n{}".format(i,sdp))
         sdp_filtered += sdp
         got_description = True
 
