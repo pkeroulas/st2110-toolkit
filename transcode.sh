@@ -2,10 +2,10 @@
 
 PATH=$PATH:/usr/local/bin/
 FFMPEG=$(which ffmpeg)
-LOG=/tmp/ffmpeg.log
 DIR=$(dirname $0)
 SCRIPT=$(basename $0)
 ST2110_CONF_FILE=/etc/st2110.conf
+LOG_FILE=/tmp/ffmpeg.log
 
 if ! which $FFMPEG > /dev/null 2>&1
 then
@@ -14,7 +14,7 @@ then
 fi
 
 log() {
-	echo $@ | tee -a $LOG
+	echo $@ | tee -a $LOG_FILE
 }
 
 help() {
@@ -186,8 +186,8 @@ $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT
 	log $(echo -e "Command:\n$cmd" | sed 's/\t//g')
 	# start ffmpeg in a tmux session
 	tmux new-session -d -s transcoder \
-"$cmd 2>&1 | tee -a $LOG;
-date | tee -a $LOG;
+"$cmd 2>&1 | tee -a $LOG_FILE;
+date | tee -a $LOG_FILE;
 sleep 100;"
 }
 
@@ -238,7 +238,7 @@ case $cmd in
 		shift $((OPTIND-1))
 
 		stop
-		rm $LOG
+		rm $LOG_FILE
 		log "==================== Start $(date) ===================="
 		start $1 $encode $audio $output
 		;;
@@ -247,14 +247,14 @@ case $cmd in
 		tmux kill-session -t transcoder
 		log "==================== Stop $(date) ===================="
 		# cleanup log file
-		sed -i -e 's///g' $LOG
+		sed -i -e 's///g' $LOG_FILE
 		;;
 	log)
 		# attach to tmux session, read-only, Ctrl-b + d to detach
 		# Ctrl-b + Ctrl-b + d if tmux inside tmux
 		tmux attach -r -t transcoder
 		if [ ! $? -eq 0 ]; then
-			tail -100 $LOG
+			tail -100 $LOG_FILE
 		fi
 		;;
 	monitor)
