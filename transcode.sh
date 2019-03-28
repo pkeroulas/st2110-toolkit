@@ -202,6 +202,14 @@ date | tee -a $LOG_FILE;
 sleep 100;"
 }
 
+stop() {
+	log "==================== Stop $(date) ===================="
+	killall -INT $(basename $FFMPEG)
+	tmux kill-session -t transcoder
+	# cleanup log file
+	sed -i -e 's///g' $LOG_FILE
+}
+
 cmd=$1
 shift
 
@@ -220,6 +228,11 @@ case $cmd in
 		exit $?
 		;;
 	start)
+		if pidof -s ffmpeg > /dev/null; then
+			log "ffmpeg is running, stop it first"
+			exit 1
+		fi
+
 		if [ $# -lt 1 ]; then
 			help
 			exit 1
@@ -248,17 +261,10 @@ case $cmd in
 		done
 		shift $((OPTIND-1))
 
-		stop
-		rm $LOG_FILE
-		log "==================== Start $(date) ===================="
 		start $1 $encode $audio $output
 		;;
 	stop)
-		killall -INT $(basename $FFMPEG)
-		tmux kill-session -t transcoder
-		log "==================== Stop $(date) ===================="
-		# cleanup log file
-		sed -i -e 's///g' $LOG_FILE
+		stop
 		;;
 	log)
 		# attach to tmux session, read-only, Ctrl-b + d to detach
