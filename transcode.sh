@@ -6,6 +6,7 @@ DIR=$(dirname $0)
 SCRIPT=$(basename $0)
 ST2110_CONF_FILE=/etc/st2110.conf
 LOG_FILE=/tmp/ffmpeg.log
+PASS_FILE=/tmp/ffmpeg2pass
 
 log() {
 	# Shoot to terminal, logfile and syslog
@@ -34,7 +35,7 @@ Usage:
 \t$SCRIPT start [-e <cpu|gpu>] [-a <aac|ac3>] [-o <ts|rtmp|multi>] <sdp_file>
 \t\t                  # start ffmpeg instances
 \t$SCRIPT stop      # stop ffmpeg instances
-\t$SCRIPT monitor   # monitor HW usage
+\t$SCRIPT monitor   # check log size and restart if needed
 "
 }
 
@@ -188,6 +189,7 @@ $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT
 		-i $sdp \
 		-fifo_size $TRANSCODER_FIFO_SIZE \
 		-smpte2110_timestamp 1 \
+		-passlogfile $PASS_FILE\
 		$audio_encode_options \
 		-r 30 \
 		$filter_options \
@@ -275,7 +277,31 @@ case $cmd in
 		fi
 		;;
 	monitor)
-        glances
+		# check the transcoder is running and restart if logfile is
+		# getting too big
+		if ! pidof -s ffmpeg > /dev/null; then
+			log "ffmpeg is not running"
+			exit 1
+		fi
+		log "ffmpeg is running"
+
+		if [ ! -f "$PASS_FILE-0.log.mbtree.temp" ]; then
+			exit 0
+		fi
+
+		size=$(du -m "$PASS_FILE-0.log.mbtree.temp" | cut -f 1)
+		if [ $size -lt 1000 ]; then
+			exit 0
+		fi
+
+		if [ ! -f $LOG_FILE ]; then
+			log "couldn't find logfile $LOG_FILE"
+			exit 1
+		fi
+		args=$(sed -n 's/^Start args: \(.*\)/\1/p' $LOG_FILE)
+
+		stop
+		start $args
 		;;
 	*)
 		help
