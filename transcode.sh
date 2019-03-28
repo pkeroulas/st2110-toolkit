@@ -7,15 +7,17 @@ SCRIPT=$(basename $0)
 ST2110_CONF_FILE=/etc/st2110.conf
 LOG_FILE=/tmp/ffmpeg.log
 
+log() {
+	# Shoot to terminal, logfile and syslog
+	echo $@ | tee -a $LOG_FILE
+	logger -t "st2110-transcoder" "$@"
+}
+
 if ! which $FFMPEG > /dev/null 2>&1
 then
-	echo "$FFMPEG is not installed, see install.sh"
+	log "$FFMPEG is not installed, see install.sh"
 	exit -1
 fi
-
-log() {
-	echo $@ | tee -a $LOG_FILE
-}
 
 help() {
 	echo -e "
@@ -94,7 +96,16 @@ start() {
 	encode=$2
 	audio=$3
 	output=$4
-	echo "Transcoding from $sdp"
+
+	rm $LOG_FILE
+	log "==================== Start $(date) ===================="
+	log "Start args: $@"
+
+	if [ ! -f $sdp ]; then
+		log "Couldn't find SDP file $sdp"
+		return 1
+	fi
+	log "SDP file is $sdp."
 
 	filter_options="-vf yadif=0:-1:0"
 	if [ $encode = "cpu" ]; then
@@ -104,20 +115,20 @@ start() {
 		filter_options="$filter_options,$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_720"
 		video_encode_options=$TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_2500
 	else
-		echo "Encoding not supported: $encode"
+		log "Encoding not supported: $encode"
 		return 1
 	fi
-	echo "Scaling and encoding is $encode."
+	log "Scaling and encoding is $encode."
 
 	if [ $audio = "aac" ]; then
 		audio_encode_options=$TRANSCODER_AUDIO_ENCODE_AAC
 	elif [ $audio = "ac3" ]; then
 		audio_encode_options=$TRANSCODER_AUDIO_ENCODE_AAC
 	else
-		echo "Audio codec not supported: $audio"
+		log "Audio codec not supported: $audio"
 		return 1
 	fi
-	echo "Audio codec is $audio."
+	log "Audio codec is $audio."
 
 	output_dest="-f tee -map 0:v -map 0:a"
 	if [ $output = "ts" ]; then
@@ -163,10 +174,10 @@ $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT
 "
 		fi
 	else
-		echo "Output destination not recognized: $output"
+		log "Output destination not recognized: $output"
 		return 1
 	fi
-	echo "Output destination is: $output"
+	log "Output destination is: $output"
 
 	cmd="$FFMPEG \
 		-loglevel $TRANSCODER_LOGLEVEL \
@@ -183,7 +194,7 @@ $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT
 		$video_encode_options \
 		$output_dest"
 
-	log $(echo -e "Command:\n$cmd" | sed 's/\t//g')
+	log "$(echo -e "Command:\n$cmd" | sed 's/\t//g')"
 	# start ffmpeg in a tmux session
 	tmux new-session -d -s transcoder \
 "$cmd 2>&1 | tee -a $LOG_FILE;
