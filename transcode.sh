@@ -103,10 +103,6 @@ start() {
 	log "==================== Start $(date) ===================="
 	log "Start args: $@"
 
-	if [ ! -f $sdp ]; then
-		log "Couldn't find SDP file $sdp"
-		return 1
-	fi
 	log "SDP file is $sdp."
 
 	filter_options="-vf yadif=0:-1:0"
@@ -263,8 +259,12 @@ case $cmd in
 			esac
 		done
 		shift $((OPTIND-1))
+		if ! sdp=$(readlink -f $1); then
+			log "Couldn't find SDP file $sdp"
+			return 1
+		fi
 
-		start $1 $encode $audio $output
+		start $sdp $encode $audio $output
 		;;
 	stop)
 		stop
@@ -278,6 +278,7 @@ case $cmd in
 		fi
 		;;
 	monitor)
+		log "$(date) monitoring"
 		# check the transcoder is running and restart if logfile is
 		# getting too big
 		if ! pidof -s ffmpeg > /dev/null; then
