@@ -46,26 +46,26 @@ TRANSCODER_FIFO_SIZE=1000000000
 # h264 profile recommendation for IPTV
 
 # video encode options for CPU
-TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_3500="-s 1280x720 -pix_fmt yuv420p -c:v libx264 -profile:v main -preset fast -level:v 3.1 -b:v 3500k -bufsize:v 7000k -maxrate:v 3500k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_2500="-s 1280x720 -pix_fmt yuv420p -c:v libx264 -profile:v main -preset fast -level:v 3.1 -b:v 2500k -bufsize:v 5000k -maxrate:v 2500k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_480_1200="-s 852x480  -pix_fmt yuv420p -c:v libx264 -profile:v main -preset fast -level:v 3.1 -b:v 1200k -bufsize:v 2500k -maxrate:v 1200k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_360_800="-s 640x360 -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 800k -bufsize:v 1600k -maxrate:v 800k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_360_500="-s 640x360 -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 500k -bufsize:v 1200k -maxrate:v 500k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_400="-s 480x270 -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 400k -bufsize:v 800k -maxrate:v 400k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250="-s 480x270 -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 250k -bufsize:v 500k -maxrate:v 250k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_3500="-s 1280x720 -pix_fmt yuv420p -c:v libx264 -profile:v main     -preset fast -level:v 3.1 -b:v 3500k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_2500="-s 1280x720 -pix_fmt yuv420p -c:v libx264 -profile:v main     -preset fast -level:v 3.1 -b:v 2500k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_480_1200="-s 852x480  -pix_fmt yuv420p -c:v libx264 -profile:v main     -preset fast -level:v 3.1 -b:v 1200k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_360_800=" -s 640x360  -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 800k  -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_360_500=" -s 640x360  -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 500k  -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_400=" -s 480x270  -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 400k  -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250=" -s 480x270  -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset fast -level:v 2.1 -b:v 250k  -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
 
 # video rescaled by GPU
 TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_720="format=yuv420p,hwupload_cuda,scale_npp=w=1280:h=720:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
 TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_480="format=yuv420p,hwupload_cuda,scale_npp=w=852:h=480:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
 TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_360="format=yuv420p,hwupload_cuda,scale_npp=w=640:h=360:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
 TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_270="format=yuv420p,hwupload_cuda,scale_npp=w=480:h=270:format=yuv420p:interp_algo=lanczos,hwdownload,format=yuv420p"
-TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_3500="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main -level:v 4.1 -b:v 3500k -bufsize:v 7000k -maxrate:v 3500k -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_2500="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main -level:v 4.1 -b:v 2500k -bufsize:v 5000k -maxrate:v 2500k -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_1200="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main -level:v 4.1 -b:v 1200k -bufsize:v 2500k -maxrate:v 1200k -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_800="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 4.1 -b:v 800k -bufsize:v 1600k -maxrate:v 800k -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_500="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 4.1 -b:v 500k -bufsize:v 1000k -maxrate:v 500k -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_400="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 3.1 -b:v 400k -bufsize:v 800k -maxrate:v 400k -g 30 -keyint_min 16 -refs 6"
-TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_250="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 3.1 -b:v 250k -bufsize:v 800k -maxrate:v 250k -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_3500="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main     -level:v 4.1 -b:v 3500k -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_2500="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main     -level:v 4.1 -b:v 2500k -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_1200="-c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v main     -level:v 4.1 -b:v 1200k -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_800=" -c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 4.1 -b:v 800k  -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_500=" -c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 4.1 -b:v 500k  -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_400=" -c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 3.1 -b:v 400k  -g 30 -keyint_min 16 -refs 6"
+TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_250=" -c:v h264_nvenc -rc cbr_hq -preset:v fast -profile:v baseline -level:v 3.1 -b:v 250k  -g 30 -keyint_min 16 -refs 6"
 # cbr doesn't work. measure=1-10Mbps
 # -level 3.1 not accepted
 
