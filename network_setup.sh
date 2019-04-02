@@ -92,7 +92,7 @@ fi
 # This is necessary for the reverse path resolution of the source in
 # order to accept traffic. Let's find source and media info in the SDP.
 source_ip="$(sed -n 's/^o=.*IN IP4 \(.*\)$/\1/p' $sdp_file | sed 's/\r//')"
-multicast_groups=$(sed -n 's/^a=.*IN IP4 \(.*\) .*$/\1/p' $sdp_file)
+multicast_groups=$(sed -n 's/^c=IN IP4 \(.*\)\/.*/\1/p' $sdp_file)
 
 echo "-------------------------------------------"
 echo "Source/Sender:"
