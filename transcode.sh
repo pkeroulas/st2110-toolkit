@@ -33,7 +33,7 @@ Usage:
 \t$SCRIPT monitor   # show resource usage
 \t$SCRIPT setup <interface_name> <sdp_file>
 \t\t                  # generate conf from sdp and interface
-\t$SCRIPT start [-e <cpu|gpu>] [-a <aac|ac3>] [-o <ts|rtmp|multi>] <sdp_file>
+\t$SCRIPT start [-e <cpu|gpu>] [-a <aac|ac3|mp3>] [-o <ts|rtmp|multi>] <sdp_file>
 \t\t                  # start ffmpeg instances
 \t$SCRIPT stop      # stop ffmpeg instances
 \t$SCRIPT monitor   # check log size and restart if needed
@@ -74,6 +74,7 @@ TRANSCODER_VIDEO_GPU_ENCODE_OPTIONS_250="-c:v h264_nvenc -rc cbr_hq -preset:v fa
 # audio
 TRANSCODER_AUDIO_ENCODE_AC3="-c:a ac3 -ac 6 -b:a 340k"
 TRANSCODER_AUDIO_ENCODE_AAC="-c:a libfdk_aac -ac 2 -b:a 128k"
+TRANSCODER_AUDIO_ENCODE_MP3="-c:a libmp3lame -ac 2 -b:a 128k"
 
 # default unicast TS output
 TRANSCODER_OUTPUT_TS_DST_IP=localhost

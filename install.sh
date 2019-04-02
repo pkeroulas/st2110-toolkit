@@ -146,7 +146,7 @@ install_ffmpeg()
         --extra-libs=-ldl \
         --enable-version3 --enable-gpl --enable-nonfree \
         --enable-postproc --enable-avresample \
-        --enable-libx264 --enable-libfdk-aac \
+        --enable-libx264 --enable-libfdk-aac --enable-libmp3lame \
         --disable-ffplay --disable-ffprobe \
         $ffmpeg_gpu_options \
         --enable-small --disable-stripping --disable-debug
