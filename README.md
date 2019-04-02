@@ -9,7 +9,7 @@ Features:
 * setup NIC (Rx buffer size, checksum, timestamping)
 * get SDP file from Embrionix encapsulator
 * capture streams from SDP
-* transcode st2110-to-h264 from SDP
+* transcode st2110-to-h264 from live feed described SDP
 * analyse stream content like ptp clock
 * install common tools and ffmpeg dependencies for Centos
 
@@ -94,6 +94,14 @@ On a monitoring host:
 $ ffplay udp://@0.0.0.0:5000
 $ vlc --network-caching 4000  udp://@0.0.0.0:5000
 ```
+
+## FFmpeg options
+
+Without '-pass 1', the CPU usage is way higher and the audio breaks
+after a few seconds, at least for rtmp output. The 1st con of the option is
+that the output bitrate might less precise. And the generated passlog
+file is quite large (~10GB/day). The 'monitor' function of the transcoder
+checks the size of this file and restarts ffmpeg if needed.
 
 ## Hardware acceleration for transcoding
 
