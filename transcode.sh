@@ -311,6 +311,7 @@ case $cmd in
 		args=$(sed -n 's/^Start args: \(.*\)/\1/p' $LOG_FILE)
 
 		stop
+		sleep 5
 		start $args
 		;;
 	*)
