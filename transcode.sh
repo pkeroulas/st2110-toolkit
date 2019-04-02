@@ -121,7 +121,7 @@ start() {
 	if [ $audio = "aac" ]; then
 		audio_encode_options=$TRANSCODER_AUDIO_ENCODE_AAC
 	elif [ $audio = "ac3" ]; then
-		audio_encode_options=$TRANSCODER_AUDIO_ENCODE_AAC
+		audio_encode_options=$TRANSCODER_AUDIO_ENCODE_AC3
 	else
 		log "Audio codec not supported: $audio"
 		return 1
