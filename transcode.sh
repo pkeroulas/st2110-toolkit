@@ -193,7 +193,7 @@ $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT
 		-i $sdp \
 		-fifo_size $TRANSCODER_FIFO_SIZE \
 		-smpte2110_timestamp 1 \
-		-passlogfile $PASS_FILE\
+		-passlogfile $PASS_FILE \
 		$audio_encode_options \
 		-r 30 \
 		$filter_options \
