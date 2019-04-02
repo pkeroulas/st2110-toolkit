@@ -128,7 +128,14 @@ start() {
 	fi
 	log "Audio codec is $audio."
 
-	output_dest="-f tee -map 0:v -map 0:a"
+	output_dest="-f tee"
+	if grep -q "audio" $sdp; then
+		output_dest="$output_dest -map 0:a"
+	fi
+	if grep -q "video" $sdp; then
+		output_dest="$output_dest -map 0:v"
+	fi
+
 	if [ $output = "ts" ]; then
 		# simple monitor
 		output_dest="$output_dest \"$TRANSCODER_OUTPUT_MPEGTS\""
