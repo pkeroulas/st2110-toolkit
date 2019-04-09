@@ -111,6 +111,11 @@ checks the size of this file and restarts ffmpeg if needed.
 
 [Measurments](./doc/transcoder_perf.md) with CPU vs GPU.
 
+## Trancoding ancillary data (SMPTE ST 2110-40)
+
+ffmpeg shows some limitations in  [transcoding closed
+caption](./doc/closed_captionis.md).
+
 ## Capture
 
 If you already have an SDP file, it can be used as an input for the
