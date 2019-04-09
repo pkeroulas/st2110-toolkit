@@ -116,6 +116,8 @@ checks the size of this file and restarts ffmpeg if needed.
 ffmpeg shows some limitations in [transcoding closed
 caption](./doc/closed_captions.md).
 
+Here are some guidelines for [SCTE-35](./doc/scte_104_to_35.md).
+
 ## Capture
 
 If you already have an SDP file, it can be used as an input for the
