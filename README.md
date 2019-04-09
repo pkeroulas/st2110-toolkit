@@ -113,8 +113,8 @@ checks the size of this file and restarts ffmpeg if needed.
 
 ## Trancoding ancillary data (SMPTE ST 2110-40)
 
-ffmpeg shows some limitations in  [transcoding closed
-caption](./doc/closed_captionis.md).
+ffmpeg shows some limitations in [transcoding closed
+caption](./doc/closed_captions.md).
 
 ## Capture
 
