@@ -46,6 +46,7 @@ TRANSCODER_BUFFER_SIZE=671088640
 TRANSCODER_FIFO_SIZE=1000000000
 
 # h264 profile recommendation for IPTV
+TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_IPTV="-s 1280x720 -pix_fmt yuv420p -c:v libx264 -profile:v main -preset fast -level:v 3.1 -b:v 2500k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -refs 6"
 
 # video encode options for CPU
 TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_3500="-s 1280x720 -pix_fmt yuv420p -c:v libx264 -profile:v main -preset fast -level:v 3.1 -b:v 3500k -bufsize:v 7000k -maxrate:v 3500k -x264-params b-pyramid=1 -g 30 -keyint_min 16 -pass 1 -refs 6"
@@ -108,7 +109,7 @@ start() {
 
 	filter_options="-vf yadif=0:-1:0"
 	if [ $encode = "cpu" ]; then
-		video_encode_options=$TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_720_2500
+		video_encode_options=$TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_IPTV
 	elif [ $encode = "gpu" ]; then
 		# gpu can rescale
 		filter_options="$filter_options,$TRANSCODER_VIDEO_GPU_SCALE_OPTIONS_720"

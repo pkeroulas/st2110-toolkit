@@ -123,7 +123,7 @@ done
 echo "------------------------------------------
 Capturing"
 
-if [ $CAPTURE_TRUNCATE = "yes" ]; then
+if [ "$CAPTURE_TRUNCATE" = "yes" ]; then
 	TCPDUMP_OPTIONS="--snapshot-length=100"
 fi
 

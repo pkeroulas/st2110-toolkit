@@ -37,7 +37,6 @@ install_common_tools()
         net-tools \
         openssl-devel \
         perl \
-        smcroute \
         tar \
         tcpdump \
         tmux \
