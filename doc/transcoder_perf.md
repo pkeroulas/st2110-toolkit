@@ -14,6 +14,8 @@ Input: 1 or 2 streams @ 1080i 60 fps (1.23Gb/s) + 2 audio channels
 
 Output: 720p @ 30 fps (2.5Mpbs) + 2 audio channels
 
+Audio-only test is performed at the end.
+
 ## Measuring CPU and GPU utilization
 
 ```sh
@@ -69,7 +71,7 @@ fight for the data. Use one FFmpeg instance to transcode one feed into
 multiple resolution/bitrate output (3500k, 2500k, 1200k, 800k, 500,
 400k, 250k) is prefered.
 
-```
+```sh
 # ./transcode start -e gpu -o multi ../sdp/emb_176_explora.sdp
 /usr/local/bin/ffmpeg -loglevel info -strict experimental -threads 2 -buffer_size 671088640 -protocol_whitelist file,udp,rtp -i ../sdp/emb_176_explora.sdp
 	-fifo_size 1000000000 -smpte2110_timestamp 1 -c:a libfdk_aac -ac 2 -b:a 128k -r 30
@@ -92,3 +94,12 @@ multiple resolution/bitrate output (3500k, 2500k, 1200k, 800k, 500,
 * stable with 6 CPUs instead of 4
 * command line is too long to run in tmux
 * no yadif and no audio because it made the filter graph very complicated
+
+## Audio only,
+
+The load is composed of 8 audio stream (L24/48k/2). The VM settings and
+the audio encoding parameters are the same as above.
+
+* Input rate: 21Mb/s
+* Output rate: 1.3Mb/s
+* CPU: 5-25%, Mem: 9%
