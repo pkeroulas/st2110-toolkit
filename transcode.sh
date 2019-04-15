@@ -83,8 +83,7 @@ TRANSCODER_OUTPUT_TS_DST_PORT=5000
 TRANSCODER_OUTPUT_TS_DST_PKT_SIZE=1492
 
 # default rtmp destinations
-TRANSCODER_OUTPUT_RTMP_DST_IP_A=localhost
-TRANSCODER_OUTPUT_RTMP_DST_IP_B=localhost
+TRANSCODER_OUTPUT_RTMP_DST_IP=localhost
 
 # override default params with possibly existing conf file
 if [ -f $ST2110_CONF_FILE ]; then
@@ -92,8 +91,7 @@ if [ -f $ST2110_CONF_FILE ]; then
 fi
 
 TRANSCODER_OUTPUT_MPEGTS="[f=mpegts]udp://$TRANSCODER_OUTPUT_TS_DST_IP:$TRANSCODER_OUTPUT_TS_DST_PORT?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE"
-TRANSCODER_OUTPUT_RTMP_DST_A="[f=flv]rtmp://$TRANSCODER_OUTPUT_RTMP_DST_IP_A:1935/live/smpte2110"
-TRANSCODER_OUTPUT_RTMP_DST_B="[f=flv]rtmp://$TRANSCODER_OUTPUT_RTMP_DST_IP_B:1935/live/smpte2110"
+TRANSCODER_OUTPUT_RTMP_DST="[f=flv]rtmp://$TRANSCODER_OUTPUT_RTMP_DST_IP:1935/live/smpte2110"
 
 start() {
 	sdp=$1
@@ -145,8 +143,7 @@ start() {
 		# fit audio bitstream (ADTS) to flv (ASC)
 		audio_encode_options="$audio_encode_options -ar 44100 -bsf:a aac_adtstoasc"
 		# ASC breaks audio TS, let's remove it for the monitoring
-		output_dest="$output_dest \"[select=\'v:0\':f=mpegts]udp://$TRANSCODER_OUTPUT_TS_DST_IP:$TRANSCODER_OUTPUT_TS_DST_PORT?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE|
-$TRANSCODER_OUTPUT_RTMP_DST_A|$TRANSCODER_OUTPUT_RTMP_DST_B\"
+		output_dest="$output_dest \"$TRANSCODER_OUTPUT_RTMP_DST\"
 "
 	elif [ $output = "multi" ]; then
 		# one ffmpeg instance for multiple output/bitrates (unicast TS)
