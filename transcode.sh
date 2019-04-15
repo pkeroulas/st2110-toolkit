@@ -289,22 +289,22 @@ case $cmd in
 		# getting too big
 		if ! pidof -s ffmpeg > /dev/null; then
 			log "ffmpeg is not running"
-			exit 1
-		fi
-		log "ffmpeg is running"
+		else
+			log "ffmpeg is running"
 
-		if [ ! -f "$PASS_FILE-0.log.mbtree.temp" ]; then
-			exit 0
-		fi
+			if [ ! -f "$PASS_FILE-0.log.mbtree.temp" ]; then
+				exit 0
+			fi
 
-		size=$(du -m "$PASS_FILE-0.log.mbtree.temp" | cut -f 1)
-		if [ $size -lt 1000 ]; then
-			exit 0
-		fi
+			size=$(du -m "$PASS_FILE-0.log.mbtree.temp" | cut -f 1)
+			if [ $size -lt 1000 ]; then
+				exit 0
+			fi
 
-		if [ ! -f $LOG_FILE ]; then
-			log "couldn't find logfile $LOG_FILE"
-			exit 1
+			if [ ! -f $LOG_FILE ]; then
+				log "couldn't find logfile $LOG_FILE"
+				exit 1
+			fi
 		fi
 		args=$(sed -n 's/^Start args: \(.*\)/\1/p' $LOG_FILE)
 
