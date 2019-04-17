@@ -28,6 +28,12 @@ Or you can install a single component:
 $ ./install.sh install_ffmpeg
 ```
 
+Or build a Docker container:
+
+```sh
+docker build -t centos/transcoder:v0 .
+```
+
 ## Setup
 
 Both capture and transcoder scripts have default parameters but they can
