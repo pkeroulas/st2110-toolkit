@@ -22,6 +22,7 @@ export LANG=en_US.utf8 \
     FDKAAC_VERSION=0.1.4 \
     YASM_VERSION=1.3.0 \
     NASM_VERSION=2.13.02 \
+    MP3_VERSION=3.99.5 \
     SMCROUTE_VERSION=2.4.3 \
     PREFIX=/usr/local \
     MAKEFLAGS="-j$[$(nproc) + 1]"
@@ -137,6 +138,21 @@ install_fdkaac()
     rm -rf $DIR
 }
 
+install_mp3()
+{
+    echo "Installing mp3"
+    DIR=$(mktemp -d)
+    cd $DIR/
+    curl -s -L http://downloads.sourceforge.net/project/lame/lame/3.99/lame-$MP3_VERSION.tar.gz |
+        tar zxvf - -C .
+    cd lame-$MP3_VERSION/
+    ./configure --prefix="$PREFIX" --bindir="$PREFIX/bin" --disable-shared --enable-nasm
+    make
+    make install
+    make distclean
+    rm -rf $DIR
+}
+
 install_ffnvcodec()
 {
     echo "Installing ffnvcodev"
@@ -203,6 +219,7 @@ install_all()
     install_nasm
     install_x264
     install_fdkaac
+    install_mp3
     install_ffmpeg
     install_smcroute
 }
