@@ -11,7 +11,7 @@ Features:
 * capture streams from SDP
 * transcode st2110-to-h264 from live feed described SDP
 * analyse stream content like ptp clock
-* install common tools and ffmpeg dependencies for Centos
+* install common tools and ffmpeg dependencies for Centos 7 or Ubuntu 18.04
 
 ## Install ffmpeg and dependencies
 
@@ -169,10 +169,9 @@ $ sudo /etc/init.d/smcroute restart
 
 ## Todos
 
-* install: make it work for Debian
+* NMOSify the transcoder
 * separate NIC setup from network setup
 * document Mellanox NIC installation
-* transcoder: test multiple outputs
 * tcpdump and smcroute without sudo:
 
 ```

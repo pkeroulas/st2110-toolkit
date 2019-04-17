@@ -6,6 +6,17 @@
 # set -euo pipefail
 # set -x
 
+if [ -f /etc/lsb-release ]; then
+    OS=debian
+    PACKAGE_MANAGER=apt
+elif [ -f /etc/redhat-release ]; then
+    OS=redhat
+    PACKAGE_MANAGER=yum
+else
+    echo "Couldn't detect OS."
+    exit 1
+fi
+
 export LANG=en_US.utf8 \
     LC_ALL=en_US.utf8 \
     FDKAAC_VERSION=0.1.4 \
@@ -21,35 +32,42 @@ echo "${PREFIX}/lib" >/etc/ld.so.conf.d/libc.conf
 
 install_common_tools()
 {
-    yum -y update && yum install -y \
+    $PACKAGE_MANAGER -y update && $PACKAGE_MANAGER install -y \
         autoconf \
         automake \
         bzip2 \
         cmake \
         ethtool \
         gcc \
-        gcc-c++ \
         git \
         libtool \
         linuxptp \
         make \
-        nc \
         net-tools \
-        openssl-devel \
         perl \
         tar \
         tcpdump \
         tmux \
-        wget \
-        which \
-        zlib-devel
+        wget
+
+    if [ $OS = "redhat" ]; then
+        $PACKAGE_MANAGER -y update && $PACKAGE_MANAGER install -y \
+            nc \
+            gcc-c++ \
+            openssl-devel \
+            which \
+            zlib-devel
+    fi
 }
 
 install_monitoring_tools()
 {
-    wget dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm
-    rpm -ihv epel-release-7-11.noarch.rpm
-    yum -y install \
+    if [ $OS = "redhat" ]; then
+        wget dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm
+        rpm -ihv epel-release-7-11.noarch.rpm
+    fi
+
+    $PACKAGE_MANAGER -y install \
         htop \
         nload \
         vim \
@@ -75,13 +93,17 @@ install_yasm()
 install_nasm()
 {
     echo "Installing NASM"
-    DIR=$(mktemp -d)
-    cd $DIR/
-    nasm_rpm=nasm-$NASM_VERSION-0.fc24.x86_64.rpm
-    curl -O https://www.nasm.us/pub/nasm/releasebuilds/$NASM_VERSION/linux/$nasm_rpm
-    rpm -i $nasm_rpm
-    rm -f $nasm_rpm
-    rm -rf $DIR
+    if [ $OS = "redhat" ]; then
+        DIR=$(mktemp -d)
+        cd $DIR/
+        nasm_rpm=nasm-$NASM_VERSION-0.fc24.x86_64.rpm
+        curl -O https://www.nasm.us/pub/nasm/releasebuilds/$NASM_VERSION/linux/$nasm_rpm
+        rpm -i $nasm_rpm
+        rm -f $nasm_rpm
+        rm -rf $DIR
+    else
+        $PACKAGE_MANAGER -y install nasm
+    fi
 }
 
 install_x264()
@@ -96,6 +118,7 @@ install_x264()
     make install
     make distclean
     rm -rf $DIR
+    # or both install libx264.XXX and libx264-dev from distro packages
 }
 
 install_fdkaac()
