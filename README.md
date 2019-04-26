@@ -11,7 +11,12 @@ Features:
 * capture streams from SDP
 * transcode st2110-to-h264 from live feed described SDP
 * analyse stream content like ptp clock
-* install common tools and ffmpeg dependencies for Centos 7 or Ubuntu 18.04
+* provide NMOS setup script
+
+Tested distros:
+* Centos 7
+* Dockerized Centos 7
+* Ubuntu 18.04
 
 ## Install ffmpeg and dependencies
 

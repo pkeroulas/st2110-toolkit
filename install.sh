@@ -6,6 +6,8 @@
 # set -euo pipefail
 # set -x
 
+THIS_DIR="$(dirname ${BASH_SOURCE[0]})"
+
 if [ -f /etc/lsb-release ]; then
     OS=debian
     PACKAGE_MANAGER=apt
@@ -45,6 +47,7 @@ install_common_tools()
         linuxptp \
         make \
         net-tools \
+        patch \
         perl \
         tar \
         tcpdump \
@@ -211,6 +214,8 @@ install_smcroute()
     rm -rf $DIR
 }
 
+source $THIS_DIR/nmos/install.sh
+
 install_all()
 {
     install_common_tools
@@ -222,4 +227,5 @@ install_all()
     install_mp3
     install_ffmpeg
     install_smcroute
+    install_nmos
 }
