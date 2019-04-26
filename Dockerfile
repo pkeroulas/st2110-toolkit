@@ -1,10 +1,10 @@
+# transcoder image
 FROM centos:latest
 
-RUN adduser --uid 1000 --home /home/trancoder trancoder
-WORKDIR /home/trancoder/
+RUN adduser --uid 1000 --home /home/transcoder transcoder
+WORKDIR /home/transcoder/
 
-RUN yum -y update && yum install -y \
-    git
+RUN yum -y update && yum install -y git
 
 RUN git clone https://github.com/pkeroulas/st2110-toolkit.git
 RUN source st2110-toolkit/install.sh && \
