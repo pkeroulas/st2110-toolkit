@@ -18,7 +18,7 @@ Tested distros:
 * Dockerized Centos 7
 * Ubuntu 18.04
 
-## Install ffmpeg and dependencies
+## Install
 
 Install everything (tools, FFmpeg and all the dependencies) on Centos 7
 using the install scrip:
@@ -39,13 +39,15 @@ Or build a Docker container:
 docker build -t centos/transcoder:v0 .
 ```
 
-## Setup
+## Configuration
+
+### Global
 
 Both capture and transcoder scripts have default parameters but they can
 be overriden by a config filecan to be installed as `/etc/st2110.conf`.
 See the sample in `./config/`.
 
-## SDP file as an input
+### Stream config as SDP file
 
 ST2110 senders, like Embrionix encap, should provide an SDP file to
 describe every produced essences, i.e. RTP streams.
@@ -106,7 +108,7 @@ $ ffplay udp://@0.0.0.0:5000
 $ vlc --network-caching 4000  udp://@0.0.0.0:5000
 ```
 
-## FFmpeg options
+### FFmpeg options
 
 Without '-pass 1', the CPU usage is way higher and the audio breaks
 after a few seconds, at least for rtmp output. The 1st con of the option is
@@ -114,15 +116,15 @@ that the output bitrate might less precise. And the generated passlog
 file is quite large (~10GB/day). The 'monitor' function of the transcoder
 checks the size of this file and restarts ffmpeg if needed.
 
-## Hardware acceleration for transcoding
+### Hardware acceleration for transcoding
 
 [Nvidia setup.](./doc/hw_encoding.md)
 
-## Transcoding performance
+### Transcoding performance
 
 [Measurments](./doc/transcoder_perf.md) with CPU vs GPU.
 
-## Trancoding ancillary data (SMPTE ST 2110-40)
+### Trancoding ancillary data (SMPTE ST 2110-40)
 
 ffmpeg shows some limitations in [transcoding closed
 caption](./doc/closed_captions.md).
