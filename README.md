@@ -180,6 +180,15 @@ Daemon error: Join multicast group, unknown interface eth0
 $ sudo /etc/init.d/smcroute restart
 ```
 
+Measure the udp packet drops:
+
+```sh
+netstat -s -u
+```
+
+## [NMOS.](./doc/nmos.md)
+
+
 ## Todos
 
 * NMOSify the transcoder
