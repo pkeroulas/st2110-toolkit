@@ -3,8 +3,7 @@
 # Compile & Install everything for FFMPEG transcoding
 # and tcpdump capturing
 
-# set -euo pipefail
-# set -x
+set -euo pipefail
 
 THIS_DIR="$(dirname ${BASH_SOURCE[0]})"
 
