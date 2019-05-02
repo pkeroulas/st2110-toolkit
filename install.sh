@@ -116,12 +116,11 @@ install_x264()
     cd $DIR/
     git clone -b stable  --single-branch http://git.videolan.org/git/x264.git
     cd x264/
-    ./configure --prefix="$PREFIX" --bindir="$PREFIX/bin" --enable-static
+    ./configure --prefix="$PREFIX" --bindir="$PREFIX/bin" --enable-shared
     make
     make install
     make distclean
     rm -rf $DIR
-    # or both install libx264.XXX and libx264-dev from distro packages
 }
 
 install_fdkaac()
@@ -134,7 +133,7 @@ install_fdkaac()
     cd fdk-aac-$FDKAAC_VERSION/
     autoreconf -fiv
     ./configure --prefix="$PREFIX" --disable-shared
-    make
+    make CXXFLAGS="-std=gnu++98" # compatibility with gcc v7...
     make install
     make distclean
     rm -rf $DIR
@@ -172,6 +171,7 @@ install_ffnvcodec()
 
 install_ffmpeg()
 {
+    ldconfig -v
     echo "Installing ffmpeg"
     DIR=$(mktemp -d)
     cd $DIR/
