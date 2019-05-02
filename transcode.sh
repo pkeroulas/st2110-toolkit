@@ -87,7 +87,7 @@ TRANSCODER_OUTPUT_RTMP_DST_IP=localhost
 
 # override default params with possibly existing conf file
 if [ -f $ST2110_CONF_FILE ]; then
-	source $ST2110_CONF_FILE
+	. $ST2110_CONF_FILE
 fi
 
 TRANSCODER_OUTPUT_MPEGTS="[f=mpegts]udp://$TRANSCODER_OUTPUT_TS_DST_IP:$TRANSCODER_OUTPUT_TS_DST_PORT?pkt_size=$TRANSCODER_OUTPUT_TS_DST_PKT_SIZE"
