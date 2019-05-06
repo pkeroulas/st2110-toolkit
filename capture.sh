@@ -112,7 +112,7 @@ echo "------------------------------------------
 Joining"
 
 for m in $mcast_ips; do
-	smcroute -j $IFACE $m
+	smcroutectl join $IFACE $m
 	if netstat -ng | grep -q "$IFACE.*$m"; then
 		echo "$m OK"
 	else
@@ -148,7 +148,7 @@ echo "------------------------------------------
 Leaving"
 
 for m in $mcast_ips; do
-	smcroute -l $IFACE $m
+	smcroutectl leave $IFACE $m
 done
 
 if [ ! -f $CAPTURE ]; then
