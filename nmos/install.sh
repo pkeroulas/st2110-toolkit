@@ -39,8 +39,11 @@ install_mdns(){
     wget --no-check-certificate https://opensource.apple.com/tarballs/mDNSResponder/mDNSResponder-$MDNS_VERSION.tar.gz
     tar xvf mDNSResponder-$MDNS_VERSION.tar.gz
 
+    # patch to make mdnsd work with unicast DNS
     wget https://raw.githubusercontent.com/sony/nmos-cpp/master/Development/third_party/mDNSResponder/poll-rather-than-select.patch
     patch -d mDNSResponder-$MDNS_VERSION/ -p1 < poll-rather-than-select.patch
+    wget https://raw.githubusercontent.com/sony/nmos-cpp/master/Development/third_party/mDNSResponder/unicast.patch
+    patch -d mDNSResponder-$MDNS_VERSION/ -p1 < unicast.patch
 
     cd ./mDNSResponder-$MDNS_VERSION/mDNSPosix
     set HAVE_IPV6=0
