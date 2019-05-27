@@ -61,6 +61,13 @@ install_common_tools()
             which \
             zlib-devel
     fi
+
+    # rigth permission to use tcpdump without sudo
+    bin=$(which tcpdump)
+    groupadd pcap
+    usermod -a -G pcap $ST2110_USER
+    chgrp pcap $bin
+    setcap cap_net_raw,cap_net_admin=eip $bin
 }
 
 install_monitoring_tools()

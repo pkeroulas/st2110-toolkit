@@ -191,19 +191,8 @@ netstat -s -u
 
 ## Todos
 
-* NMOSify the transcoder
 * separate NIC setup from network setup
 * document Mellanox NIC installation
-* tcpdump and smcroute without sudo:
-
-```
-bin=$(which tcpdump)
-sudo groupadd pcap
-sudo usermod -a -G pcap $USER
-sudo chgrp pcap $bin
-sudo setcap cap_net_raw,cap_net_admin=eip $bin
-sudo getcap $bin
-```
 
 ## Additional resources
 
