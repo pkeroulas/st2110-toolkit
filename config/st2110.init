@@ -100,13 +100,14 @@ case "$1" in
         start_mellanox
         start_ptp
         start_list
-        smcroutectl -d
+        smcrouted
         ;;
 
     stop)
         stop_mellanox
         stop_ptp
         stop_list
+        smcroutectl kill
         ;;
     log)
         log_list
