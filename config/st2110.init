@@ -14,27 +14,6 @@
 #  $ update-rc.d st2110 defaults
 #  $ update-rc.d st2110 enable
 
-LIST_USER=ebulist
-
-start_list()
-{
-    # LIST is a st2110 stream analyser which can run on a network
-    # capturing host. https://github.com/ebu/pi-list
-    # TODO: verify that LIST is installed before
-    logger "st2110 - Start EBU LIST server."
-
-    # start either native or dockerized LIST
-    cd /home/$LIST_USER/LIST-native/
-    su $LIST_USER -c "tmux new-session -d -s list ./startup_server_live.sh"
-
-    # su $LIST_USER -c "cd /home/$LIST_USER/LIST/release && ./start.sh"
-}
-
-stop_list()
-{
-    logger "st2110 - Stop EBU LIST server."
-    su $LIST_USER -c "cd /home/$LIST_USER/LIST/release && ./stop.sh"
-}
 
 ST2110_CONF_FILE=/etc/st2110.conf
 if [ -f $ST2110_CONF_FILE ]; then
@@ -50,6 +29,35 @@ if [ $(cat /sys/class/net/$IFACE/operstate) != "up" ]; then
     echo "$IFACE is not up, exit."
     exit 1
 fi
+
+start_list()
+{
+    # LIST is a st2110 stream analyser which can run on a network
+    # capturing host. https://github.com/ebu/pi-list
+    # TODO: verify that LIST is installed before
+    logger "st2110 - Start EBU LIST server."
+
+    # start either native or dockerized LIST
+    cd /home/$ST2110_USER/pi-list/
+    su $ST2110_USER -c "tmux new-session -d -s list ./startup_server_live.sh"
+
+    # fully dockerized
+    # su $ST2110_USER -c "cd ./release && ./start.sh"
+}
+
+log_list()
+{
+    logger "EBU LIST server's log."
+    logger ""
+    su $ST2110_USER -c "tmux attach -r -t list"
+}
+
+stop_list()
+{
+    logger "Stop EBU LIST server."
+    su $ST2110_USER -c "tmux kill-session -t list"
+    #su $ST2110_USER -c "cd /home/$ST2110_USER/pi-list/release && ./stop.sh"
+}
 
 PTP_IFACE=$IFACE
 PTP_CONFIG=/etc/linuxptp/ptp4l.conf
@@ -100,9 +108,11 @@ case "$1" in
         stop_ptp
         stop_list
         ;;
-
+    log)
+        log_list
+        ;;
     *)
-        echo "Usage: $0 {start|stop}" >&2
+        echo "Usage: $0 {start|stop|log}" >&2
         exit 1
         ;;
 esac
