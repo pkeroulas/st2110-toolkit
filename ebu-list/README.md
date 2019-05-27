@@ -1,7 +1,7 @@
-# EBU-list server:
+# EBU-LIST server integration guide
 
-This is the installation guide for [EBU LIST](http://list.ebu.io/login).
-Although the project documentation allows to setup an offline analyzer, additional instruction are required for a complete capturing device. This include:
+This is the integration guide for [EBU LIST](http://list.ebu.io/login).
+Although the project documentation allows to setup an offline analyzer, additional instructions are required for a complete capturing device. This include:
 
 * master init script + config
 * linuxptp + config
@@ -30,7 +30,8 @@ apps/listwebserver/controllers/capture.js, line 47-48
 
 ## Configuration
 
-Edit master config (/etc/st2110.conf), especially the 'Mandatory' part.
+Edit master config (/etc/st2110.conf), especially the 'Mandatory' part
+which contains physical port names and data folder.
 
 ## Startup
 
