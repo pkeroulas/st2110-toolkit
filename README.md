@@ -41,11 +41,12 @@ docker build -t centos/transcoder:v0 .
 
 ## Configuration
 
-### Global
+### Master
 
 Both capture and transcoder scripts have default parameters but they can
 be overriden by a config filecan to be installed as `/etc/st2110.conf`.
-See the sample in `./config/`.
+See the sample in `./config/`. This config also provisions EBU-list
+server config.
 
 ### Stream config as SDP file
 
@@ -152,6 +153,10 @@ Additional params (capture duration, truncate) can be set in the conf
 file, i.e. `/etc/st2110.conf`. See sample `./config/st2110.conf` for
 details.
 
+## EBU-LIST
+
+[Installation guide](./ebu-list/README.md).
+
 ## Troubleshoot
 
 Find your live media interface name and execute:
@@ -203,5 +208,6 @@ Fox Network provides Wireshark dissectors:
 
 And EBU and CBC provides pcap analyser: Live IP Sowtware Toolkit
 
-* [LIST](http://list.ebu.io/login)
+* [EBU LIST](http://list.ebu.io/login)
+* [EBU tools](https://github.com/ebu/smpte2110-analyzer)
 * [source](https://github.com/ebu/pi-list)

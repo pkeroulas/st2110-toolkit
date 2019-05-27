@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Compile & Install everything for FFMPEG transcoding
-# and tcpdump capturing
+# and tcpdump capturing and EBU-LIST
 
 set -euo pipefail
 
@@ -220,10 +220,39 @@ install_smcroute()
     rm -rf $DIR
 }
 
+install_config()
+{
+    install -m 644 $THIS_DIR/config/st2110.conf  /etc/st2110.conf
+    install -m 755 $THIS_DIR./config/st2110.init /etc/init.d/st2110
+    install -m 644 $THIS_DIR./ptp/ptp4l.conf     /etc/linuxptp/ptp4l.conf
+    update-rc.d st2110 defaults
+    update-rc.d st2110 enable
+}
+
+install_list()
+{
+    $PACKAGE_MANAGER install -y \
+        ethtool \
+        docker \
+        docker-compose \
+        linuxptp
+
+    # no sudo
+    cd ~
+    git clone https://github.com/ebu/pi-list.git
+    cd pi-list
+    ./scripts/deploy/deploy.sh
+
+    # config
+    cp $THIS_DIR/ebu-list/config.yml.template .
+    cp $THIS_DIR/ebu-list/startup_server_live.sh .yml .
+}
+
 source $THIS_DIR/nmos/install.sh
 
 install_all()
 {
+    install_config
     install_common_tools
     install_monitoring_tools
     install_yasm
@@ -234,4 +263,5 @@ install_all()
     install_ffmpeg
     install_smcroute
     install_nmos
+    install_list
 }
