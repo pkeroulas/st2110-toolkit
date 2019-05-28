@@ -72,6 +72,11 @@ start_ptp()
      start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID --exec /usr/sbin/phc2sys -- -s $PTP_IFACE -c CLOCK_REALTIME -w -n $PTP_DOMAIN
 }
 
+log_ptp()
+{
+    journalctl -xef | grep "phc2sys\|ptp4l"
+}
+
 stop_ptp()
 {
     logger "st2110 - Stop linuxptp"
@@ -95,6 +100,15 @@ stop_mellanox()
     mst stop
 }
 
+log_system(){
+    journalctl -xef | grep 2110
+}
+
+usage()
+{
+    echo "Usage: $0 {start|stop|log}
+    log <list|ptp|system>" >&2
+}
 case "$1" in
     start)
         start_mellanox
@@ -110,10 +124,24 @@ case "$1" in
         smcroutectl kill
         ;;
     log)
-        log_list
+        case "$2" in
+            list)
+                log_list
+                ;;
+            system)
+                log_system
+                ;;
+            ptp)
+                log_ptp
+                ;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
         ;;
     *)
-        echo "Usage: $0 {start|stop|log}" >&2
+        usage
         exit 1
         ;;
 esac

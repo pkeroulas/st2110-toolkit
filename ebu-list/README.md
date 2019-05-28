@@ -46,9 +46,12 @@ Start all at once:
 sudo /etc/init.d/st2110 start
 ```
 
-Monitor the server:
+You can monitor the server, the ptp logs or system/process logs:
+
 ```
-sudo /etc/init.d/st2110 log
+sudo /etc/init.d/st2110 log list
+sudo /etc/init.d/st2110 log ptp
+sudo /etc/init.d/st2110 log system
 ```
 
 #TODO nodemon is not installed
