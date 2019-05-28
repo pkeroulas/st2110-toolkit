@@ -19,6 +19,8 @@ install_common
 install_list
 ```
 
+At this point, all the services should be enabled.
+
 ## Capture engine:
 
 2 choices:
