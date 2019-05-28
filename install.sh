@@ -6,6 +6,7 @@
 #set -euo pipefail
 
 THIS_DIR=.
+ST2110_CONF_FILE=/etc/st2110.conf
 
 if [ -f /etc/lsb-release ]; then
     OS=debian
@@ -222,9 +223,12 @@ install_smcroute()
 
 install_config()
 {
-    install -m 644 $THIS_DIR/config/st2110.conf  /etc/st2110.conf
-    install -m 755 $THIS_DIR/config/st2110.init /etc/init.d/st2110
+    # don't overwrite config, it is painful
+    if [ ! -f  $ST2110_CONF_FILE ]; then
+        install -m 644 $THIS_DIR/config/st2110.conf $ST2110_CONF_FILE
+    fi
     install -m 644 $THIS_DIR/ptp/ptp4l.conf     /etc/linuxptp/ptp4l.conf
+    install -m 755 $THIS_DIR/config/st2110.init /etc/init.d/st2110
     update-rc.d st2110 defaults
     update-rc.d st2110 enable
 }
@@ -236,8 +240,8 @@ install_list()
         docker-compose \
         linuxptp
 
-    if [ -f /etc/st2110.conf ]; then
-        source /etc/st2110.conf
+    if [ -f  $ST2110_CONF_FILE ]; then
+        source $ST2110_CONF_FILE
     else
         echo "Config should be installed first (install_config) and EDITED, exit."
         exit 1
