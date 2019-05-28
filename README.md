@@ -20,8 +20,7 @@ Tested distros:
 
 ## Install
 
-Install everything (tools, FFmpeg and all the dependencies) on Centos 7
-using the install scrip:
+Install everything (tools, FFmpeg and all the dependencies) using the install scrip:
 
 ```sh
 $ ./install.sh install_all
