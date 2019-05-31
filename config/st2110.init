@@ -20,13 +20,13 @@ if [ -f $ST2110_CONF_FILE ]; then
     . $ST2110_CONF_FILE
 fi
 
-if [ ! -d /sys/class/net/$IFACE ]; then
-    echo "$IFACE doesn't exist, exit."
+if [ ! -d /sys/class/net/$MEDIA_IFACE ]; then
+    echo "$MEDIA_IFACE doesn't exist, exit."
     exit 1
 fi
 
-if [ $(cat /sys/class/net/$IFACE/operstate) != "up" ]; then
-    echo "$IFACE is not up, exit."
+if [ $(cat /sys/class/net/$MEDIA_IFACE/operstate) != "up" ]; then
+    echo "$MEDIA_IFACE is not up, exit."
     exit 1
 fi
 
@@ -59,7 +59,7 @@ stop_list()
     #su $ST2110_USER -c "cd /home/$ST2110_USER/pi-list/release && ./stop.sh"
 }
 
-PTP_IFACE=$IFACE
+PTP_IFACE=$MEDIA_IFACE
 PTP_CONFIG=/etc/linuxptp/ptp4l.conf
 PTP_DOMAIN=$(sed -n 's/domainNumber\t\+\([0-9]*\)/\1/p' $PTP_CONFIG)
 PTP_PTP4L_PID=/var/run/ptp4l.pid
@@ -87,11 +87,13 @@ stop_ptp()
 
 start_mellanox()
 {
-    logger "st2110 - Start Mellanox"
+    logger "st2110 - Start Mellanox NIC"
     mst start
-    MLNX_DEV=$(mst status -v | tr -s ' ' | grep f1 | cut -d ' ' -f2)
+    MLNX_DEV=$(mst status -v | tr -s ' ' | grep $MEDIA_IFACE | cut -d ' ' -f2)
     mcra $MLNX_DEV 0xd8068 3
-    ethtool --set-priv-flags $PTP_IFACE sniffer on
+    ethtool --set-priv-flags $MEDIA_IFACE sniffer on
+
+    hwstamp_ctl -i $MEDIA_IFACE -r 1
 }
 
 stop_mellanox()
@@ -111,6 +113,10 @@ usage()
 }
 case "$1" in
     start)
+        logger "st2110 - Increasing the number of hugepages resources in the system."
+        echo 1000000000 > /proc/sys/kernel/shmmax
+        echo 800 > /proc/sys/vm/nr_hugepages
+
         start_mellanox
         start_ptp
         start_list
