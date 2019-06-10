@@ -33,5 +33,5 @@ cd $THIS_DIR
 2110_logger "Start the server"
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$THIS_DIR/build/lib/
 cd $THIS_DIR/apps/listwebserver
-nodemon ./server.js -- config.yml.dev --dev --live
+nodemon ./server.js -- config.yml --dev --live
 2110_logger "Server stopped"
