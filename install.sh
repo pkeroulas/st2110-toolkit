@@ -234,6 +234,22 @@ install_config()
     update-rc.d st2110 enable
 }
 
+install_mellanox()
+{
+    # couldn't automatically fetch files from:
+    # https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED
+    mkdir -p /mnt/iso
+    mount -o loop MLNX_OFED_LINUX-4.6-1.0.1.1-ubuntu18.04-x86_64.iso /mnt/iso
+    /mnt/iso/mlnxofedinstall --with-vma --force-fw-update
+    /etc/init.d/openibd restart
+    ibv_devinfo
+    mst start
+    mlxfwmanager
+
+    # To make sure libs are (not) installed:
+    # find /usr -name "*libvma*" -o -name "*libmlx5*" -o -name "*libibverbs*"
+}
+
 install_list()
 {
     $PACKAGE_MANAGER install -y \
