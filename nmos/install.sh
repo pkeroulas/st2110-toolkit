@@ -67,10 +67,7 @@ install_cpprest()
         -DWERROR:BOOL="0"
     make
     make install
-
-    #TODO: figure out where this should be installed
-    mkdir /root/cpprest
-    cp -r ../libs /root/cpprest/
+    cp -rf ../libs/websocketpp/websocketpp/ $PREFIX/include/
 
     rm -rf $DIR
 }
@@ -88,7 +85,8 @@ install_cppnode()
         -G "Unix Makefiles" \
         -DCMAKE_CONFIGURATION_TYPES:STRING="Debug" \
         -DBoost_USE_STATIC_LIBS:BOOL="1" \
-        -DWEBSOCKETPP_INCLUDE_DIR:PATH="/root/cpprest/libs/websocketpp"
+        -DCMAKE_CXX_FLAGS="-fpermissive" \
+        -DWEBSOCKETPP_INCLUDE_DIR:PATH="$PREFIX/include/websocketpp"
 
     make
     install -m 755 ./nmos-cpp-node ./nmos-cpp-registry ./nmos-cpp-test $PREFIX/bin

@@ -52,7 +52,8 @@ install_common_tools()
         tar \
         tcpdump \
         tmux \
-        wget
+        wget \
+        zlib1g-dev
 
     if [ $OS = "redhat" ]; then
         $PACKAGE_MANAGER -y update && $PACKAGE_MANAGER install -y \
@@ -248,7 +249,7 @@ install_list()
     fi
 
     USER_DIR=/home/$ST2110_USER
-    LIST_DIR=$USER_DIR/pi-list1/
+    LIST_DIR=$USER_DIR/pi-list
 
     su $ST2110_USER -c "
         git clone https://github.com/ebu/pi-list.git $LIST_DIR
