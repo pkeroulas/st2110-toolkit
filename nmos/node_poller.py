@@ -3,7 +3,7 @@ import sys
 import json
 import hashlib
 import time
-from common_api import *
+from nmos_node import NmosNode
 import os.path
 
 def usage():
@@ -17,34 +17,32 @@ Usage:
 
 """)
 
-def poll(ip_address):
+def poll(node):
     print("-" * 72)
-    base_url = get_connection_receiver_url(ip_address)
+    receiver_id_list = node.get_receiver_ids()
 
-    try:
-       connection_list = get_from_url(base_url)
-    except:
-        print("Unable to parse json of active connection")
-        return
+    for receiver_id in receiver_id_list:
+        # get media type
+        media_type = node.get_media_type(receiver_id)
+        msg = str(receiver_id) + "(" + str(media_type) + ")"
 
-    for connection_id in connection_list:
-        url = base_url + str(connection_id) + "active/"
-        connection = get_from_url(url)
-        if not connection['master_enable'] or not connection['activation']['mode']:
-            print(str(connection_id) + ": active=False")
+        # get connection status
+        connection_status = node.get_connection_status(receiver_id)
+        msg += ": active=" + str(connection_status)
+        if not connection_status:
+            print(msg)
             continue
 
-        #print(json.dumps(connection, indent=1))
-        raw_sdp = connection['transport_file']['data']
+        raw_sdp = node.get_connection_sdp(receiver_id)
         if raw_sdp == None:
-            print(str(connection_id) + ": SDP=None")
+            print(msg + ": SDP=None")
             continue
         else:
-            print(str(connection_id) + ": SDP=OK")
+            print(msg + ": SDP=OK")
 
+        # keep 'primary' part of SDP
         delimiter='m='
         sdp_chunks = [delimiter+e for e in raw_sdp.split(delimiter) if e]
-
         sdp_chunks[0] = sdp_chunks[0][len(delimiter):]
 
         # open file and write sdp chunk with 'primary' string inside
@@ -75,7 +73,8 @@ def main():
         return
 
     while True:
-        poll(sys.argv[1])
+        node = NmosNode(sys.argv[1])
+        poll(node)
         time.sleep(2)
 
 if __name__ == "__main__":
