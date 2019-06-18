@@ -35,6 +35,14 @@ apps/listwebserver/controllers/capture.js, line 47-48
 Edit master config (/etc/st2110.conf), especially the 'Mandatory' part
 which contains physical port names and data folder.
 
+For convenience, source that config in your user environment:
+add these lines your ~/.bashrc:
+
+```
+source /etc/st2110.conf
+export $(grep -v "^#" /etc/st2110.conf | cut -d= -f1)
+```
+
 ## Startup
 
 Installed initscript starts up all runtime dependencies:
