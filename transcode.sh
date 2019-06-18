@@ -20,12 +20,10 @@ then
 	exit -1
 fi
 
-help() {
+usage() {
 	echo -e "
-$SCRIPT opens multiple instances of ffmpeg transcoders.
-Each of them reads an SDP file decode a specific SMPTE ST 2110
-stream, re-encodes it to h264. All the streams are redirected to the
-same destination but with different ports.
+$SCRIPT opens multiple an instance of FFmpeg transcoder which reads an
+SDP file to decode SMPTE ST 2110 streams, re-encodes them to h264.
 
 Usage:
 \t$SCRIPT help      # show this message
@@ -215,16 +213,21 @@ stop() {
 	sed -i -e 's///g' $LOG_FILE
 }
 
+if [ $# -eq 0 ]; then
+    usage
+    exit 1
+fi
+
 cmd=$1
 shift
 
 case $cmd in
 	help)
-		help
+		usage
 		;;
 	setup)
 		if [ $# -lt 2 ]; then
-			help
+			usage
 			exit 1
 		fi
 		iface=$1
@@ -239,7 +242,7 @@ case $cmd in
 		fi
 
 		if [ $# -lt 1 ]; then
-			help
+			usage
 			exit 1
 		fi
 
@@ -259,7 +262,7 @@ case $cmd in
 					output=${OPTARG}
 					;;
 				*)
-					help
+					usage
 					exit 1
 					;;
 			esac
@@ -276,8 +279,7 @@ case $cmd in
 		stop
 		;;
 	log)
-		# attach to tmux session, read-only, Ctrl-b + d to detach
-		# Ctrl-b + Ctrl-b + d if tmux inside tmux
+		# attach to tmux session, read-only, Ctrl-a + d to detach
 		tmux attach -r -t transcoder
 		if [ ! $? -eq 0 ]; then
 			tail -100 $LOG_FILE
@@ -313,6 +315,6 @@ case $cmd in
 		start $args
 		;;
 	*)
-		help
+		usage
 		exit 1
 esac
