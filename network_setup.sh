@@ -62,11 +62,11 @@ echo "$iface: OK"
 
 # save interface
 if [ ! -f $ST2110_CONF_FILE ]; then
-    echo "IFACE=$iface" > $ST2110_CONF_FILE
-elif grep -q "IFACE=.*" $ST2110_CONF_FILE; then
-    sed -i 's/\(IFACE=\).*/\1'$iface'/' $ST2110_CONF_FILE
+    echo "MEDIA_IFACE=$iface" > $ST2110_CONF_FILE
+elif grep -q "MEDIA_IFACE=.*" $ST2110_CONF_FILE; then
+    sed -i 's/\(MEDIA_IFACE=\).*/\1'$iface'/' $ST2110_CONF_FILE
 else
-    echo "IFACE=$iface" >> $ST2110_CONF_FILE
+    echo "MEDIA_IFACE=$iface" >> $ST2110_CONF_FILE
 fi
 
 echo "-------------------------------------------"

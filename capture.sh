@@ -3,7 +3,7 @@
 # default param
 CAPTURE_DURATION=10 # in sec
 ST2110_CONF_FILE=/etc/st2110.conf
-IFACE=eth0
+MEDIA_IFACE=eth0
 
 # const
 CAPTURE=tmp.pcap
@@ -48,9 +48,9 @@ case $cmd in
 			help
 			exit 1
 		fi
-		IFACE=$1
+		MEDIA_IFACE=$1
 		sdp=$2
-		$DIR/network_setup.sh $IFACE $sdp
+		$DIR/network_setup.sh $MEDIA_IFACE $sdp
 		exit $?
 		;;
 	sdp)
@@ -86,17 +86,17 @@ esac
 
 echo "------------------------------------------"
 
-if [ ! -d /sys/class/net/$IFACE ]; then
-	echo "$IFACE doesn't exist, exit."
+if [ ! -d /sys/class/net/$MEDIA_IFACE ]; then
+	echo "$MEDIA_IFACE doesn't exist, exit."
 	exit 1
 fi
 
-if [ $(cat /sys/class/net/$IFACE/operstate) != "up" ]; then
-	echo "$IFACE is not up, exit."
+if [ $(cat /sys/class/net/$MEDIA_IFACE/operstate) != "up" ]; then
+	echo "$MEDIA_IFACE is not up, exit."
 	exit 1
 fi
 
-echo "$IFACE: OK"
+echo "$MEDIA_IFACE: OK"
 
 echo "------------------------------------------
 Mcast IPs:"
@@ -112,8 +112,8 @@ echo "------------------------------------------
 Joining"
 
 for m in $mcast_ips; do
-	smcroutectl join $IFACE $m
-	if netstat -ng | grep -q "$IFACE.*$m"; then
+	smcroutectl join $MEDIA_IFACE $m
+	if netstat -ng | grep -q "$MEDIA_IFACE.*$m"; then
 		echo "$m OK"
 	else
 		echo "Can't joint $m"
@@ -130,7 +130,7 @@ fi
 tcpdump -vvv \
 	$TCPDUMP_OPTIONS \
 	-j adapter_unsynced \
-	-i $IFACE \
+	-i $MEDIA_IFACE \
 	-n "multicast" \
 	-c $MAX_COUNT \
 	-w $CAPTURE \
@@ -148,7 +148,7 @@ echo "------------------------------------------
 Leaving"
 
 for m in $mcast_ips; do
-	smcroutectl leave $IFACE $m
+	smcroutectl leave $MEDIA_IFACE $m
 done
 
 if [ ! -f $CAPTURE ]; then
