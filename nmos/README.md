@@ -19,12 +19,26 @@ build a pure software receiver controlled by IS-05.
 
 TODO
 
+### DNS-SD
+
+[AMWA instructions:](https://github.com/AMWA-TV/nmos/wiki/DNS-Servers)
+
+dnsmasq.conf contains:
+
+* DNS entries (with ports)
+* the domain name (== nxdomain and != FQDN)
+* the local domain (which tell to search in /etc/hosts which contains querySD and registrationSD)
+* a ref to the 'master' server in /etc/resolv.something.conf, for request forward for non local names
+* log_query option for troubleshooting
+
+Devices should get the IP of this DNS server manually or through DHCP
+
 ## Execution:
 
 Run run Sony virtual node:
 
 ```sh
-~/nmos-cpp/Development/build/nmos-cpp-node ~/st2110_toolkit/nmos/nmos-cpp-ffmpeg-mdns-config.json
+~/nmos-cpp/Development/build/nmos-cpp-node ~/st2110_toolkit/nmos/config/nmos-cpp-ffmpeg-mdns-config.json
 ```
 
 Run the node poller on the same host:
@@ -63,4 +77,5 @@ Disable the receiver node:
 * Riedel Explorer use port 80 only for IS-05
 * Binding cpp-nmos connection API to port 80 needs sudo on Ubunutu 18.
 * be carefull of the IPs exposed by virtual node, it could be mgmt IP, the client can be confused
+* Run virtual node and registry on separated hosts
 * video SDP and audio SDP have to be combined into a single file to work with ffmpeg but it's not allow by ST2110.
