@@ -5,7 +5,7 @@ ST2110_CONF_FILE=/etc/st2110.conf
 
 usage (){
     echo -e "$SCRIPT create routes to accept multicast traffic on a
-given interface. The user must have privileged rights.
+given interface.
 
 \t$SCRIPT <sdp_file>"
 }

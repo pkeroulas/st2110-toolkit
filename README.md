@@ -83,7 +83,7 @@ Firewall rules may also be needed to unblock the traffic from the NIC to
 the userspace socket interface. This is all done by this script:
 
 ```sh
-$ sudo ./network_setup.sh sdp.file
+$ ./network_setup.sh sdp.file
 [...]
 ```
 
@@ -173,7 +173,7 @@ details.
 Find your live media interface name and execute:
 
 ```sh
-$ sudo ./network_setup.sh file.sdp
+$ ./network_setup.sh file.sdp
 [...]
 ```
 
@@ -185,6 +185,13 @@ $ cd misc/
 $ gcc -o socket_reader -std=c99 socket_reader.c
 $ ./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 [...]
+```
+
+Validate that the the multicast group is joined through the correct
+interface:
+
+```sh
+netstat -ng | grep <multicast_group>
 ```
 
 Note that in certain setup, the initial join may take several second.

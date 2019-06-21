@@ -64,12 +64,13 @@ install_common_tools()
             zlib-devel
     fi
 
-    # rigth permission to use tcpdump without sudo
-    bin=$(which tcpdump)
+    # rigth capabilities in order to use tcpdump, ip, iptables without sudo
     groupadd pcap
-    usermod -a -G pcap $ST2110_USER
-    chgrp pcap $bin
-    setcap cap_net_raw,cap_net_admin=eip $bin
+    for p in tcpdump ip iptables; do
+        bin=$(readlink -f $(which $p))
+        chgrp pcap $bin
+        setcap cap_net_raw,cap_net_admin=eip $bin
+    done
 }
 
 install_monitoring_tools()
@@ -264,6 +265,7 @@ install_list()
         exit 1
     fi
 
+    usermod -a -G pcap $ST2110_USER
     USER_DIR=/home/$ST2110_USER
     LIST_DIR=$USER_DIR/pi-list
 
