@@ -273,6 +273,7 @@ install_list()
         git clone https://github.com/ebu/pi-list.git $LIST_DIR
         cp $THIS_DIR/ebu-list/config.yml.template $LIST_DIR
         cp $THIS_DIR/ebu-list/startup_server_live.sh $LIST_DIR
+        cp $THIS_DIR/ebu-list/upgrade.sh $LIST_DIR
         cd $LIST_DIR
         ./scripts/deploy/deploy.sh
         "
