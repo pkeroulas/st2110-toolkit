@@ -39,6 +39,10 @@ Establish a connection from sender (192.168.39.12):
 ~/st2110_toolkit/nmos/node_connection.py 192.168.39.12 localhost start
 ```
 
+This scripts fetch transport file of the 1st video and 1st audio tracks
+of the sender device and pushes them to the corresponding track of the
+receiver device.
+
 Refer to general documention to setup the transcoder.
 
 Disable the receiver node:
