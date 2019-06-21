@@ -40,14 +40,24 @@ docker build -t centos/transcoder:v0 .
 
 ## Configuration
 
-### Master
+### NIC
+
+The first thing to do on system startup is to setup the network
+interface controller (NIC).
+
+```sh
+$ sudo ./nic_setup.sh eth0
+[...]
+```
+
+### Master config
 
 Both capture and transcoder scripts have default parameters but they can
 be overriden by a config filecan to be installed as `/etc/st2110.conf`.
 See the sample in `./config/`. This config also provisions EBU-list
 server config.
 
-### Stream config as SDP file
+### Stream description: SDP file
 
 ST2110 senders, like Embrionix encap, should provide an SDP file to
 describe every produced essences, i.e. RTP streams.
@@ -67,11 +77,13 @@ SDP written to emb_encap_176.sdp
 
 [Embrinonix SDP example.](./doc/sdp.sample)
 
-In some situations, it is necessary to setup the media network interface,
-the IP routes and firewall rules:
+When using some applications like ffmpeg, a wrong interface to perform
+the IGMP join to multicast group. Setup the IP routing table fixes.
+Firewall rules may also be needed to unblock the traffic from the NIC to
+the userspace socket interface. This is all done by this script:
 
 ```sh
-$ sudo ./network_setup.sh eth0 sdp.file
+$ sudo ./network_setup.sh sdp.file
 [...]
 ```
 
@@ -161,7 +173,7 @@ details.
 Find your live media interface name and execute:
 
 ```sh
-$ sudo ./network_setup.sh eth0 file.sdp
+$ sudo ./network_setup.sh file.sdp
 [...]
 ```
 
@@ -192,10 +204,8 @@ netstat -s -u
 
 ## [NMOS.](./doc/nmos.md)
 
-
 ## Todos
 
-* separate NIC setup from network setup
 * document Mellanox NIC installation
 
 ## Additional resources
