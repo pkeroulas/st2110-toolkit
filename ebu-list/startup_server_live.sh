@@ -15,7 +15,7 @@ if ! ping -W 1 -c 1 -q $IP > /dev/null; then
     exit 1
 fi
 
-sed "s,\(folder:\).*,\1 $DATA_FOLDER,;
+sed "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
     s,\(webappDomain:\).*,\1 http://$IP:8080,;
     s,\(  interfaceName:\).*,\1 $MEDIA_IFACE,;
     " ./config.yml.template | tee $THIS_DIR/apps/listwebserver/config.yml
