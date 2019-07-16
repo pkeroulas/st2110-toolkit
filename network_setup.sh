@@ -68,10 +68,14 @@ if [ -z $gateway -o -z $ipaddr -o -z $subnet ]; then
     exit 1
 fi
 
-# The unicast IP of the source should be accessible through the gateway.
-# This is necessary for the reverse path resolution of the source in
-# order to accept traffic. Let's find source and media info in the SDP.
+# The control unicast IP of the source should be accessible through the
+# gateway. This MAY be necessary for the reverse path resolution of the source in
+# order to accept traffic.
 source_ip="$(sed -n 's/^o=.*IN IP4 \(.*\)$/\1/p' $sdp_file | sed 's/\r//')"
+
+# Get media source IP instead
+# source_ip="$(sed -n 's/^a=source-filter.*IN IP4 .* \(.*\)$/\1/p' $sdp_file | sed 's/\r//' | uniq)"
+
 multicast_groups=$(sed -n 's/^c=IN IP4 \(.*\)\/.*/\1/p' $sdp_file)
 # get the port of the last essence which is associated to the last
 # multicast group, i.e. $gr
@@ -89,7 +93,7 @@ fi
 
 # ip route add $subnet/$cidr via $gateway dev $MEDIA_IFACE
 if ! ping -W 1 -I $MEDIA_IFACE -c 1 -q $source_ip > /dev/null; then
-    echo "Couln't ping source @ $source_ip, add a  route to source"
+    echo "Couln't ping source @ $source_ip, add a route to source"
     ip route add $source_ip via $gateway dev $MEDIA_IFACE
 
     # disable reverse path filtering, useless if explicit route is added"

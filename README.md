@@ -213,6 +213,11 @@ netstat -s -u
 
 ## Todos
 
+* rework nic_setup.sh
+* poller: display ffmpeg status
+* ffmpeg: a static route to multicast must be added, why? would it work
+  with a route to source IP only? is it possible to tell ffmpeg which
+  interface to use
 * document Mellanox NIC installation
 
 ## Additional resources

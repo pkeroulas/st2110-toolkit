@@ -2,7 +2,12 @@
 
 * has 2 SDI inputs A and B
 * encapsulates 1 video, 8 audio and 1 ancillary flow for each input
-* ouputs 2 (1 and 2) RTP streams par flow
+* ouputs 2 (1 and 2) RTP streams per flow for -7
+* provides normal, per-flow SDPs
+* provides -7 SDPs, with primary and secondary flow combined (used by NMOS API)
+* has a unicast IP address for control
+* has a fake source IP address for media, it is not pingable and is used
+  for src IP only, in packets
 
 The 40 flows are ordered this way:
 
@@ -21,4 +26,4 @@ The 40 flows are ordered this way:
 * 38: ancillary B1
 * 39: ancillary B2
 
-get_sdp.py uses Embrionix API to fetch sdp per flow.
+get_sdp.py uses Embrionix API to fetch SDP per flow.
