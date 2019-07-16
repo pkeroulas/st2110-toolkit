@@ -229,6 +229,12 @@ install_config()
     if [ ! -f  $ST2110_CONF_FILE ]; then
         install -m 644 $THIS_DIR/config/st2110.conf $ST2110_CONF_FILE
     fi
+    source $ST2110_CONF_FILE
+
+    if ! grep -q 2110 /home/$ST2110_USER/.bashrc; then
+        cat $THIS_DIR/config/bashrc >> /home/$ST2110_USER/.bashrc
+    fi
+
     install -m 644 $THIS_DIR/ptp/ptp4l.conf     /etc/linuxptp/ptp4l.conf
     install -m 755 $THIS_DIR/config/st2110.init /etc/init.d/st2110
     update-rc.d st2110 defaults

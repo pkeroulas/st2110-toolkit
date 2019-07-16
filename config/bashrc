@@ -1,0 +1,13 @@
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "%       ST2110 CONFIG        %"
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+
+st2110_conf=/etc/st2110.conf
+
+if [ -f $st2110_conf ]; then
+        cat $st2110_conf
+        source $st2110_conf
+        export $(grep -v "^#" $st2110_conf | cut -d= -f1)
+else
+        echo "Missing $st2110_conf"
+fi
