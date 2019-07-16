@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+
 import sys
 import json
 import hashlib
@@ -24,7 +25,7 @@ def poller_log(msg):
 
 def transcode(active, sdp_file):
     user=os.environ['ST2110_USER']
-    transcoder='/home/'+user+'/st2110_toolkit/transcode.sh'
+    transcoder='/home/'+user+'/st2110-toolkit/transcode.sh'
     if not active:
         res = subprocess.check_output([transcoder, 'stop'])
     else:
@@ -57,7 +58,7 @@ def poll(node):
         sdp_filtered=""
         sdp_already_has_description = False
         for rx_id in ids:
-            if not state[rx_id]['connection_status']:
+            if not state[rx_id]['connection_status'] or not state[rx_id]['sdp']:
                 continue
             sdp = state[rx_id]['sdp']
 
@@ -97,6 +98,8 @@ def poll(node):
             transcode(True, sdp_filename)
 
         old_sdp_filtered = sdp_filtered
+
+        #TODO: ffmpeg status?
 
 def main():
     if len(sys.argv) < 2:
