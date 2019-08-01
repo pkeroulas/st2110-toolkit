@@ -221,6 +221,10 @@ install_smcroute()
     make install
     make distclean
     rm -rf $DIR
+
+    bin=$(readlink -f $(which smcroutectl))
+    chgrp pcap $bin
+    setcap cap_net_raw,cap_net_admin=eip $bin
 }
 
 install_config()
