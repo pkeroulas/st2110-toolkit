@@ -14,6 +14,10 @@
 #  $ update-rc.d st2110 defaults
 #  $ update-rc.d st2110 enable
 
+log_st2110()
+{
+    logger "st2110 - $@"
+}
 
 ST2110_CONF_FILE=/etc/st2110.conf
 if [ -f $ST2110_CONF_FILE ]; then
@@ -21,7 +25,7 @@ if [ -f $ST2110_CONF_FILE ]; then
 fi
 
 if [ ! -d /sys/class/net/$MEDIA_IFACE ]; then
-    echo "$MEDIA_IFACE doesn't exist, exit."
+    log_st2110 "$MEDIA_IFACE doesn't exist, exit."
     exit 1
 fi
 
@@ -35,9 +39,8 @@ start_list()
     # LIST is a st2110 stream analyser which can run on a network
     # capturing host. https://github.com/ebu/pi-list
     # TODO: verify that LIST is installed before
-    logger "st2110 - Start EBU LIST server."
+    log_st2110 "Start EBU LIST server."
 
-    # start either native or dockerized LIST
     cd /home/$ST2110_USER/pi-list/
     # start either native or dockerized LIST
     ./build/bin/enable_hw_timestamps $MEDIA_IFACE
@@ -49,14 +52,13 @@ start_list()
 
 log_list()
 {
-    logger "EBU LIST server's log."
-    logger ""
+    log_st2110 "EBU LIST server's log."
     su $ST2110_USER -c "tmux attach -r -t list"
 }
 
 stop_list()
 {
-    logger "Stop EBU LIST server."
+    log_st2110 "Stop EBU LIST server."
     su $ST2110_USER -c "tmux kill-session -t list"
     killall node
     #su $ST2110_USER -c "cd /home/$ST2110_USER/pi-list/release && ./stop.sh"
@@ -70,9 +72,9 @@ PTP_PHC2SYS_PID=/var/run/phc2sys.pid
 
 start_ptp()
 {
-    logger "st2110 - Start linuxptp"
-     start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PTP4L_PID --exec /usr/sbin/ptp4l -- -f $PTP_CONFIG -s -i $PTP_IFACE
-     start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID --exec /usr/sbin/phc2sys -- -s $PTP_IFACE -c CLOCK_REALTIME -w -n $PTP_DOMAIN
+    log_st2110 "Start linuxptp"
+    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PTP4L_PID --exec /usr/sbin/ptp4l -- -f $PTP_CONFIG -s -i $PTP_IFACE
+    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID --exec /usr/sbin/phc2sys -- -s $PTP_IFACE -c CLOCK_REALTIME -w -n $PTP_DOMAIN
 }
 
 log_ptp()
@@ -82,7 +84,7 @@ log_ptp()
 
 stop_ptp()
 {
-    logger "st2110 - Stop linuxptp"
+    log_st2110 "Stop linuxptp"
     start-stop-daemon --stop --pidfile $PTP_PTP4L_PID --oknodo
     start-stop-daemon --stop --pidfile $PTP_PHC2SYS_PID --oknodo
     rm -f $PTP_PHC2SYS_PID $PTP_PTP4L_PID
@@ -90,7 +92,7 @@ stop_ptp()
 
 start_mellanox()
 {
-    logger "st2110 - Start Mellanox NIC"
+    log_st2110 "Start Mellanox NIC"
     mst start
     MLNX_DEV=$(mst status -v | tr -s ' ' | grep $MEDIA_IFACE | cut -d ' ' -f2)
     mcra $MLNX_DEV 0xd8068 3
@@ -101,7 +103,7 @@ start_mellanox()
 
 stop_mellanox()
 {
-    logger "st2110 - Stop Mellanox"
+    log_st2110 "Stop Mellanox"
     mst stop
 }
 
@@ -116,7 +118,7 @@ usage()
 }
 case "$1" in
     start)
-        logger "st2110 - Increasing the number of hugepages resources in the system."
+        log_st2110 "Increasing the number of hugepages resources in the system."
         echo 1000000000 > /proc/sys/kernel/shmmax
         echo 800 > /proc/sys/vm/nr_hugepages
 
