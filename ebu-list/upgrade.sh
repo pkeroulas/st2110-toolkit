@@ -1,14 +1,12 @@
 #!/bin/bash
-set -e
 
-git stash
+set -eux
+
+# connection issue? restart docker
+
+# git stash whatever you need before
 git checkout master
-git pull --all
-git stash pop
+git pull devops master
+git submodule update --init --recursive
 
-git submodule update --init
-
-cd build/
-cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_PCH=OFF -DBUILD_APPS=ON
-#cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_PCH=OFF -DBUILD_ALL=ON
-make -j8
+./scripts/deploy/deploy.sh
