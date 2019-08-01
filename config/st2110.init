@@ -39,6 +39,8 @@ start_list()
 
     # start either native or dockerized LIST
     cd /home/$ST2110_USER/pi-list/
+    # start either native or dockerized LIST
+    ./build/bin/enable_hw_timestamps $MEDIA_IFACE
     su $ST2110_USER -c "tmux new-session -d -s list ./startup_server_live.sh"
 
     # fully dockerized
