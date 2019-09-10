@@ -1,7 +1,7 @@
 #!/bin/sh -e
 ### BEGIN INIT INFO
 # Provides:          st2110
-# Required-Start:    $time $network $local_fs $syslog
+# Required-Start:    $time $network $local_fs $syslog $docker
 # Required-Stop:
 # Default-Start:     2 3 4 5
 # Default-Stop:
@@ -95,7 +95,13 @@ start_mellanox()
     log_st2110 "Start Mellanox NIC"
     mst start
     MLNX_DEV=$(mst status -v | tr -s ' ' | grep $MEDIA_IFACE | cut -d ' ' -f2)
+    if $MLNX_DEV = "NA"; then
+        log_st2110 "Couldn't detect MST device: $MLNX_DEV"
+        exit 1
+    fi
     mcra $MLNX_DEV 0xd8068 3
+
+    # doesn't look to work with  MT27800 Family [ConnectX-5]
     ethtool --set-priv-flags $MEDIA_IFACE sniffer on
 
     hwstamp_ctl -i $MEDIA_IFACE -r 1
@@ -108,7 +114,7 @@ stop_mellanox()
 }
 
 log_system(){
-    journalctl -xef | grep 2110
+    journalctl -xef -n 1000 | grep 2110
 }
 
 usage()
