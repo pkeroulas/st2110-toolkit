@@ -16,7 +16,7 @@
 
 log_st2110()
 {
-    logger "st2110 - $@"
+    logger -t st2110 "$@"
 }
 
 ST2110_CONF_FILE=/etc/st2110.conf
@@ -41,27 +41,20 @@ start_list()
     # TODO: verify that LIST is installed before
     log_st2110 "Start EBU LIST server."
 
-    cd /home/$ST2110_USER/pi-list/
-    # start either native or dockerized LIST
-    ./build/bin/enable_hw_timestamps $MEDIA_IFACE
-    su $ST2110_USER -c "tmux new-session -d -s list ./startup_server_live.sh"
-
-    # fully dockerized
-    # su $ST2110_USER -c "cd ./release && ./start.sh"
+    $LIST_PATH/build/bin/enable_hw_timestamps $MEDIA_IFACE
+    su $ST2110_USER -c "ebu_list_ctl start"
 }
 
 log_list()
 {
     log_st2110 "EBU LIST server's log."
-    su $ST2110_USER -c "tmux attach -r -t list"
+    su $ST2110_USER -c "ebu_list_ctl log"
 }
 
 stop_list()
 {
     log_st2110 "Stop EBU LIST server."
-    su $ST2110_USER -c "tmux kill-session -t list"
-    killall node
-    #su $ST2110_USER -c "cd /home/$ST2110_USER/pi-list/release && ./stop.sh"
+    su $ST2110_USER -c "ebu_list_ctl stop"
 }
 
 PTP_IFACE=$MEDIA_IFACE

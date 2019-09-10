@@ -235,8 +235,9 @@ install_config()
     fi
     source $ST2110_CONF_FILE
 
+    install -m 644 $THIS_DIR/config/st2110.bashrc /home/$ST2110_USER/
     if ! grep -q 2110 /home/$ST2110_USER/.bashrc; then
-        cat $THIS_DIR/config/bashrc >> /home/$ST2110_USER/.bashrc
+        echo "source /home/$ST2110_USER/st2110.bashrc" >> /home/$ST2110_USER/.bashrc
     fi
 
     install -m 644 $THIS_DIR/ptp/ptp4l.conf     /etc/linuxptp/ptp4l.conf
@@ -279,11 +280,9 @@ install_list()
     USER_DIR=/home/$ST2110_USER
     LIST_DIR=$USER_DIR/pi-list
 
+    install -m 755 $THIS_DIR/ebu-list/ebu_list_ctl /usr/sbin/
     su $ST2110_USER -c "
         git clone https://github.com/ebu/pi-list.git $LIST_DIR
-        cp $THIS_DIR/ebu-list/config.yml.template $LIST_DIR
-        cp $THIS_DIR/ebu-list/startup_server_live.sh $LIST_DIR
-        cp $THIS_DIR/ebu-list/upgrade.sh $LIST_DIR
         cd $LIST_DIR
         ./scripts/deploy/deploy.sh
         "

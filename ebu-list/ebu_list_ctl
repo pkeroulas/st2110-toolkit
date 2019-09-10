@@ -1,0 +1,106 @@
+#!/bin/bash
+
+log_ebu_list()
+{
+    logger -t "st2110-ebulist" "$@"
+}
+
+ST2110_CONF_FILE=/etc/st2110.conf
+if [ -f $ST2110_CONF_FILE ]; then
+    . $ST2110_CONF_FILE
+fi
+
+if [ -z $LIST_PATH -o -z $ST2110_USER ]; then
+    log_ebu_list "Missing param LIST_PATH or ST2110_USER..."
+    exit 1
+fi
+
+path=$(pwd)
+
+start()
+{
+    IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+    if ! ping -W 1 -c 1 -q $IP > /dev/null; then
+        echo "Couln't ping $IP for interface $MGMT_IFACE, exit."
+        exit 1
+    fi
+
+    sed -i "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
+        s,\(cpp:\).*,\1 $LIST_PATH/build/bin,;
+        s,\(webappDomain:\).*,\1 http://$IP:8080,;
+        " $LIST_PATH/apps/listwebserver/config.yml
+
+    sed -i "s,\(  interfaceName:\).*,\1 $MEDIA_IFACE,;
+        s,\(  bin:\).*,\1 $LIST_PATH/build/bin,;
+        " $LIST_PATH/apps/capture_probe/config.yml
+
+    log_ebu_list "Start mongo and influx"
+    cd $LIST_PATH/apps/external/
+    docker-compose up -d
+
+    log_ebu_list "Start the UI"
+    cd $LIST_PATH/apps/gui/
+    npm start 2>&1 | logger -t "st2110-ebulist-gui" &
+
+    #apps/capture_probe" "npm run dev -- config.yml
+
+    log_ebu_list "Start the server"
+    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
+    cd $LIST_PATH/apps/listwebserver
+    nodemon ./server.js -- config.yml --dev --live 2>&1 | logger -t "st2110-ebulist-server" &
+}
+
+stop()
+{
+    killall -9 node
+    cd $LIST_PATH/apps/external/
+    docker-compose down
+}
+
+log()
+{
+    journalctl -xef | grep "st2110-ebulist"
+}
+
+upgrade()
+{
+    set -eux
+    cd $LIST_PATH
+
+    # git stash whatever you need before
+    git checkout release
+    git fetch devops
+    git merge devops/release
+    git submodule update --init --recursive
+
+    ./scripts/deploy/deploy.sh
+
+    set +eux
+}
+
+usage()
+{
+    echo "Usage: $0 {start|stop|log|upgrade}" >&2
+}
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    log)
+        log
+        ;;
+    upgrade)
+        upgrade
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
+
+cd $path
+
+exit 0
