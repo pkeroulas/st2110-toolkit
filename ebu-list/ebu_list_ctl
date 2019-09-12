@@ -31,14 +31,14 @@ start()
 
     log_ebu_list "Start the UI"
     cd $LIST_PATH/apps/gui/
-    npm start 2>&1 | logger -t "st2110-ebulist-gui" &
+    npm start 2>&1 > /tmp/list-gui.log &
 
     log_ebu_list "Start the capture probe"
     cd $LIST_PATH/apps/capture_probe/
     sed -i "s,\(.*interface:\).*,\1 $MEDIA_IFACE,;
         s,\(.*bin:\).*,\1 $LIST_PATH/build/bin,;
         " ./config.yml
-    npm run dev -- config.yml | logger -t "st2110-ebulist-gui" &
+    npm run dev -- config.yml 2>&1 > /tmp/list-capture.log &
 
     log_ebu_list "Start the server"
     cd $LIST_PATH/apps/listwebserver
@@ -47,7 +47,7 @@ start()
         s,\(webappDomain:\).*,\1 http://$IP:8080,;
         " ./config.yml
     export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
-    nodemon ./server.js -- config.yml --dev --live 2>&1 | logger -t "st2110-ebulist-server" &
+    nodemon ./server.js -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
 }
 
 stop()
@@ -84,7 +84,7 @@ status()
 
 log()
 {
-    journalctl -xef | grep "st2110-ebulist"
+    tail -f /tmp/list*.log
 }
 
 upgrade()
