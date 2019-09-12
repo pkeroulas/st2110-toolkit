@@ -22,4 +22,6 @@ echo
 echo "EBU-LIST utility: ebu_list_ctl"
 echo
 
-ebu_list show_usage
+ebu_list_ctl show_usage
+
+ebu_list_ctl status

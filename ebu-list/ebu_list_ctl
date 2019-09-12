@@ -57,6 +57,29 @@ stop()
     docker-compose down
 }
 
+get_status()
+{
+    if $2 | grep -q "$3"; then
+        ret="UP"
+    else
+        ret="DOWN"
+    fi
+    printf  "%-30.30s: %s\n" "$1" "$ret"
+}
+
+status()
+{
+    get_status "Media interface" "ip addr show $MEDIA_IFACE" "$MEDIA_IFACE: .* UP"
+    get_status "Ptp for Linux daemon" "ps aux" "[p]tp4l"
+    get_status "Ptp to NIC" "ps aux" "[p]hc2sys"
+    get_status "Docker daemon" "ps aux" "[d]ockerd"
+    get_status "Mongo DB" "docker ps" "mongo"
+    get_status "Influx DB" "docker ps" "influxdb"
+    get_status "Rabbit MQ" "docker ps" "rabbitmq"
+    get_status "LIST server" "ps aux" "[n]ode .*server.js"
+    get_status "LIST gui" "ps aux" "[n]ode .*gui"
+}
+
 log()
 {
     journalctl -xef | grep "st2110-ebulist"
@@ -80,7 +103,7 @@ upgrade()
 
 usage()
 {
-    echo "Usage: $0 {start|stop|log|upgrade}" >&2
+    echo "Usage: $0 {start|stop|status|log|upgrade}" >&2
 }
 case "$1" in
     start)
@@ -88,6 +111,9 @@ case "$1" in
         ;;
     stop)
         stop
+        ;;
+    status)
+        status
         ;;
     log)
         log
