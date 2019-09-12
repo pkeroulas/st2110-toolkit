@@ -88,10 +88,19 @@ log()
 
 upgrade()
 {
-    set -eux
     cd $LIST_PATH
 
-    # git stash whatever you need before
+    git status
+    echo "Changes will be deleted."
+    echo "Do you really want to upgrade? [y/n]"
+    read y
+    if [ $y != "y" ]; then
+        echo "Abort."
+        exit
+    fi
+
+    set -eux
+    git reset --hard
     git checkout release
     git fetch devops
     git merge devops/release
