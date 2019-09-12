@@ -1,6 +1,6 @@
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%       ST2110 SERVER        %"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "#####################################"
+echo "#   SMPTE ST 2110 TOOLKIT SERVER    #"
+echo "#####################################"
 
 echo "Network config: /etc/netplan/*"
 echo "      $ sudo netplan apply"
@@ -20,8 +20,6 @@ echo "Master init script: /etc/init.d/st2110"
 echo
 
 echo "EBU-LIST utility: ebu_list_ctl"
-echo
-
 ebu_list_ctl show_usage
-
+echo
 ebu_list_ctl status

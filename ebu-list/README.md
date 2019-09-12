@@ -1,12 +1,14 @@
 # EBU-LIST server integration guide
 
-This is the integration guide for [EBU LIST](http://list.ebu.io/login).
-Although the project documentation allows to setup an offline analyzer, additional instructions are required for a complete capturing device. This include:
+This is the integration guide for [EBU LIST](https://tech.ebu.ch/list).
+Although the project documentation allows to setup an offline analyzer,
+additional instructions are required for a complete capturing device.
 
-* master init script + config
+This include:
+
+* master control script + config
 * linuxptp + config
 * NIC settings
-* LIST server startup script + config generated from master config
 
 ## Installation steps
 
@@ -24,44 +26,34 @@ At this point, all the services should be enabled.
 ## Capture engine:
 
 2 choices:
-* regular tcpdump which run with generic NIC (limited precision)
-* custom recoder which relies on VMA accelaration with Mellanox
 
-The capture engine is hard-coded is EBU-LST source:
-apps/listwebserver/controllers/capture.js, line 47-48
+* regular tcpdump which run with generic NIC (limited precision
+  regarding packet timestamping)
+* custom recoder which relies on VMA accelaration with Mellanox (need
+  for EBU support for activation)
 
 ## Configuration
 
 Edit master config (/etc/st2110.conf), especially the 'Mandatory' part
-which contains physical port names and data folder.
+which contains physical port names, path, etc. This config is loaded by
+every script of this toolkit, including EBU-LIST startup script and it
+is loaded on ssh login as well.
 
-For convenience, source that config in your user environment:
-add these lines your ~/.bashrc:
-
-```
-source /etc/st2110.conf
-export $(grep -v "^#" /etc/st2110.conf | cut -d= -f1)
-```
-
-## Startup
-
-Installed initscript starts up all runtime dependencies:
-
-* Mellanox controller
-* linuxptp
-* LIST server
-
-Start all at once:
-```
-sudo /etc/init.d/st2110 start
-```
-
-You can monitor the server, the ptp logs or system/process logs:
+## Control
 
 ```
-sudo /etc/init.d/st2110 log list
-sudo /etc/init.d/st2110 log ptp
-sudo /etc/init.d/st2110 log system
+$ ebu_list_ctl
+Usage: /usr/sbin/ebu_list_ctl {start|stop|status|log|upgrade}
+$ ebu_list_ctl
+Status:
+Media interface               : UP
+Ptp for Linux daemon          : UP
+Ptp to NIC                    : UP
+Docker daemon                 : UP
+Mongo DB                      : UP
+Influx DB                     : UP
+Rabbit MQ                     : UP
+LIST server                   : UP
+LIST gui                      : UP
+LIST capture                  : UP
 ```
-
-#TODO nodemon is not installed

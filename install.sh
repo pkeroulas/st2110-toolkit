@@ -253,6 +253,7 @@ install_mellanox()
     mkdir -p /mnt/iso
     mount -o loop MLNX_OFED_LINUX-4.6-1.0.1.1-ubuntu18.04-x86_64.iso /mnt/iso
     /mnt/iso/mlnxofedinstall --with-vma --force-fw-update
+    # if dkms fails to build : --without-dkms --add-kernel-support
     /etc/init.d/openibd restart
     ibv_devinfo
     mst start
