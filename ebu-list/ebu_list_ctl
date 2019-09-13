@@ -25,7 +25,7 @@ start()
         exit 1
     fi
 
-    log_ebu_list "Start mongo and influx"
+    log_ebu_list "Start containers: mongo, influxdb and rabbitmq"
     cd $LIST_PATH/apps/external/
     docker-compose up -d
 
@@ -54,7 +54,8 @@ stop()
 {
     killall -9 node
     cd $LIST_PATH/apps/external/
-    docker-compose down
+    docker-compose stop # 'down' may break the DBs
+    echo "You may need to 'sudo service docker restart' before starting EBU-LIST again (if Mongo DB doesn't respond)."
 }
 
 get_status()
@@ -84,7 +85,7 @@ status()
 
 log()
 {
-    tail -f /tmp/list*.log
+    tail -f -n200 /tmp/list*.log
 }
 
 upgrade()
