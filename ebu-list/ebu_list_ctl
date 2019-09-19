@@ -80,7 +80,7 @@ status()
 {
     echo "Status:"
     get_status "Media interface" "ip addr show $MEDIA_IFACE" "$MEDIA_IFACE: .* UP"
-    # TODO Mellanox Software Tools
+    get_status "Mellanox Software" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
     get_status "Ptp for Linux daemon" "ps aux" "[p]tp4l"
     get_status "Ptp to NIC" "ps aux" "[p]hc2sys"
     get_status "Docker daemon" "ps aux" "[d]ockerd"

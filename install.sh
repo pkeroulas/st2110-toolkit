@@ -248,19 +248,26 @@ install_config()
 
 install_mellanox()
 {
-    # couldn't automatically fetch files from:
-    # https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED
+    iso_file="/home/$ST2110_USER/MLNX_OFED_LINUX-4.6-1.0.1.1-ubuntu18.04-x86_64.iso"
+    if [ ! -f $iso_file ]; then
+        echo "Couldn't find $iso_file.
+Manually fetch it from:
+https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED"
+        return 1
+    fi
+
     mkdir -p /mnt/iso
-    mount -o loop MLNX_OFED_LINUX-4.6-1.0.1.1-ubuntu18.04-x86_64.iso /mnt/iso
+    mount -o loop $iso_file /mnt/iso
     /mnt/iso/mlnxofedinstall --with-vma --force-fw-update
-    # if dkms fails to build : --without-dkms --add-kernel-support
+    # if dkms fails to build :
+    #/mnt/iso/mlnxofedinstall --with-vma --force-fw-update --without-dkms --add-kernel-support
     /etc/init.d/openibd restart
     ibv_devinfo
     mst start
     mlxfwmanager
 
-    # To make sure libs are (not) installed:
-    # find /usr -name "*libvma*" -o -name "*libmlx5*" -o -name "*libibverbs*"
+    echo "Installed libs:"
+    find /usr -name "*libvma*" -o -name "*libmlx5*" -o -name "*libibverbs*"
 }
 
 install_list()
