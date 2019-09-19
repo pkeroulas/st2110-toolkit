@@ -282,11 +282,8 @@ install_list()
     LIST_DIR=$USER_DIR/pi-list
 
     install -m 755 $THIS_DIR/ebu-list/ebu_list_ctl /usr/sbin/
-    su $ST2110_USER -c "
-        git clone https://github.com/ebu/pi-list.git $LIST_DIR
-        cd $LIST_DIR
-        ./scripts/deploy/deploy.sh
-        "
+    su $ST2110_USER -c "git clone https://github.com/ebu/pi-list.git $LIST_DIR"
+    su $ST2110_USER -c "ebu_list_ctl upgrade"
 }
 
 source $THIS_DIR/nmos/install.sh

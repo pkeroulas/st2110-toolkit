@@ -1,5 +1,13 @@
 #!/bin/bash
 
+usage()
+{
+    echo "$0 is a wrapper script that manages EBU-LIST
+and related sub-services (DB, backend, UI, etc.)
+Usage:
+    $0 {start|stop|status|log|upgrade}" >&2
+}
+
 log_ebu_list()
 {
     logger -t "st2110-ebulist" "$@"
@@ -72,6 +80,7 @@ status()
 {
     echo "Status:"
     get_status "Media interface" "ip addr show $MEDIA_IFACE" "$MEDIA_IFACE: .* UP"
+    # TODO Mellanox Software Tools
     get_status "Ptp for Linux daemon" "ps aux" "[p]tp4l"
     get_status "Ptp to NIC" "ps aux" "[p]hc2sys"
     get_status "Docker daemon" "ps aux" "[d]ockerd"
@@ -90,8 +99,9 @@ log()
 
 upgrade()
 {
-    cd $LIST_PATH
+    stop
 
+    cd $LIST_PATH
     git status
     echo "Changes will be deleted."
     echo "Do you really want to upgrade? [y/n]"
@@ -111,12 +121,10 @@ upgrade()
     ./scripts/deploy/deploy.sh
 
     set +eux
+
+    start
 }
 
-usage()
-{
-    echo "Usage: $0 {start|stop|status|log|upgrade}" >&2
-}
 case "$1" in
     start)
         start

@@ -15,9 +15,10 @@ capturing devices.
 |CPU|[Intel Core i5-9600K Coffee Lake 6-Core 3.7 GHz (4.6 GHz Turbo) LGA 1151 (300 Series) 95W BX80684I59600K Desktop Processor Intel UHD Graphics 630](https://www.newegg.ca/core-i5-9th-gen-intel-core-i5-9600k/p/N82E16819117959)| 1 |
 |RAM|[G.SKILL Aegis 16GB (2 x 8GB) 288-Pin DDR4 SDRAM DDR4 3000 (PC4 24000) Intel Z170 Platform Memory (Desktop Memory) Model F4-3000C16D-16GISB ](https://www.newegg.ca/g-skill-16gb-288-pin-ddr4-sdram/p/N82E16820232417)| 1 |
 |SSD for user data|[SAMSUNG 860 EVO Series 2.5" 500GB SATA III V-NAND 3-bit MLC Internal Solid State Drive (SSD) MZ-76E500B/AM](https://www.newegg.ca/samsung-860-evo-series-500gb/p/N82E16820147674) | 2 |
+|SATA III cable|[Coboc Model SC-SATA3-18 18" SATA III 6Gb/s Data Cable](https://www.newegg.ca/p/N82E16812422752?Description=SATA%20III%20&cm_re=SATA_III-_-12-422-752-_-Product)| 2 |
 |NVMe SSD for OS|[Samsung PM981 Polaris 256GB M.2 NGFF PCIe Gen3 x4, NVME SSD, OEM (2280) MZVLB256HAHQ-00000](https://www.newegg.ca/samsung-pm981-256gb/p/0D9-0009-002R4)| 1 |
 |NVMe for data cache|[Intel Optane M.2 2280 32GB PCIe NVMe 3.0 x2 Memory Module/System Accelerator MEMPEK1W032GAXT](https://www.newegg.ca/intel-optane-32gb/p/N82E16820167427)| 1 |
-|Network controller|[Mellanox Connectx-5](https://www.mellanox.com/page/products_dyn?product_family=260&mtag=connectx_5_en_card)|1|
+|Network controller|[Mellanox Connectx-5](https://www.newegg.ca/p/14U-005H-00068)| 1 |
 |Thermal compound|[Arctic Silver AS5-3.5G Thermal Compound](https://www.newegg.ca/arctic-silver-as5-3-5g/p/N82E16835100007)| 1 |
 |Heat sink|[Noctua NH-L9i, Premium Low-profile CPU Cooler for Intel LGA115x](https://www.newegg.ca/p/N82E16835608029)| 1 |
 |Computer case|[APEVIA X-FIT-200 Black Steel Mini-ITX Tower Computer Case 250W Power Supply](https://www.newegg.ca/p/N82E16811144255)| 1 |
@@ -27,6 +28,22 @@ capturing devices.
 Boot Ubuntu 18.04 from USB stick.
 
 Install on Samsung M.2 drive.
+
+Install minimal tools:
+
+```sh
+# apt udpate
+# apt udgrade
+# apt install vim git
+```
+
+OS update may break Mellanox drivers, see `install_mellanox` function
+for detail. Disable automatic update:
+
+```sh
+$ sudo vi /etc/apt/apt.conf.d/20auto-upgrades
+APT::Periodic::Update-Package-Lists "0";
+```
 
 ### BIOS
 
@@ -62,7 +79,7 @@ TODO: check permission
 
 ### Data cache
 
-TODO: create bcache to improve SSD performance
+TODO:[create bcache to improve SSD performance](https://www.linux.com/tutorials/using-bcache-soup-your-sata-drives/)
 
 ### Mellanox network controller
 
@@ -115,7 +132,7 @@ Regarding the capturing method, in EBU-LIST source tree, see
 * custom recorder which relies on VMA accelaration with Mellanox (need
   for EBU support for activation)
 
-### Control
+### EBU-LIST control
 
 Master init script needs root priviledge to start the NIC and PTP and start
 a user session to run EBU-LIST
@@ -143,4 +160,14 @@ Rabbit MQ                     : UP
 LIST server                   : UP
 LIST gui                      : UP
 LIST capture                  : UP
+```
+
+#### EBU-LIST upgrade
+
+```sh
+sudo service docker stop
+ebu_list_ctl upgrade
+vi pi-list/apps/capture_probe/config.yml
+sudo service docker start
+ebu_list_ctl status
 ```
