@@ -25,8 +25,23 @@ fi
 
 path=$(pwd)
 
+get_status()
+{
+    if $2 | grep -q "$3"; then
+        ret="UP"
+    else
+        ret="DOWN"
+    fi
+    printf  "%-30.30s: %s\n" "$1" "$ret"
+}
+
 start()
 {
+    if get_status "LIST *" "$0 status" "LIST.*UP" | grep -q UP; then
+        echo "LIST is already up"
+        return
+    fi
+
     IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
     if ! ping -W 1 -c 1 -q $IP > /dev/null; then
         echo "Couln't ping $IP for interface $MGMT_IFACE, exit."
@@ -66,16 +81,6 @@ stop()
     echo "You may need to 'sudo service docker restart' before starting EBU-LIST again (if Mongo DB doesn't respond)."
 }
 
-get_status()
-{
-    if $2 | grep -q "$3"; then
-        ret="UP"
-    else
-        ret="DOWN"
-    fi
-    printf  "%-30.30s: %s\n" "$1" "$ret"
-}
-
 status()
 {
     echo "Status:"
@@ -87,7 +92,7 @@ status()
     get_status "Mongo DB" "docker ps" "mongo"
     get_status "Influx DB" "docker ps" "influxdb"
     get_status "Rabbit MQ" "docker ps" "rabbitmq"
-    get_status "LIST server" "ps aux" "[n]ode .*server.js"
+    get_status "LIST server" "ps aux" "[n]ode server.js .*--live"
     get_status "LIST gui" "ps aux" "[n]ode .*gui"
     get_status "LIST capture" "ps aux" "[n]ode .*capture"
 }
