@@ -291,6 +291,9 @@ install_list()
     install -m 755 $THIS_DIR/ebu-list/ebu_list_ctl /usr/sbin/
     su $ST2110_USER -c "git clone https://github.com/ebu/pi-list.git $LIST_DIR"
     su $ST2110_USER -c "ebu_list_ctl upgrade"
+
+    # allow to bind on port < 1024
+    setcap cap_net_bind_service=ep /home/$ST2110_USER/pi-list/build/bin/recorder
 }
 
 source $THIS_DIR/nmos/install.sh
