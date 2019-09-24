@@ -27,7 +27,7 @@ path=$(pwd)
 
 get_status()
 {
-    if $2 | grep -q "$3"; then
+    if $2 2>&1 | grep -q "$3"; then
         ret="UP"
     else
         ret="DOWN"
@@ -83,11 +83,15 @@ stop()
 
 status()
 {
+    ip=$(ip addr show $MEDIA_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+    filter="src host $ip && dst host 224.0.1.129"
+
     echo "Status:"
     get_status "Media interface" "ip addr show $MEDIA_IFACE" "$MEDIA_IFACE: .* UP"
     get_status "Mellanox Software" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
     get_status "Ptp for Linux daemon" "ps aux" "[p]tp4l"
     get_status "Ptp to NIC" "ps aux" "[p]hc2sys"
+    get_status "Ptp traffic" "tcpdump -i $MEDIA_IFACE -c3 $filter" "3 packets captured"
     get_status "Docker daemon" "ps aux" "[d]ockerd"
     get_status "Docker network" "ping -c 1 -W 1 172.17.0.1" "1 received"
     get_status "Mongo DB" "docker ps" "mongo"
