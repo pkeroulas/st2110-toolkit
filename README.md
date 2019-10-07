@@ -166,7 +166,7 @@ details.
 
 ## EBU-LIST
 
-[Installation guide](./ebu-list/README.md).
+[Integration guide](./ebu-list/README.md).
 
 ## Troubleshoot
 

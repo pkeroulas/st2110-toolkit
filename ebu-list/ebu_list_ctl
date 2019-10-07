@@ -5,7 +5,7 @@ usage()
     echo "$0 is a wrapper script that manages EBU-LIST
 and related sub-services (DB, backend, UI, etc.)
 Usage:
-    $0 {start|stop|status|log|upgrade}" >&2
+    $0 {start|stop|status|log|install|upgrade}" >&2
 }
 
 log_ebu_list()
@@ -70,7 +70,7 @@ start()
         s,\(webappDomain:\).*,\1 http://$IP:8080,;
         " ./config.yml
     export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
-    nodemon ./server.js -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
+    npm run dev -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
 }
 
 stop()
@@ -107,14 +107,26 @@ log()
     tail -f -n200 /tmp/list*.log
 }
 
+install()
+{
+    cd ~
+    git clone https://github.com/ebu/pi-list.git $LIST_DIR
+    set -eux
+    cd $LIST_DATA
+    git submodule update --init --recursive
+    sudo ./scripts/setup_build_env.sh
+    ./scripts/deploy/deploy.sh
+    set +eux
+}
+
 upgrade()
 {
     stop
 
     cd $LIST_PATH
     git status
-    echo "Changes will be deleted."
-    echo "Do you really want to upgrade? [y/n]"
+    echo "Local changes will be deleted:"
+    echo "Do you really want to upgrade EBU-LIST? [y/n]"
     read y
     if [ $y != "y" ]; then
         echo "Abort."
@@ -123,9 +135,11 @@ upgrade()
 
     set -eux
     git reset --hard
-    git checkout release
-    git fetch devops
-    git merge devops/release
+    git pull
+    # dev:
+    # git checkout release
+    # git fetch devops
+    # git merge devops/release
     git submodule update --init --recursive
 
     ./scripts/deploy/deploy.sh
@@ -150,6 +164,9 @@ case "$1" in
         ;;
     upgrade)
         upgrade
+        ;;
+    install)
+        install
         ;;
     *)
         usage

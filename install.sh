@@ -232,8 +232,9 @@ install_config()
     # don't overwrite config, it is painful
     if [ ! -f  $ST2110_CONF_FILE ]; then
         install -m 644 $THIS_DIR/config/st2110.conf $ST2110_CONF_FILE
+    else
+        source $ST2110_CONF_FILE
     fi
-    source $ST2110_CONF_FILE
 
     install -m 644 $THIS_DIR/config/st2110.bashrc /home/$ST2110_USER/
     if ! grep -q 2110 /home/$ST2110_USER/.bashrc; then
@@ -248,7 +249,7 @@ install_config()
 
 install_mellanox()
 {
-    iso_file="/home/$ST2110_USER/MLNX_OFED_LINUX-4.6-1.0.1.1-ubuntu18.04-x86_64.iso"
+    iso_file="$1"
     if [ ! -f $iso_file ]; then
         echo "Couldn't find $iso_file.
 Manually fetch it from:
@@ -261,13 +262,14 @@ https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED"
     /mnt/iso/mlnxofedinstall --with-vma --force-fw-update
     # if dkms fails to build :
     #/mnt/iso/mlnxofedinstall --with-vma --force-fw-update --without-dkms --add-kernel-support
+    echo "Installed libs:"
+    find /usr -name "*libvma*" -o -name "*libmlx5*" -o -name "*libibverbs*"
+
+    echo "Start Mellanox stuff:"
     /etc/init.d/openibd restart
     ibv_devinfo
     mst start
     mlxfwmanager
-
-    echo "Installed libs:"
-    find /usr -name "*libvma*" -o -name "*libmlx5*" -o -name "*libibverbs*"
 }
 
 install_list()
@@ -285,15 +287,21 @@ install_list()
     fi
 
     usermod -a -G pcap $ST2110_USER
+    usermod -a -G docker $ST2110_USER
+
     USER_DIR=/home/$ST2110_USER
     LIST_DIR=$USER_DIR/pi-list
 
     install -m 755 $THIS_DIR/ebu-list/ebu_list_ctl /usr/sbin/
-    su $ST2110_USER -c "git clone https://github.com/ebu/pi-list.git $LIST_DIR"
     su $ST2110_USER -c "ebu_list_ctl upgrade"
 
     # allow to bind on port < 1024
-    setcap cap_net_bind_service=ep /home/$ST2110_USER/pi-list/build/bin/recorder
+    recorder=/home/$ST2110_USER/pi-list/build/bin/recorder
+    if [ -f $recorder ]; then
+        setcap cap_net_bind_service=ep $recorder
+    else
+        echo "Ask the capture engine to EBU-LIST support contact."
+    fi
 }
 
 source $THIS_DIR/nmos/install.sh

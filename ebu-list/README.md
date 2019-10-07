@@ -23,87 +23,142 @@ capturing devices.
 |Heat sink|[Noctua NH-L9i, Premium Low-profile CPU Cooler for Intel LGA115x](https://www.newegg.ca/p/N82E16835608029)| 1 |
 |Computer case|[APEVIA X-FIT-200 Black Steel Mini-ITX Tower Computer Case 250W Power Supply](https://www.newegg.ca/p/N82E16811144255)| 1 |
 
+TODO: photos
+
 ### OS
 
-Boot Ubuntu 18.04 from USB stick.
+#### Boot Ubuntu 18.04 from USB stick.
 
-Install on Samsung M.2 drive.
+* [Create a bootable USB stick with Ubuntu 18.04 inside](https://tutorials.ubuntu.com/tutorial/tutorial-create-a-usb-stick-on-ubuntu#0)
+* plug the USB on the station and power up
+* press F2 to enter the BIOS setup.
+* select UEFI USB stick as a primary boot device
+* set correct time
+* save and exit BIOS
 
-Install minimal tools:
+#### OS install
+
+* start Ubuntu installer
+* select "Minimal installation"
+* no disk encryption nor LVM required
+* select target disk for OS, i.e. the largest NVMe
+* user: ebulist
+* computer's name: ebulist-light-<dpt>-<id> (example: ebulist-light-maint-0)
+* restart
+
+#### OS init setup
+
+From here, use the terminal. Install basic tools:
 
 ```sh
-# apt udpate
-# apt udgrade
-# apt install vim git
+sudo -i
+apt udpate
+apt udgrade
+apt install openssh-server git
 ```
 
 OS update may break Mellanox drivers, see `install_mellanox` function
-for detail. Disable automatic update:
+for detail. Disable automatic update in `/etc/apt/apt.conf.d/20auto-upgrades` (need for root priviledges).
 
 ```sh
-$ sudo vi /etc/apt/apt.conf.d/20auto-upgrades
 APT::Periodic::Update-Package-Lists "0";
 ```
-
-### BIOS
-
-TODO
 
 ### RAID 0 array for user data
 
 From here, most of installation commands require root priviledges.
 
+```sh
+sudo -i
+```
+
 Find the 2 SATA drives and create RAID 0 array:
 
 ```sh
+apt install mdadm
+ls /dev/md*
 lsblk | grep sd
 mdadm --create --verbose /dev/md0 --level=0 --raid-devices=2 /dev/sda /dev/sdb
 cat /proc/mdstat
 ```
 
-Create an EXT4 file system, create the mount point and mount:
+Create an EXT4 file system, create the mount point, mount and set
+ownership:
 
 ```sh
 mkfs.ext4 -F /dev/md0
 mkdir -p /media/raid0
 mount /dev/md0 /media/raid0
+chown -R ebulist:ebulist /media/raid0/*
 ```
 
 For persistent mounting, add this line in `/etc/fstab`:
 
 ```
-/dev/md0 /media/raid    ext4    defaults 0      1
+/dev/md0 /media/raid0   ext4    defaults 0      1
 ```
-
-TODO: check permission
 
 ### Data cache
 
-TODO:[create bcache to improve SSD performance](https://www.linux.com/tutorials/using-bcache-soup-your-sata-drives/)
+TODO:
+[Create bcache to improve SSD performance.](https://www.linux.com/tutorials/using-bcache-soup-your-sata-drives/)
 
-### Mellanox network controller
+### Install ST 2110 depencies
 
-ST-2110-ready NIC is mandatory to perform accurate analysis. Mellanox
-Connectx-5 is selected to benefit from VMA library for hardware-accelerated
-capture. Mellanox drivers has to be manually downloaded from
-[here](https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED).
-Select the .iso image. Then start the installation:
+As `ebulist` user:
 
 ```sh
-cd <st2110-toolkit-directory>
-source ./install.sh
-cd <directory-where-the-iso-is-located>
-install_mellanox
+cd ~
+git clone https://github.com/pkeroulas/st2110-toolkit.git
 ```
 
-## Software installation steps
-
-Install all the depencies:
+As `root` user:
 
 ```sh
+sudo -i
+cd /home/ebulist/st2110-toolkit
 source ./install.sh
-install_config
 install_common_tool
+install_monitoring_tools
+install_config
+source /etc/st2110.conf
+```
+### Mellanox network controller
+
+ST-2110-ready NIC is mandatory to perform accurate analysis. Connectx-5 is selected to benefit from VMA library for hardware-accelerated capture. Verify the NIC is detected:
+
+```sh
+lspci -v | grep Mellanox
+...
+```
+
+Mellanox drivers has to be manually downloaded [here.](https://www.mellanox.com/page/products_dyn?product_family=26&mtag=linux_sw_drivers)
+
+* Select: "Download > LatestVersion > Ubuntu > Ubuntu 18.04 > x86_64 > ISO"
+* Accept End User License Agreement
+* Copy in the home directory
+* Start the installation which takes a while:
+
+```sh
+install_mellanox ../MLNX_OFED_LINUX-4.7-1.0.0.1-ubuntu18.04-x86_64.iso
+```
+
+If dkms fails to build, see comment `install_mellanox` function in
+`intall.sh` script.
+
+Note the serial number, needed later:
+
+```sh
+lspci -xxxvvv | grep "\[SN\] Serial number:"
+```
+
+If something is worng, you may find additional [installation documentation.](https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED).
+
+## EBU-LIST install
+
+Install all the dependencies, still as `root`:
+
+```sh
 install_list
 ```
 
@@ -120,19 +175,25 @@ is loaded on ssh login as well.
 
 #### PTP
 
-`ptp4linux` package and config was installed in 1st step.
+Verify that `linuxptp` package is already installed.
+
+```sh
+dpkg --list | grep linuxptp
+```
+
+Config file is `/etc/ptp/ptp4l.conf`.
 
 #### Capture Engine
 
 Regarding the capturing method, in EBU-LIST source tree, see
 'apps/capture_probe/config.yml' to select one of the 2 solution:
 
-* regular tcpdump which run with generic NIC (limited precision
-  regarding packet timestamping)
-* custom recorder which relies on VMA accelaration with Mellanox (need
-  for EBU support for activation)
+* regular `tcpdump` run with generic NIC (limited precision
+  regarding packet timestamping, not suitable for UHD video)
+* custom `recorder` (not installed by default) relies on Mellanox VMA
+  accelaration. EBU support is needed for activation, provide NIC serial number)
 
-### EBU-LIST control
+### Control
 
 Master init script needs root priviledge to start the NIC and PTP and start
 a user session to run EBU-LIST
@@ -154,6 +215,7 @@ Media interface               : UP
 Ptp for Linux daemon          : UP
 Ptp to NIC                    : UP
 Docker daemon                 : UP
+Docker network                : UP
 Mongo DB                      : UP
 Influx DB                     : UP
 Rabbit MQ                     : UP
@@ -162,12 +224,12 @@ LIST gui                      : UP
 LIST capture                  : UP
 ```
 
-#### EBU-LIST upgrade
+#### Upgrade
 
 ```sh
 sudo service docker stop
 ebu_list_ctl upgrade
-vi pi-list/apps/capture_probe/config.yml
+vi pi-list/apps/capture_probe/config.yml #select tcpdump or custom recorder
 sudo service docker start
 ebu_list_ctl status
 ```
