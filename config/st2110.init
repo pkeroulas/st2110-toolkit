@@ -88,7 +88,7 @@ start_mellanox()
     log_st2110 "Start Mellanox NIC"
     mst start
     MLNX_DEV=$(mst status -v | tr -s ' ' | grep $MEDIA_IFACE | cut -d ' ' -f2)
-    if $MLNX_DEV = "NA"; then
+    if [ "$MLNX_DEV" = "NA" ]; then
         log_st2110 "Couldn't detect MST device: $MLNX_DEV"
         exit 1
     fi
