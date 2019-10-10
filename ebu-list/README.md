@@ -149,7 +149,7 @@ If dkms fails to build, see comment `install_mellanox` function in
 Note the serial number, needed later:
 
 ```sh
-lspci -xxxvvv | grep "\[SN\] Serial number:"
+sudo mlxfwmanager | grep GUID
 ```
 
 If something is worng, you may find additional [installation documentation.](https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED).
