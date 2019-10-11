@@ -122,7 +122,7 @@ status()
     get_status "Mongo DB" "docker ps" "mongo"
     get_status "Influx DB" "docker ps" "influxdb"
     get_status "Rabbit MQ" "docker ps" "rabbitmq"
-    get_status "LIST server" "ps aux" "[n]ode ./server.js .*--live"
+    get_status "LIST server" "ps aux" "[n]ode server.js .*--live"
     get_status "LIST gui" "ps aux" "[n]ode .*gui"
     get_status "LIST capture" "ps aux" "[n]ode .*capture"
 }
