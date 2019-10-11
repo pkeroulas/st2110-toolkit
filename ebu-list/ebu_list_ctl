@@ -5,7 +5,15 @@ usage()
     echo "$0 is a wrapper script that manages EBU-LIST
 and related sub-services (DB, backend, UI, etc.)
 Usage:
-    $0 {start|stop|status|log|install|upgrade}" >&2
+    $0 {start|stop|status|log|install|upgrade|dev}
+        start    start docker containers and server
+        stop     stop docker containers and server
+        status   check the status of all the st 2110 services
+        log      get the logs of the server+containers
+        install  install EBU-LIST for the first time
+        upgrade  upgrade to next stable version fron public Github
+        dev      upgrade to the next release from private repo
+" >&2
 }
 
 log_ebu_list()
@@ -38,7 +46,7 @@ get_status()
 start()
 {
     if get_status "LIST *" "$0 status" "LIST.*UP" | grep -q UP; then
-        echo "LIST is already up"
+        echo "EBU-LIST is already up"
         return
     fi
 
@@ -140,10 +148,13 @@ upgrade()
 {
     stop
 
+    repo=$1
+    branch=$2
+
     cd $LIST_PATH
     git status
     echo "Local changes will be deleted:"
-    echo "Do you really want to upgrade EBU-LIST? [y/n]"
+    echo "Do you really want to upgrade EBU-LIST from repo $repo/$branch? [y/n]"
     read y
     if [ $y != "y" ]; then
         echo "Abort."
@@ -151,12 +162,10 @@ upgrade()
     fi
 
     set -eux
+
     git reset --hard
-    git pull
-    # dev:
-    # git checkout release
-    # git fetch devops
-    # git merge devops/release
+    git checkout $branch
+    git pull $repo $branch
     git submodule update --init --recursive
 
     ./scripts/deploy/deploy.sh
@@ -180,7 +189,10 @@ case "$1" in
         log
         ;;
     upgrade)
-        upgrade
+        upgrade origin master
+        ;;
+    dev)
+        upgrade devops release
         ;;
     install)
         install

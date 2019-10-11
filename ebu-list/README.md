@@ -208,12 +208,29 @@ EBU-LIST is controlled by a dedicated script:
 
 ```sh
 $ ebu_list_ctl
-Usage: /usr/sbin/ebu_list_ctl {start|stop|status|log|upgrade}
+/usr/sbin/ebu_list_ctl is a wrapper script that manages EBU-LIST
+and related sub-services (DB, backend, UI, etc.)
+Usage:
+    /usr/sbin/ebu_list_ctl {start|stop|status|log|install|upgrade|dev}
+        start    start docker containers and server
+        stop     stop docker containers and server
+        status   check the status of all the st 2110 services
+        log      get the logs of the server+containers
+        install  install EBU-LIST for the first time
+        upgrade  upgrade to next stable version fron public Github
+        dev      upgrade to the next release from private repo
+
 $ ebu_list_ctl
-Status:
+-----------------------------------------------
+                EBU-LIST Status
+-----------------------------------------------
+MGT INTERFACE                 : eno2            192.168.2.164
+MEDIA INTERFACE               : enp1s0f0        192.168.105.209
 Media interface               : UP
+Mellanox Software             : UP
 Ptp for Linux daemon          : UP
 Ptp to NIC                    : UP
+Ptp traffic                   : UP
 Docker daemon                 : UP
 Docker network                : UP
 Mongo DB                      : UP
@@ -229,7 +246,6 @@ LIST capture                  : UP
 ```sh
 sudo service docker stop
 ebu_list_ctl upgrade
-vi pi-list/apps/capture_probe/config.yml #select tcpdump or custom recorder
 sudo service docker start
 ebu_list_ctl status
 ```
