@@ -83,10 +83,15 @@ stop()
 
 status()
 {
-    ip=$(ip addr show $MEDIA_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
-    filter="src host $ip && dst host 224.0.1.129"
+    media_ip=$(ip addr show $MEDIA_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+    mgt_ip=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+    filter="src host $media_ip && dst host 224.0.1.129"
 
-    echo "Status:"
+    echo "-----------------------------------------------"
+    echo "                EBU-LIST Status"
+    echo "-----------------------------------------------"
+    printf  "%-30.30s: %-15.15s %s\n" "MGT INTERFACE" "$MGMT_IFACE" "$mgt_ip"
+    printf  "%-30.30s: %-15.15s %s\n" "MEDIA INTERFACE" "$MEDIA_IFACE" "$media_ip"
     get_status "Media interface" "ip addr show $MEDIA_IFACE" "$MEDIA_IFACE: .* UP"
     get_status "Mellanox Software" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
     get_status "Ptp for Linux daemon" "ps aux" "[p]tp4l"
