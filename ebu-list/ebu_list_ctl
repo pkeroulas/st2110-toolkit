@@ -116,7 +116,7 @@ status()
     get_status "Mellanox Software" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
     get_status "Ptp for Linux daemon" "ps aux" "[p]tp4l"
     get_status "Ptp to NIC" "ps aux" "[p]hc2sys"
-    get_status "Ptp traffic" "tcpdump -i $MEDIA_IFACE -c3 $filter" "3 packets captured"
+    get_status "Ptp traffic" "timeout 2 tcpdump -i $MEDIA_IFACE -c3 $filter" "3 packets captured"
     get_status "Docker daemon" "ps aux" "[d]ockerd"
     get_status "Docker network" "ping -c 1 -W 1 172.17.0.1" "1 received"
     get_status "Mongo DB" "docker ps" "mongo"
