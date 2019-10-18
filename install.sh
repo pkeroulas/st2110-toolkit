@@ -236,7 +236,7 @@ install_config()
         source $ST2110_CONF_FILE
     fi
 
-    install -m 644 $THIS_DIR/config/st2110.bashrc /home/$ST2110_USER/
+    install -m 666 $THIS_DIR/config/st2110.bashrc /home/$ST2110_USER/
     if ! grep -q 2110 /home/$ST2110_USER/.bashrc; then
         echo "source /home/$ST2110_USER/st2110.bashrc" >> /home/$ST2110_USER/.bashrc
     fi
