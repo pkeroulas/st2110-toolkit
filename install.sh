@@ -293,15 +293,8 @@ install_list()
     LIST_DIR=$USER_DIR/pi-list
 
     install -m 755 $THIS_DIR/ebu-list/ebu_list_ctl /usr/sbin/
-    su $ST2110_USER -c "ebu_list_ctl upgrade"
-
-    # allow to bind on port < 1024
-    recorder=/home/$ST2110_USER/pi-list/build/bin/recorder
-    if [ -f $recorder ]; then
-        setcap cap_net_bind_service=ep $recorder
-    else
-        echo "Ask the capture engine to EBU-LIST support contact."
-    fi
+    install -m 755 $THIS_DIR/ebu-list/captured /usr/sbin/
+    su $ST2110_USER -c "ebu_list_ctl install"
 }
 
 source $THIS_DIR/nmos/install.sh

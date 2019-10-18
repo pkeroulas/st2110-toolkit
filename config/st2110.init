@@ -42,6 +42,23 @@ start_list()
     log_st2110 "Start EBU LIST server."
 
     su $ST2110_USER -c "ebu_list_ctl start"
+
+    while ! netstat -lptn | grep -q ":5672"; do
+        log_st2110 "wait mqtt port to be open"
+        # captured will crash
+        sleep 1
+    done
+    sleep 5 # not sure why but this is needed
+
+    log_st2110 "Start EBU capture probe"
+    cat > /home/$ST2110_USER/captured.yml << EOF
+id: $(uuidgen)
+label: "LIST capture probe: $(cat /etc/hostname)"
+broker_url: "amqp://localhost:5672"
+interface: $MEDIA_IFACE
+EOF
+    VMA_HW_TS_CONVERSION=4 LD_PRELOAD=libvma.so \
+        captured /home/$ST2110_USER/captured.yml 2>&1 > /tmp/list-capture.log &
 }
 
 log_list()

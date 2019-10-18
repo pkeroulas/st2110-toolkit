@@ -64,25 +64,6 @@ start()
     cd $LIST_PATH/apps/gui/
     npm start 2>&1 > /tmp/list-gui.log &
 
-    log_ebu_list "Start the capture probe"
-    cd $LIST_PATH/apps/capture_probe/
-    cat > capture_probe.yml << EOF
-probe:
-  id: 6cbf09dc-e602-45ee-9c70-0a0b3b1cf16e
-  label: "LIST capture probe $HOSTNAME"
-
-rabbitmq:
-  hostname: localhost
-  port: 5672
-
-list:
-  bin: $LIST_PATH/build/bin
-
-recorder:
-  interface: $MEDIA_IFACE
-EOF
-    npm run dev -- capture_probe.yml 2>&1 > /tmp/list-capture.log &
-
     log_ebu_list "Start the server"
     cd $LIST_PATH/apps/listwebserver
     sed -i "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
@@ -124,7 +105,7 @@ status()
     get_status "Rabbit MQ" "docker ps" "rabbitmq"
     get_status "LIST server" "ps aux" "[n]ode server.js .*--live"
     get_status "LIST gui" "ps aux" "[n]ode .*gui"
-    get_status "LIST capture" "ps aux" "[n]ode .*capture"
+    get_status "LIST capture" "ps aux" "[c]aptured"
 }
 
 log()
