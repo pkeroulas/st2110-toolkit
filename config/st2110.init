@@ -41,7 +41,6 @@ start_list()
     # TODO: verify that LIST is installed before
     log_st2110 "Start EBU LIST server."
 
-    $LIST_PATH/build/bin/enable_hw_timestamps $MEDIA_IFACE
     su $ST2110_USER -c "ebu_list_ctl start"
 }
 
