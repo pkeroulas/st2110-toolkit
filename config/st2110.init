@@ -42,13 +42,28 @@ start_list()
     log_st2110 "Start EBU LIST server."
 
     su $ST2110_USER -c "ebu_list_ctl start"
+}
 
+log_list()
+{
+    su $ST2110_USER -c "ebu_list_ctl log"
+}
+
+stop_list()
+{
+    log_st2110 "Stop EBU LIST server."
+    su $ST2110_USER -c "ebu_list_ctl stop"
+}
+
+start_capture()
+{
+    log_st2110 "Start captured."
     while ! netstat -lptn | grep -q ":5672"; do
         log_st2110 "wait mqtt port to be open"
         # captured will crash
         sleep 1
     done
-    sleep 5 # not sure why but this is needed
+    sleep 10 # not sure why but this is needed
 
     log_st2110 "Start EBU capture probe"
     cat > /home/$ST2110_USER/captured.yml << EOF
@@ -61,16 +76,10 @@ EOF
         captured /home/$ST2110_USER/captured.yml 2>&1 > /tmp/list-capture.log &
 }
 
-log_list()
+stop_capture()
 {
-    log_st2110 "EBU LIST server's log."
-    su $ST2110_USER -c "ebu_list_ctl log"
-}
-
-stop_list()
-{
-    log_st2110 "Stop EBU LIST server."
-    su $ST2110_USER -c "ebu_list_ctl stop"
+    log_st2110 "Stop captured."
+    killall captured
 }
 
 PTP_IFACE=$MEDIA_IFACE
@@ -140,14 +149,16 @@ case "$1" in
         start_mellanox
         start_ptp
         start_list
-        smcrouted
+        start_capture
+        #smcrouted
         ;;
 
     stop)
         stop_mellanox
         stop_ptp
         stop_list
-        smcroutectl kill
+        stop_capture
+        #smcroutectl kill
         ;;
     log)
         case "$2" in
