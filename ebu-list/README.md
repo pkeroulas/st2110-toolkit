@@ -230,6 +230,7 @@ Media interface               : UP
 Mellanox Software             : UP
 Ptp for Linux daemon          : UP
 Ptp to NIC                    : UP
+Ptp lock                      : UP
 Ptp traffic                   : UP
 Docker daemon                 : UP
 Docker network                : UP

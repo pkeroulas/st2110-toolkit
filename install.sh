@@ -286,6 +286,7 @@ install_list()
         exit 1
     fi
 
+    usermod -a -G adm $ST2110_USER # journalctl
     usermod -a -G pcap $ST2110_USER
     usermod -a -G docker $ST2110_USER
 
