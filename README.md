@@ -2,7 +2,7 @@
 
 Author: [Patrick Keroulas](mailto:patrick.keroulas@radio-canada.ca)
 
-This toolkit provides scripts and config to test, monitor and transcode ST-2110 streams.
+This toolkit provides scripts and config to test, monitor and transcode SMPTE ST 2110 streams.
 Features:
 
 * setup network (routes, firewall)
@@ -12,11 +12,16 @@ Features:
 * transcode st2110-to-h264 from live feed described SDP
 * analyse stream content like ptp clock
 * provide NMOS setup script
+* integration resources for [EBU-LIST](https://tech.ebu.ch/list)
 
 Tested distros:
 * Centos 7
 * Dockerized Centos 7
 * Ubuntu 18.04
+
+Sponsored by:
+
+![logo](doc/cbc-rc-logo.png)
 
 ## Install
 
