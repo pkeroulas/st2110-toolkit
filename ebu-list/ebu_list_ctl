@@ -52,33 +52,47 @@ start()
 
     IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
     if ! ping -W 1 -c 1 -q $IP > /dev/null; then
-        echo "Couln't ping $IP for interface $MGMT_IFACE, exit."
+        log_ebu_list "Couln't ping $IP for interface $MGMT_IFACE, exit."
         exit 1
     fi
 
-    log_ebu_list "Start containers: mongo, influxdb and rabbitmq"
-    cd $LIST_PATH/apps/external/
-    docker-compose up -d
+    if [ $LIST_DEV = "true" ]; then
+        log_ebu_list "Start containers: mongo, influxdb and rabbitmq"
+        cd $LIST_PATH/apps/external/
+        docker-compose up -d
 
-    log_ebu_list "Start the UI"
-    cd $LIST_PATH/apps/gui/
-    npm start 2>&1 > /tmp/list-gui.log &
+        log_ebu_list "Start the UI"
+        cd $LIST_PATH/apps/gui/
+        npm start 2>&1 > /tmp/list-gui.log &
 
-    log_ebu_list "Start the server"
-    cd $LIST_PATH/apps/listwebserver
-    sed -i "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
-        s,\(cpp:\).*,\1 $LIST_PATH/build/bin,;
-        s,\(webappDomain:\).*,\1 http://$IP:8080,;
-        " ./config.yml
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
-    npm run dev -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
+        log_ebu_list "Start the server"
+        cd $LIST_PATH/apps/listwebserver
+        sed -i "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
+            s,\(cpp:\).*,\1 $LIST_PATH/build/bin,;
+            s,\(webappDomain:\).*,\1 http://$IP:8080,;
+            " ./config.yml
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
+        npm run dev -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
+    else
+        cd $LIST_PATH
+        sed -i "s,\(.*EBU_LIST_LIVE_MODE=\).*,\1true,;
+            s,\(.*EBU_LIST_WEB_APP_DOMAIN=\).*,\1 http://$IP:8080,;
+            "  ./docker-compose.yml
+        log_ebu_list "Start containers: mongo, influxdb, rabbitmq and EBU-LIST"
+        docker-compose up -d
+    fi
 }
 
 stop()
 {
-    killall -9 node
-    cd $LIST_PATH/apps/external/
-    docker-compose stop # 'down' may break the DBs
+    if [ $LIST_DEV = "true" ]; then
+        killall -9 node
+        cd $LIST_PATH/apps/external/
+        docker-compose stop # 'down' may break the DBs
+    else
+        cd $LIST_PATH
+        docker-compose stop # 'down' may break the DBs
+    fi
     echo "You may need to 'sudo service docker restart' before starting EBU-LIST again (if Mongo DB doesn't respond)."
 }
 
@@ -104,25 +118,46 @@ status()
     get_status "Mongo DB" "docker ps" "mongo"
     get_status "Influx DB" "docker ps" "influxdb"
     get_status "Rabbit MQ" "docker ps" "rabbitmq"
-    get_status "LIST server" "ps aux" "[n]ode server.js .*--live"
-    get_status "LIST gui" "ps aux" "[n]ode .*gui"
+    if [ $LIST_DEV = "true" ]; then
+        get_status "LIST server" "ps aux" "[n]ode server.js .*--live"
+        get_status "LIST gui" "ps aux" "[n]ode .*gui"
+    else
+        get_status "LIST server and UI" "docker ps" "pi-list"
+    fi
+    get_status "LIST server port" "netstat -laputen" ":::3030.*LISTEN"
+    get_status "LIST gui port" "netstat -laputen" ":::8080.*LISTEN"
     get_status "LIST capture" "ps aux" "[c]aptured"
 }
 
 log()
 {
-    tail -f -n200 /tmp/list*.log
+    if [ $LIST_DEV == "true" ]; then
+        tail -f -n200 /tmp/list*.log
+    else
+        tail -f -n200 /tmp/list*.log &
+        cd $LIST_PATH
+        docker-compose logs -f --tail=500
+        killall tail
+    fi
 }
 
 install()
 {
-    cd ~
-    git clone https://github.com/ebu/pi-list.git $LIST_DIR
     set -eux
-    cd $LIST_DATA
-    git submodule update --init --recursive
-    sudo ./scripts/setup_build_env.sh
-    ./scripts/deploy/deploy.sh
+
+    if [ $LIST_DEV = "true" ]; then
+        cd ~
+        git clone https://github.com/ebu/pi-list.git $LIST_DIR
+        cd $LIST_DATA
+        git submodule update --init --recursive
+        sudo ./scripts/setup_build_env.sh
+        ./scripts/deploy/deploy.sh
+    else
+        mkdir $LIST_PATH
+        cd $LIST_PATH
+        curl -O https://raw.githubusercontent.com/ebu/pi-list/master/docs/docker-compose.yml
+    fi
+
     set +eux
 }
 
@@ -174,6 +209,7 @@ case "$1" in
         upgrade origin master
         ;;
     dev)
+        # upgrade <remote> <branch>
         upgrade devops release
         ;;
     install)

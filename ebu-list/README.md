@@ -237,8 +237,9 @@ Docker network                : UP
 Mongo DB                      : UP
 Influx DB                     : UP
 Rabbit MQ                     : UP
-LIST server                   : UP
-LIST gui                      : UP
+LIST server and UI            : UP
+LIST server port              : UP
+LIST gui port                 : UP
 LIST capture                  : UP
 ```
 
