@@ -231,9 +231,4 @@ Fox Network provides Wireshark dissectors:
 
 * [video](https://github.com/FOXNEOAdvancedTechnology/smpte2110-20-dissector)
 * [ancillary](https://github.com/FOXNEOAdvancedTechnology/smpte2110-40-dissector)
-
-And EBU and CBC provides pcap analyser: Live IP Sowtware Toolkit
-
-* [EBU LIST](http://list.ebu.io/login)
 * [EBU tools](https://github.com/ebu/smpte2110-analyzer)
-* [source](https://github.com/ebu/pi-list)

@@ -5,6 +5,9 @@ Although the project documentation allows to setup an offline analyzer,
 this guide gives instructions to build a standalone, high perforamce
 capturing devices.
 
+* [Online running instance: EBU LIST](http://list.ebu.io/login) (no capture)
+* [Sources](https://github.com/ebu/pi-list)
+
 ## Suggested Hardware + OS
 
 ### Part list
