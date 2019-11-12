@@ -26,12 +26,10 @@ fi
 
 if [ ! -d /sys/class/net/$MEDIA_IFACE ]; then
     log_st2110 "$MEDIA_IFACE doesn't exist, exit."
-    exit 1
 fi
 
 if [ $(cat /sys/class/net/$MEDIA_IFACE/operstate) != "up" ]; then
-    echo "$MEDIA_IFACE is not up, exit."
-    exit 1
+    log_st2110 "$MEDIA_IFACE is not up, exit."
 fi
 
 start_list()
