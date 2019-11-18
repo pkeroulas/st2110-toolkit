@@ -74,11 +74,11 @@ start()
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
         npm run dev -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
     else
-        cd $LIST_PATH
-        sed -i "s,\(.*EBU_LIST_LIVE_MODE=\).*,\1true,;
-            s,\(.*EBU_LIST_WEB_APP_DOMAIN=\).*,\1 http://$IP:8080,;
-            "  ./docker-compose.yml
         log_ebu_list "Start containers: mongo, influxdb, rabbitmq and EBU-LIST"
+        cd $LIST_PATH
+        export EBU_LIST_WEB_APP_DOMAIN=http://$IP:80
+        export EBU_LIST_LIVE_MODE=true
+        export EBU_LIST_HOST_DATA_FOLDER=$LIST_DATA_FOLDER
         docker-compose up -d
     fi
 }
@@ -88,31 +88,33 @@ stop()
     if [ $LIST_DEV = "true" ]; then
         killall -9 node
         cd $LIST_PATH/apps/external/
-        docker-compose stop # 'down' may break the DBs
     else
         cd $LIST_PATH
-        docker-compose stop # 'down' may break the DBs
     fi
+    docker-compose stop # 'down' may break the DBs
     echo "You may need to 'sudo service docker restart' before starting EBU-LIST again (if Mongo DB doesn't respond)."
 }
 
 status()
 {
-    media_ip=$(ip addr show $MEDIA_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
     mgt_ip=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
-    filter="src host $media_ip && dst host 224.0.1.129"
+    media_ip=$(ip addr show $MEDIA_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+    media_gateway_ip=$(ip route | sed -n 's/default via \(.*\) dev '""$(echo $MEDIA_IFACE | tr -d '\n')""' .*/\1/p')
+    ptp_filter="src host $media_ip && dst host 224.0.1.129"
 
     echo "-----------------------------------------------"
     echo "                EBU-LIST Status"
     echo "-----------------------------------------------"
-    printf  "%-30.30s: %-15.15s %s\n" "MGT INTERFACE" "$MGMT_IFACE" "$mgt_ip"
-    printf  "%-30.30s: %-15.15s %s\n" "MEDIA INTERFACE" "$MEDIA_IFACE" "$media_ip"
+    printf  "%-30.30s: %-15.15s %s\n" "Mgt interface" "$MGMT_IFACE" "$mgt_ip"
+    printf  "%-30.30s: %-15.15s %s\n" "Media interface" "$MEDIA_IFACE" "$media_ip"
+    printf  "%-30.30s: %-15.15s %s\n" "Media gateway" "$MEDIA_IFACE" "$media_gateway_ip"
     get_status "Media interface" "ip addr show $MEDIA_IFACE" "$MEDIA_IFACE: .* UP"
+    get_status "Media gateway" "ping -c 1 -W 1 $media_gateway_ip" "1 received"
     get_status "Mellanox Software" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
     get_status "Ptp for Linux daemon" "ps aux" "[p]tp4l"
     get_status "Ptp to NIC" "ps aux" "[p]hc2sys"
     get_status "Ptp lock" "journalctl -n10" "phc2sys.* s2 freq "
-    get_status "Ptp traffic" "timeout 2 tcpdump -i $MEDIA_IFACE -c2 $filter" "2 packets captured"
+    get_status "Ptp traffic" "timeout 2 tcpdump -i $MEDIA_IFACE -c2 $ptp_filter" "2 packets captured"
     get_status "Docker daemon" "ps aux" "[d]ockerd"
     get_status "Docker network" "ping -c 1 -W 1 172.17.0.1" "1 received"
     get_status "Mongo DB" "docker ps" "mongo"
@@ -124,8 +126,6 @@ status()
     else
         get_status "LIST server and UI" "docker ps" "pi-list"
     fi
-    get_status "LIST server port" "netstat -laputen" ":::3030.*LISTEN"
-    get_status "LIST gui port" "netstat -laputen" ":::8080.*LISTEN"
     get_status "LIST capture" "ps aux" "[c]aptured"
 }
 
@@ -145,13 +145,17 @@ install()
 {
     set -eux
 
+    # dev mode means build application from source
     if [ $LIST_DEV = "true" ]; then
         cd ~
         git clone https://github.com/ebu/pi-list.git $LIST_DIR
         cd $LIST_DATA
         git submodule update --init --recursive
         sudo ./scripts/setup_build_env.sh
+        echo "Get token to access online translation file."
+        ./apps/gui/data/translationsGenerator.js -t
         ./scripts/deploy/deploy.sh
+    # whereas non dev mode means install from public docker image
     else
         mkdir $LIST_PATH
         cd $LIST_PATH
@@ -164,30 +168,35 @@ install()
 upgrade()
 {
     stop
-
-    repo=$1
-    branch=$2
-
     cd $LIST_PATH
-    git status
-    echo "Local changes will be deleted:"
-    echo "Do you really want to upgrade EBU-LIST from repo $repo/$branch? [y/n]"
-    read y
-    if [ $y != "y" ]; then
-        echo "Abort."
-        exit
+
+    if [ $LIST_DEV = "true" ]; then
+        repo=$1
+        branch=$2
+
+        git status
+        echo "Local changes will be deleted:"
+        echo "Do you really want to upgrade EBU-LIST from repo $repo/$branch? [y/n]"
+        read y
+        if [ $y != "y" ]; then
+            echo "Abort."
+            exit
+        fi
+
+        set -eux
+
+        git reset --hard
+        git checkout $branch
+        git pull $repo $branch
+        git submodule update --init --recursive
+
+        ./scripts/deploy/deploy.sh
+
+        set +eux
+    else
+        curl -O https://raw.githubusercontent.com/ebu/pi-list/master/docs/docker-compose.yml
+        docker-compose pull
     fi
-
-    set -eux
-
-    git reset --hard
-    git checkout $branch
-    git pull $repo $branch
-    git submodule update --init --recursive
-
-    ./scripts/deploy/deploy.sh
-
-    set +eux
 
     start
 }
