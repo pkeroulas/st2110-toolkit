@@ -8,6 +8,10 @@ capturing devices.
 * [Online running instance: EBU LIST](http://list.ebu.io/login) (no capture)
 * [Sources](https://github.com/ebu/pi-list)
 
+Sponsored by:
+
+![logo](https://site-cbc.radio-canada.ca/site/annual-reports/2014-2015/_images/about/services/cbc-radio-canada.png)
+
 ## Suggested Hardware + OS
 
 ### Part list

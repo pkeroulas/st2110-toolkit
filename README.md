@@ -21,7 +21,7 @@ Tested distros:
 
 Sponsored by:
 
-![logo](doc/cbc-rc-logo.png)
+![logo](https://site-cbc.radio-canada.ca/site/annual-reports/2014-2015/_images/about/services/cbc-radio-canada.png)
 
 ## Install
 
