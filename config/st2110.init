@@ -120,7 +120,11 @@ start_mellanox()
     # doesn't look to work with  MT27800 Family [ConnectX-5]
     ethtool --set-priv-flags $MEDIA_IFACE sniffer on
 
+    # HW timestamp any incoming pkt
     hwstamp_ctl -i $MEDIA_IFACE -r 1
+
+    # announce hostname through lldp
+    lldptool -T -i $MEDIA_IFACE  -V sysName enableTx=no
 }
 
 stop_mellanox()
