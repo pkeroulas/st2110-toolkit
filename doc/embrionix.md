@@ -27,3 +27,22 @@ The 40 flows are ordered this way:
 * 39: ancillary B2
 
 get_sdp.py uses Embrionix API to fetch SDP per flow.
+
+# API
+
+Firmware info: http://<SFP_IP>
+
+API entry point: http://<SFP_IP>/emsfp/node/v1
+
+# ancillary:
+
+RTP time step: 1501 or 1502 ticks (interlaced)
+
+Version 3.1.1673
+
+3 modes:
+
+* 'End of field event': 1pkt/field, compliant
+* '1 ms of decoding': 2pkt/field, wrong marker bit, not compliant
+* 'Packet by Packet': 1 anc type / pkt + 1 empty pkt for marker
+

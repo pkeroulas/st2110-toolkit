@@ -31,7 +31,13 @@ if [ -z $LIST_PATH -o -z $ST2110_USER ]; then
     exit 1
 fi
 
-path=$(pwd)
+ORIG_PATH=$(pwd)
+MGT_IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+if [ $LIST_DEV = "true" ]; then
+    LIST_PORT=8080
+else
+    LIST_PORT=80
+fi
 
 get_status()
 {
@@ -50,9 +56,8 @@ start()
         return
     fi
 
-    IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
-    if ! ping -W 1 -c 1 -q $IP > /dev/null; then
-        log_ebu_list "Couln't ping $IP for interface $MGMT_IFACE, exit."
+    if ! ping -W 1 -c 1 -q $MGT_IP > /dev/null; then
+        log_ebu_list "Couln't ping $MGT_IP for interface $MGMT_IFACE, exit."
         exit 1
     fi
 
@@ -69,14 +74,14 @@ start()
         cd $LIST_PATH/apps/listwebserver
         sed -i "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
             s,\(cpp:\).*,\1 $LIST_PATH/build/bin,;
-            s,\(webappDomain:\).*,\1 http://$IP:8080,;
+            s,\(webappDomain:\).*,\1 http://$MGT_IP:$LIST_PORT,;
             " ./config.yml
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
         npm run dev -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
     else
         log_ebu_list "Start containers: mongo, influxdb, rabbitmq and EBU-LIST"
         cd $LIST_PATH
-        export EBU_LIST_WEB_APP_DOMAIN=http://$IP:80
+        export EBU_LIST_WEB_APP_DOMAIN=http://$MGT_IP:80
         export EBU_LIST_LIVE_MODE=true
         export EBU_LIST_HOST_DATA_FOLDER=$LIST_DATA_FOLDER
         docker-compose up -d
@@ -97,7 +102,6 @@ stop()
 
 status()
 {
-    mgt_ip=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
     media_ip=$(ip addr show $MEDIA_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
     media_gateway_ip=$(ip route | sed -n 's/default via \(.*\) dev '""$(echo $MEDIA_IFACE | tr -d '\n')""' .*/\1/p')
     ptp_filter="src host $media_ip && dst host 224.0.1.129"
@@ -105,7 +109,7 @@ status()
     echo "-----------------------------------------------"
     echo "                EBU-LIST Status"
     echo "-----------------------------------------------"
-    printf  "%-30.30s: %-15.15s %s\n" "Mgt interface" "$MGMT_IFACE" "$mgt_ip"
+    printf  "%-30.30s: %-15.15s %s\n" "Mgt interface" "$MGMT_IFACE" "$MGT_IP"
     printf  "%-30.30s: %-15.15s %s\n" "Media interface" "$MEDIA_IFACE" "$media_ip"
     printf  "%-30.30s: %-15.15s %s\n" "Media gateway" "$MEDIA_IFACE" "$media_gateway_ip"
     get_status "Media interface" "ip addr show $MEDIA_IFACE" "$MEDIA_IFACE: .* UP"
@@ -121,11 +125,13 @@ status()
     get_status "Influx DB" "docker ps" "influxdb"
     get_status "Rabbit MQ" "docker ps" "rabbitmq"
     if [ $LIST_DEV = "true" ]; then
-        get_status "LIST server" "ps aux" "[n]ode server.js .*--live"
-        get_status "LIST gui" "ps aux" "[n]ode .*gui"
+        get_status "LIST node API" "ps aux" "[n]ode server.js .*--live"
+        get_status "LIST node GUI" "ps aux" "[n]ode .*gui"
     else
-        get_status "LIST server and UI" "docker ps" "pi-list"
+        get_status "LIST" "docker ps" "pi-list"
     fi
+    get_status "LIST API response" "curl http://$MGT_IP:3030/api/meta/version 2>/dev/nul" "USER_NOT_AUTHENTICATED"
+    get_status "LIST GUI response" "curl http://$MGT_IP:$LIST_PORT 2>/dev/nul" "ebu_logo.svg"
     get_status "LIST capture" "ps aux" "[c]aptured"
 }
 
@@ -230,6 +236,6 @@ case "$1" in
         ;;
 esac
 
-cd $path
+cd $ORIG_PATH
 
 exit 0
