@@ -162,6 +162,9 @@ case "$1" in
         stop_capture
         #smcroutectl kill
         ;;
+    conf) # hidden
+        bash -c "cd /home/$ST2110_USER/st2110-toolkit; source ./install.sh; install_config"
+        ;;
     log)
         case "$2" in
             list)

@@ -230,8 +230,9 @@ install_smcroute()
 
 install_config()
 {
-    # don't overwrite config, it is painful
+    set -x
     if [ ! -f  $ST2110_CONF_FILE ]; then
+        echo "Don't overwrite config, it is painful"
         install -m 644 $THIS_DIR/config/st2110.conf $ST2110_CONF_FILE
     else
         source $ST2110_CONF_FILE
@@ -246,6 +247,10 @@ install_config()
     install -m 755 $THIS_DIR/config/st2110.init /etc/init.d/st2110
     update-rc.d st2110 defaults
     update-rc.d st2110 enable
+
+    install -m 755 $THIS_DIR/ebu-list/ebu_list_ctl /usr/sbin/
+    install -m 755 $THIS_DIR/ebu-list/captured /usr/sbin/
+    set +x
 }
 
 install_mellanox()
