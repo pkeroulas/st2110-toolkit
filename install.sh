@@ -41,7 +41,7 @@ install_common_tools()
         automake \
         bzip2 \
         cmake \
-        lldpad \
+        lldpd \
         ethtool \
         gcc \
         git \
