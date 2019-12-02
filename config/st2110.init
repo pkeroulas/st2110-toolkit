@@ -124,7 +124,7 @@ start_mellanox()
     hwstamp_ctl -i $MEDIA_IFACE -r 1
 
     # announce hostname through lldp
-    lldptool -T -i $MEDIA_IFACE  -V sysName enableTx=no
+    lldptool -T -i $MEDIA_IFACE  -V sysName enableTx=yes
 }
 
 stop_mellanox()
