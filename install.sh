@@ -25,6 +25,7 @@ export LANG=en_US.utf8 \
     YASM_VERSION=1.3.0 \
     NASM_VERSION=2.13.02 \
     MP3_VERSION=3.99.5 \
+    PTP_VERSION=2.0 \
     SMCROUTE_VERSION=2.4.3 \
     PREFIX=/usr/local \
     MAKEFLAGS="-j$[$(nproc) + 1]"
@@ -45,7 +46,6 @@ install_common_tools()
         gcc \
         git \
         libtool \
-        linuxptp \
         make \
         net-tools \
         patch \
@@ -87,6 +87,24 @@ install_monitoring_tools()
         vim \
         tig \
         psmisc
+}
+
+install_ptp()
+{
+    # build+patch linuxptp instead of installing pre-built package
+    cd $THIS_DIR
+    dir=$(pwd)
+    echo "Installing PTP"
+    DIR=$(mktemp -d)
+    cd $DIR/
+    git clone http://git.code.sf.net/p/linuxptp/code linuxptp
+    cd linuxptp
+    git checkout -b $PTP_VERSION v$PTP_VERSION
+    patch -p1 < $dir/ptp/0001-port-do-not-answer-in-case-of-unknown-mgt-message-co.patch
+    make
+    make install
+    make distclean
+    rm -rf $DIR
 }
 
 install_yasm()
@@ -282,8 +300,7 @@ install_list()
 {
     $PACKAGE_MANAGER install -y \
         docker \
-        docker-compose \
-        linuxptp
+        docker-compose
 
     if [ -f  $ST2110_CONF_FILE ]; then
         source $ST2110_CONF_FILE
@@ -296,9 +313,7 @@ install_list()
     usermod -a -G pcap $ST2110_USER
     usermod -a -G docker $ST2110_USER
 
-    USER_DIR=/home/$ST2110_USER
-    LIST_DIR=$USER_DIR/pi-list
-
+    LIST_DIR=/home/$ST2110_USER/pi-list
     install -m 755 $THIS_DIR/ebu-list/ebu_list_ctl /usr/sbin/
     install -m 755 $THIS_DIR/ebu-list/captured /usr/sbin/
     su $ST2110_USER -c "ebu_list_ctl install"
@@ -311,6 +326,7 @@ install_all()
     install_config
     install_common_tools
     install_monitoring_tools
+    install_ptp
     install_yasm
     install_nasm
     install_x264

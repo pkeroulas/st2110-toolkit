@@ -1,0 +1,24 @@
+From 179f25c681220e1dcc9b457acd3f2705de96acee Mon Sep 17 00:00:00 2001
+From: Patrick Keroulas <patrick.keroulas@gmail.com>
+Date: Mon, 2 Dec 2019 10:53:21 -0500
+Subject: port: do not answer in case of unknown mgt message coming
+
+---
+ port.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/port.c b/port.c
+index 5e0aed7..8dfca20 100644
+--- a/port.c
++++ b/port.c
+@@ -2687,7 +2687,6 @@ int port_manage(struct port *p, struct port *ingress, struct ptp_message *msg)
+ 		port_management_send_error(p, ingress, msg, TLV_NOT_SUPPORTED);
+ 		break;
+ 	default:
+-		port_management_send_error(p, ingress, msg, TLV_NO_SUCH_ID);
+ 		return -1;
+ 	}
+ 	return 1;
+-- 
+2.17.1
+

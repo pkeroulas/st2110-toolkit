@@ -89,8 +89,8 @@ PTP_PHC2SYS_PID=/var/run/phc2sys.pid
 start_ptp()
 {
     log_st2110 "Start linuxptp"
-    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PTP4L_PID --exec /usr/sbin/ptp4l -- -f $PTP_CONFIG -s -i $PTP_IFACE
-    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID --exec /usr/sbin/phc2sys -- -s $PTP_IFACE -c CLOCK_REALTIME -w -n $PTP_DOMAIN
+    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PTP4L_PID --exec /usr/local/sbin/ptp4l -- -f $PTP_CONFIG -s -i $PTP_IFACE
+    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID --exec /usr/local/sbin/phc2sys -- -s $PTP_IFACE -c CLOCK_REALTIME -w -n $PTP_DOMAIN
 }
 
 log_ptp()
