@@ -33,11 +33,22 @@ fi
 
 ORIG_PATH=$(pwd)
 MGT_IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+
+# In prod, nginx is used as proxy to expose port 80 only
 if [ $LIST_DEV = "true" ]; then
-    LIST_PORT=8080
+    PROFILE="dev"
+    LIST_API_PORT=3030
+    LIST_GUI_PORT=8080
 else
-    LIST_PORT=80
+    PROFILE="prod"
+    LIST_API_PORT=80
+    LIST_GUI_PORT=80
 fi
+
+show_status()
+{
+    printf  "%-30.30s: %-15.15s %s\n" "$1" "$2" "$3"
+}
 
 get_status()
 {
@@ -46,7 +57,7 @@ get_status()
     else
         ret="DOWN"
     fi
-    printf  "%-30.30s: %s\n" "$1" "$ret"
+    show_status "$1" "$ret"
 }
 
 start()
@@ -74,7 +85,7 @@ start()
         cd $LIST_PATH/apps/listwebserver
         sed -i "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
             s,\(cpp:\).*,\1 $LIST_PATH/build/bin,;
-            s,\(webappDomain:\).*,\1 http://$MGT_IP:$LIST_PORT,;
+            s,\(webappDomain:\).*,\1 http://$MGT_IP:$LIST_GUI_PORT,;
             " ./config.yml
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
         npm run dev -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
@@ -109,9 +120,9 @@ status()
     echo "-----------------------------------------------"
     echo "                EBU-LIST Status"
     echo "-----------------------------------------------"
-    printf  "%-30.30s: %-15.15s %s\n" "Mgt interface" "$MGMT_IFACE" "$MGT_IP"
-    printf  "%-30.30s: %-15.15s %s\n" "Media interface" "$MEDIA_IFACE" "$media_ip"
-    printf  "%-30.30s: %-15.15s %s\n" "Media gateway" "$MEDIA_IFACE" "$media_gateway_ip"
+    show_status "Profile" "$PROFILE"
+    show_status "Mgt interface" "$MGMT_IFACE" "$MGT_IP"
+    show_status "Media interface" "$MEDIA_IFACE" "$media_ip (gw:$media_gateway_ip)"
     get_status "Media interface" "ip addr show $MEDIA_IFACE" "$MEDIA_IFACE: .* UP"
     get_status "Media gateway" "ping -c 1 -W 1 $media_gateway_ip" "1 received"
     get_status "Mellanox Software" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
@@ -130,8 +141,8 @@ status()
     else
         get_status "LIST" "docker ps" "pi-list"
     fi
-    get_status "LIST API response" "curl http://$MGT_IP:3030/api/meta/version 2>/dev/nul" "USER_NOT_AUTHENTICATED"
-    get_status "LIST GUI response" "curl http://$MGT_IP:$LIST_PORT 2>/dev/nul" "ebu_logo.svg"
+    get_status "LIST API response" "curl http://$MGT_IP:$LIST_API_PORT/api/meta/version 2>/dev/nul" "USER_NOT_AUTHENTICATED"
+    get_status "LIST GUI response" "curl http://$MGT_IP:$LIST_GUI_PORT 2>/dev/nul" "ebu_logo.svg"
     get_status "LIST capture" "ps aux" "[c]aptured"
 }
 
