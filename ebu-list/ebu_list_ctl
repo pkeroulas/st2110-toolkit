@@ -187,7 +187,7 @@ install()
         ./scripts/deploy/deploy.sh
     # whereas non dev mode means install from public docker image
     else
-        mkdir $LIST_PATH
+        mkdir -p $LIST_PATH
         cd $LIST_PATH
         curl -O https://raw.githubusercontent.com/ebu/pi-list/master/docs/docker-compose.yml
     fi

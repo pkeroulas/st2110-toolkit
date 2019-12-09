@@ -125,7 +125,7 @@ As `root` user:
 sudo -i
 cd /home/ebulist/st2110-toolkit
 source ./install.sh
-install_common_tool
+install_common_tools
 install_monitoring_tools
 install_config
 source /etc/st2110.conf
