@@ -192,6 +192,7 @@ install()
         mkdir -p $LIST_PATH
         cd $LIST_PATH
         curl -O https://raw.githubusercontent.com/ebu/pi-list/master/docs/docker-compose.yml
+        docker-compose pull
     fi
 
     set +eux
