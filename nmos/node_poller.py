@@ -84,7 +84,7 @@ def poll(node):
         if old_sdp_filtered == sdp_filtered:
             continue
 
-        if sdp_filename == "":
+        if sdp_filtered == "":
             # all the receivers are disabled
             transcode(False, 'dummy')
         else:

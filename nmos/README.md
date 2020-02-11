@@ -44,13 +44,13 @@ Run run Sony virtual node:
 Run the node poller on the same host:
 
 ```sh
-~/st2110_toolkit/nmos/node_poller.py localhost
+~/st2110_toolkit/nmos/node_poller.py localhost:8080
 ```
 
-Establish a connection from sender (192.168.39.12):
+Establish a connection from NMOS-capable sender (exple: 192.168.39.12):
 
 ```sh
-~/st2110_toolkit/nmos/node_connection.py 192.168.39.12 localhost start
+~/st2110_toolkit/nmos/node_connection.py 192.168.39.12 localhost:8080 start
 ```
 
 This scripts fetch transport file of the 1st video and 1st audio tracks
@@ -62,7 +62,7 @@ Refer to general documention to setup the transcoder.
 Disable the receiver node:
 
 ```sh
-~/st2110_toolkit/nmos/node_controller.py localhost rx start
+~/st2110_toolkit/nmos/node_controller.py localhost rx stop
 ```
 
 ## TODO
