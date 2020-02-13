@@ -1,0 +1,61 @@
+#!/bin/bash
+set -x
+ST2110_CONF_FILE=/etc/st2110.conf
+if [ ! -f  $ST2110_CONF_FILE ]; then
+    echo "Config file is missing"
+    return
+fi
+source $ST2110_CONF_FILE
+
+NMOS_CPP_PATH=/home/$ST2110_USER/nmos-cpp/Development/build
+NMOS_ST2110_PATH=/home/$ST2110_USER/st2110-toolkit/nmos
+NMOS_LOGFILE=/tmp/nmos-
+
+usage()
+{
+    echo "$0 is a wrapper script that manages EBU-LIST
+and related sub-services (DB, backend, UI, etc.)
+Usage:
+    $0 {start|stop|log}
+        start    start nmos-cpp-node and node_poller.py
+        stop     stop all
+        log
+" >&2
+}
+
+start()
+{
+    $NMOS_CPP_PATH/nmos-cpp-node $NMOS_ST2110_PATH/nmos-cpp-ffmpeg-dnssd-config.json 2>&1> ${NMOS_LOGFILE}cpp.log &
+    sleep 4
+    #TODO grap port from nmos-ccp config
+    $NMOS_ST2110_PATH/node_poller.py localhost:8081 > ${NMOS_LOGFILE}poller.log &
+}
+
+stop()
+{
+    killall nmos-cpp-node
+    killall node_poller.py
+}
+
+log()
+{
+    tail -f ${NMOS_LOGFILE}*
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    log)
+        log
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
+
+exit 0
