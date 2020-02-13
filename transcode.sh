@@ -137,12 +137,13 @@ start() {
 	if [ $output = "ts" ]; then
 		# simple monitor
 		output_dest="$output_dest \"$TRANSCODER_OUTPUT_MPEGTS\""
+
 	elif [ $output = "rtmp" ]; then
 		# fit audio bitstream (ADTS) to flv (ASC)
 		audio_encode_options="$audio_encode_options -ar 44100 -bsf:a aac_adtstoasc"
 		# ASC breaks audio TS, let's remove it for the monitoring
-		output_dest="$output_dest \"$TRANSCODER_OUTPUT_RTMP_DST\"
-"
+		output_dest="$output_dest \"$TRANSCODER_OUTPUT_RTMP_DST\""
+
 	elif [ $output = "multi" ]; then
 		# one ffmpeg instance for multiple output/bitrates (unicast TS)
 		# yadif is removed to make the graph not too complicated
@@ -197,7 +198,7 @@ $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT
 		$video_encode_options \
 		$output_dest"
 
-	log "$(echo -e "Command:\n$cmd" | sed 's/\t//g')"
+	log "$(echo "Command:\n$cmd" | sed 's/\t//g')"
 	# start ffmpeg in a tmux session
 	tmux new-session -d -s transcoder \
 "$cmd 2>&1 | tee -a $LOG_FILE;

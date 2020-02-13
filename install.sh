@@ -198,6 +198,12 @@ install_ffnvcodec()
     ffmpeg_gpu_options="--enable-cuda --enable-cuvid --enable-nvenc --enable-libnpp --extra-cflags=-I$PREFIX/cuda/include --extra-ldflags=-L$PREFIX/cuda/lib64"
 }
 
+install_streaming_server()
+{
+    apt install nginx libnginx-mod-rtmp
+    install -m 644 $THIS_DIR/config/nginx.conf /etc/nginx.conf
+}
+
 install_ffmpeg()
 {
     ldconfig -v
