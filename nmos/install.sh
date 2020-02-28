@@ -75,8 +75,6 @@ install_cpprest()
 install_cppnode()
 {
     echo "Installing Sony nmos-cpp"
-    DIR=$(mktemp -d)
-    cd $DIR/
     git clone https://github.com/sony/nmos-cpp.git
     mkdir ./nmos-cpp/Development/build
     cd ./nmos-cpp/Development/build
@@ -90,13 +88,21 @@ install_cppnode()
 
     make
     install -m 755 ./nmos-cpp-node ./nmos-cpp-registry ./nmos-cpp-test $PREFIX/bin
-    rm -rf $DIR
+}
+
+install_nmos_init(){
+    install -m 755 ./nmos.init.reg /etct/init.d/nmos
+    update-rc.d nmos defaults
+    systemctl enable nmos
 }
 
 install_nmos() {
+    set -x
     install_cmake
     install_boost
     install_mdns
     install_cpprest
     install_cppnode
+    install_nmos_init
+    set +x
 }

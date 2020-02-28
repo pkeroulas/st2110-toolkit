@@ -1,0 +1,47 @@
+#!/bin/sh -e
+### BEGIN INIT INFO
+# Provides:          nmos
+# Required-Start:    $time $network $local_fs $syslog
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Start nmos registry
+### END INIT INFO
+# This header allows systemd to create a service.
+
+# Copy to /etc/init.d/nmos with root ownership
+# This init script is written for SYSV systems but can be
+# converted to systemd service:
+#  $ update-rc.d nmos defaults
+#  $ systemctl enable nmos
+
+NAME=nmos-registry
+PIDFILE=/var/run/$NAME.pid
+DAEMON="$(which nmos-cpp-registry)"
+DAEMON_OPTS="/home/nmos/cfg_nmos/reg_config_dnssd.json"
+NMOS_USER=nmos
+
+case "$1" in
+  start)
+        echo -n "Starting daemon: "$NAME
+	start-stop-daemon --start --chuid $NMOS_USER --no-close --quiet --pidfile $PIDFILE --make-pidfile --background --exec $DAEMON -- $DAEMON_OPTS
+	;;
+  stop)
+        echo -n "Stopping daemon: "$NAME
+	start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE --remove-pidfile
+	;;
+  log)
+	journalctl -f
+        ;;
+  restart)
+        echo -n "Restarting daemon: "$NAME
+	stop
+	start
+	;;
+
+  *)
+	echo "Usage: "$1" {start|stop|log|restart}"
+	exit 1
+esac
+
+exit 0
