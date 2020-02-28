@@ -2,7 +2,7 @@
 
 This is the integration guide for [EBU LIST](https://tech.ebu.ch/list).
 Although the project documentation allows to setup an offline analyzer,
-this guide gives instructions to build a standalone, high perforamce
+this guide gives instructions to build a standalone, high performance
 capturing devices.
 
 * [Online running instance: EBU LIST](http://list.ebu.io/login) (no capture)
@@ -159,7 +159,7 @@ Note the serial number, needed later:
 sudo mlxfwmanager | grep GUID
 ```
 
-If something is worng, you may find additional [installation documentation.](https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED).
+If something goes wrong, you may find additional [installation documentation.](https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED).
 
 ## EBU-LIST install
 

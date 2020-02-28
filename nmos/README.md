@@ -33,7 +33,7 @@ dnsmasq.conf contains:
 
 Devices should get the IP of this DNS server manually or through DHCP
 
-## Execution:
+## Execute:
 
 Run run Sony virtual node:
 
