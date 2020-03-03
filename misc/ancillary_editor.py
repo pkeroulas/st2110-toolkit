@@ -3,9 +3,10 @@
 # This scrip:
 # - takes a pcap file
 # - interpret packet as st2110-40 (RTP, ancillary data)
-# - chang the DID/SDID number
+# - change the DID/SDID numberof Anciallary Time Code to 0x01 (unacceptable)
 # - recalculate the checksum
 # - write the ouput as a file
+# - !!! works only for one Anc payload per packets !!!
 #
 # It can serve as a starting point for more complex editing
 
@@ -13,6 +14,10 @@ import sys
 from array import array
 import StringIO
 from scapy.all import *
+
+if (len(sys.argv) < 2):
+    print(sys.argv[0] + ' <pcap file>')
+    exit(-1)
 
 CRC_MASK = 0x01ff
 
@@ -77,7 +82,6 @@ class BitReader(object):
         return rv
 
     def readbits(self, n):
-            new_crc += t;
         v = 0
         while n > 0:
             v = (v << 1) | self._readbit()
@@ -109,23 +113,25 @@ def decode_and_change(reader):
 
         if i == 0:
             extra="DID = " + hex(t & 0xff)
-            old_crc += t;
+            old_crc += t
             if ( (t & 0xff) == 0x60 ):
-                print "---------------- edited"
+                print(" ... Ancillary Time Code edited 0x60 -> 0x01")
                 edited = 1
-                tab[i]=0x101
-                new_crc += tab[i];
+                tab[i] = 1
+            new_crc += tab[i]
 
         elif i == 1:
             extra="SDID = " + hex(t & 0xff)
-            old_crc += t;
+            old_crc += t
             if edited:
-                tab[i]=0x101
-                new_crc += tab[i];
+                print(" ... edited 0xxx -> 0x101")
+                tab[i] = 0x101
+            new_crc += tab[i]
 
         elif i == 2:
             data_count = t & 0xff
-            old_crc += t;
+            old_crc += t
+            new_crc += t
             extra="data_count = " + str(data_count)
 
         elif i == data_count + 3: # this is checksum
@@ -137,27 +143,27 @@ def decode_and_change(reader):
 
             extra="sum = " + hex(t & CRC_MASK) + ", crc = " + hex(old_crc & CRC_MASK) + ", new crc = " + hex(tab[i])
 
-        elif i > data_count + 3:
+        elif i > data_count + 3: #this might not work for other paylaod
             extra="stuffing"
 
         else:
-            old_crc += t;
-            new_crc += t;
+            old_crc += t
+            new_crc += t
             extra="data = "+ str((t&0b1111111111) >> 2)
 
-        sys.stdout.write("raw:" + hex(t)+ "->" + str(int(t)) + " " + extra + "\n")
+        if not extra == "":
+            print("raw:" + hex(t)+ "->" + str(int(t)) + " " + extra)
 
     return edited, tab
 
 # open capture file
-cap=rdpcap("/home/pkeroulas/Documents/pcap/anc_demo/20180216-list_sample-anc_with_timecode+CC.pcap")
-
+cap=rdpcap(sys.argv[1])
 for pkt in cap:
     # init streams udp payload: RTP
     i_stream = StringIO.StringIO(pkt.load)
-    print "---------------------------------------------------"
-    print "in:" + str([ord(i) for i in i_stream.getvalue()])
-    o_stream = StringIO.StringIO(cap[1].load[:23]) # copy until DID/SDID
+    print("=====================================")
+    print("in: " + str([ord(i) for i in i_stream.getvalue()]))
+    o_stream = StringIO.StringIO(pkt.load[:23]) # copy until DID/SDID
     # init bit readers
     reader = BitReader(i_stream)
     writer = BitWriter(o_stream)
@@ -169,7 +175,7 @@ for pkt in cap:
     if edited:
         for t in ancillary:
             writer.writebits(t,10)
-        print "out:" + str([ord(i) for i in o_stream.getvalue()])
+        print("out :" + str([ord(i) for i in o_stream.getvalue()]))
         pkt.load=o_stream.getvalue()
 
 # write output file
