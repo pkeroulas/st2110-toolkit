@@ -97,7 +97,7 @@ def get_parity(value):
     print "parity: "+ str(p)
     return int(p & 1)
 
-def decode_and_change(reader):
+def editPayload(reader, writer):
     edited = 0
     tab=[]
     while True:
@@ -154,29 +154,52 @@ def decode_and_change(reader):
         if not extra == "":
             print("raw:" + hex(t)+ "->" + str(int(t)) + " " + extra)
 
-    return edited, tab
+        writer.writebits(tab[i],10)
+
+"""
+https://tools.ietf.org/id/draft-ietf-payload-rtp-ancillary-14.txt
+
+       0                   1                   2                   3
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |V=2|P|X| CC    |M|    PT       |        sequence number        |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           timestamp                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |           synchronization source (SSRC) identifier            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |   Extended Sequence Number    |           Length=32           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       | ANC_Count=2   | F |                reserved                   |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |C|   Line_Number=9     |   Horizontal_Offset   |S| StreamNum=0 |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |         DID       |        SDID       |  Data_Count=0x84  |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        ............
+"""
 
 # open capture file
 cap=rdpcap(sys.argv[1])
 for pkt in cap:
     # init streams udp payload: RTP
     i_stream = StringIO.StringIO(pkt.load)
-    print("=====================================")
-    print("in: " + str([ord(i) for i in i_stream.getvalue()]))
-    o_stream = StringIO.StringIO(pkt.load[:23]) # copy until DID/SDID
+    o_stream = StringIO.StringIO(pkt.load)
+
     # init bit readers
     reader = BitReader(i_stream)
     writer = BitWriter(o_stream)
+    print("=====================================")
+    print("in: " + str([ord(i) for i in i_stream.getvalue()]))
+
     # jump to DID/SDID
     i_stream.seek(24)
     o_stream.seek(24)
 
-    edited, ancillary = decode_and_change(reader)
-    if edited:
-        for t in ancillary:
-            writer.writebits(t,10)
-        print("out :" + str([ord(i) for i in o_stream.getvalue()]))
-        pkt.load=o_stream.getvalue()
+    editPayload(reader, writer)
+
+    print("out :" + str([ord(i) for i in o_stream.getvalue()]))
+    pkt.load = o_stream.getvalue()
 
 # write output file
 print("Output file: /tmp/out.pcap")
