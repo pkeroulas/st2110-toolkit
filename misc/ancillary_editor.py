@@ -13,9 +13,10 @@
 
 # Instead of passing arg, activate these params:
 EDIT_ENABLED = True
+EDIT_MARKER_ENABLED = True
 EDIT_FIELD_ENABLED = True
 EDIT_DID_ENABLED =  False
-EDIT_PKT_IDS = [10, 50] # like displayed in wireshark
+EDIT_PKT_IDS = [10, 55] # like displayed in wireshark
 
 import sys
 from array import array
@@ -47,8 +48,6 @@ class BitWriter(object):
             pass
 
     def _writebit(self, bit):
-        if self.bcount == 8:
-            self.flush()
         if bit > 0:
             self.accumulator |= 1 << 7-self.bcount
         self.bcount += 1
@@ -57,6 +56,8 @@ class BitWriter(object):
         while n > 0:
             self._writebit(bits & 1 << n-1)
             n -= 1
+        if self.bcount == 8:
+            self.flush()
 
     def flush(self):
         self.out.write(bytearray([self.accumulator]))
@@ -188,11 +189,11 @@ https://tools.ietf.org/id/draft-ietf-payload-rtp-ancillary-14.txt
 
 # open capture file and iterate on pkts
 cap = rdpcap(sys.argv[1])
-for i, pkt in enumerate(cap):
+for index, pkt in enumerate(cap):
     # init streams udp payload: RTP
     i_stream = StringIO.StringIO(pkt.load)
     o_stream = StringIO.StringIO(pkt.load)
-    if not EDIT_ENABLED or not i+1 in EDIT_PKT_IDS:
+    if not EDIT_ENABLED or not index+1 in EDIT_PKT_IDS:
         continue
 
     # init bit readers
@@ -201,27 +202,32 @@ for i, pkt in enumerate(cap):
 
     print("=====================================")
     buf = i_stream.getvalue()
-    print("in  [" + str(i) +"], l" + str(len(buf)) + ":" + str([hex(ord(i)) for i in buf]))
+    print("in  [" + str(index) +"], l" + str(len(buf)) + ":" + str([hex(ord(i)) for i in buf]))
+
+    if EDIT_MARKER_ENABLED:
+        # jump to 'M' field
+        i_stream.seek(1)
+        o_stream.seek(1)
+        bit = reader.readbits(8)
+        writer.writebits(bit^0x80, 8)
+        print("RTP Marker bit: " + hex(bit) + " --> " + hex(bit^0x80))
 
     if EDIT_FIELD_ENABLED:
         # jump to 'F' field
         i_stream.seek(17)
         o_stream.seek(17)
-        field = reader.readbits(2)
-        writer.writebits(0, 2)
-        print("Field: " + hex(field) + " --> 0")
-        writer.flush()
-
-    # jump to DID/SDID
-    i_stream.seek(24)
-    o_stream.seek(24)
-    print("tell: " + str(i_stream.tell()) + ","+ str(o_stream.tell()))
+        field = reader.readbits(8)
+        writer.writebits(field&0b00111111, 8)
+        print("Field: " + hex(field >> 6) + " --> 0")
 
     if EDIT_DID_ENABLED:
+        # jump to DID/SDID
+        i_stream.seek(24)
+        o_stream.seek(24)
         editPayload(reader, writer)
 
     buf = o_stream.getvalue()
-    print("out [" + str(i) +"], l" + str(len(buf)) + ":" + str([hex(ord(i)) for i in buf]))
+    print("out [" + str(index) +"], l" + str(len(buf)) + ":" + str([hex(ord(i)) for i in buf]))
     pkt.load = o_stream.getvalue()
 
 # write output file
