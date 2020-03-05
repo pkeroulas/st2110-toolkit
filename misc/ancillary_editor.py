@@ -15,6 +15,7 @@
 EDIT_ENABLED = True
 EDIT_FIELD_ENABLED = True
 EDIT_DID_ENABLED =  False
+EDIT_PKT_IDS = [10, 50] # like displayed in wireshark
 
 import sys
 from array import array
@@ -187,11 +188,11 @@ https://tools.ietf.org/id/draft-ietf-payload-rtp-ancillary-14.txt
 
 # open capture file and iterate on pkts
 cap = rdpcap(sys.argv[1])
-for pkt in cap:
+for i, pkt in enumerate(cap):
     # init streams udp payload: RTP
     i_stream = StringIO.StringIO(pkt.load)
     o_stream = StringIO.StringIO(pkt.load)
-    if not EDIT_ENABLED:
+    if not EDIT_ENABLED or not i+1 in EDIT_PKT_IDS:
         continue
 
     # init bit readers
@@ -200,7 +201,7 @@ for pkt in cap:
 
     print("=====================================")
     buf = i_stream.getvalue()
-    print("in [" + str(len(buf)) +"]: " + str([hex(ord(i)) for i in buf]))
+    print("in  [" + str(i) +"], l" + str(len(buf)) + ":" + str([hex(ord(i)) for i in buf]))
 
     if EDIT_FIELD_ENABLED:
         # jump to 'F' field
@@ -220,7 +221,8 @@ for pkt in cap:
         editPayload(reader, writer)
 
     buf = o_stream.getvalue()
-    print("out  [" + str(len(buf)) +"]:" + str([hex(ord(i)) for i in buf]))
+    print("out [" + str(i) +"], l" + str(len(buf)) + ":" + str([hex(ord(i)) for i in buf]))
+    pkt.load = o_stream.getvalue()
 
 # write output file
 print("Output file: /tmp/out.pcap")
