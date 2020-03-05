@@ -1,14 +1,20 @@
 #!/usr/bin/python
 #
-# This scrip:
-# - takes a pcap file
+# Role:
+# - take a pcap file as argument
 # - interpret packet as st2110-40 (RTP, ancillary data)
-# - change the DID/SDID numberof Anciallary Time Code to 0x01 (unacceptable)
+# - change anc header or paylaod depending on params below:
+#     * field bits to 0
+#     * the DID/SDID of Anciallary Time Code to 0x01 (unacceptable)
 # - recalculate the checksum
 # - write the ouput as a file
 # - !!! works only for one Anc payload per packets !!!
-#
-# It can serve as a starting point for more complex editing
+# - !!! works only if modified packets is same length as original !!!
+
+# Instead of passing arg, activate these params:
+EDIT_ENABLED = True
+EDIT_FIELD_ENABLED = True
+EDIT_DID_ENABLED =  False
 
 import sys
 from array import array
@@ -89,7 +95,7 @@ class BitReader(object):
         return v
 
 def get_parity(value):
-    p = 0;
+    p = 0
     for i in range(8):
         if value & 1:
             p += 1
@@ -102,10 +108,10 @@ def editPayload(reader, writer):
     tab=[]
     while True:
         tab.append(reader.readbits(10))
-        if not reader.read:  # nothing read
+        if not reader.read:  # nothing to read
             break
 
-    old_crc = 0
+    old_crc = 0 # only for debug
     new_crc = 0
     data_count = 0
     for i, t in enumerate(tab):
@@ -114,7 +120,7 @@ def editPayload(reader, writer):
         if i == 0:
             extra="DID = " + hex(t & 0xff)
             old_crc += t
-            if ( (t & 0xff) == 0x60 ):
+            if (((t & 0xff) == 0x60) and EDIT_DID_ENABLED):
                 print(" ... Ancillary Time Code edited 0x60 -> 0x01")
                 edited = 1
                 tab[i] = 1
@@ -179,27 +185,42 @@ https://tools.ietf.org/id/draft-ietf-payload-rtp-ancillary-14.txt
         ............
 """
 
-# open capture file
-cap=rdpcap(sys.argv[1])
+# open capture file and iterate on pkts
+cap = rdpcap(sys.argv[1])
 for pkt in cap:
     # init streams udp payload: RTP
     i_stream = StringIO.StringIO(pkt.load)
     o_stream = StringIO.StringIO(pkt.load)
+    if not EDIT_ENABLED:
+        continue
 
     # init bit readers
     reader = BitReader(i_stream)
     writer = BitWriter(o_stream)
+
     print("=====================================")
-    print("in: " + str([ord(i) for i in i_stream.getvalue()]))
+    buf = i_stream.getvalue()
+    print("in [" + str(len(buf)) +"]: " + str([hex(ord(i)) for i in buf]))
+
+    if EDIT_FIELD_ENABLED:
+        # jump to 'F' field
+        i_stream.seek(17)
+        o_stream.seek(17)
+        field = reader.readbits(2)
+        writer.writebits(0, 2)
+        print("Field: " + hex(field) + " --> 0")
+        writer.flush()
 
     # jump to DID/SDID
     i_stream.seek(24)
     o_stream.seek(24)
+    print("tell: " + str(i_stream.tell()) + ","+ str(o_stream.tell()))
 
-    editPayload(reader, writer)
+    if EDIT_DID_ENABLED:
+        editPayload(reader, writer)
 
-    print("out :" + str([ord(i) for i in o_stream.getvalue()]))
-    pkt.load = o_stream.getvalue()
+    buf = o_stream.getvalue()
+    print("out  [" + str(len(buf)) +"]:" + str([hex(ord(i)) for i in buf]))
 
 # write output file
 print("Output file: /tmp/out.pcap")
