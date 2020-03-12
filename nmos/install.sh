@@ -1,4 +1,5 @@
-#imported from $TOP/install.sh
+# !!! Don't execute this script directly !!!
+# It is imported in $TOP/install.sh
 
 export CMAKE_VERSION=3.11.2 \
     BOOST_VERSION=1.67.0 \

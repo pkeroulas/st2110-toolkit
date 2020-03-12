@@ -98,6 +98,7 @@ Use ./transcode.sh to start the transcoding service in back ground from
 one or multiple SDP files, then show logs and, finally stop the service.
 
 ```sh
+$ cd ./transcode/
 $ ./transcoder.sh help
 [...]
 $ ./transcoder.sh start file.sdp
