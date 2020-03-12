@@ -44,8 +44,10 @@ install_common_tools()
         lldpd \
         ethtool \
         gcc \
+        g++ \
         git \
         libtool \
+        libssl-dev \
         make \
         net-tools \
         patch \

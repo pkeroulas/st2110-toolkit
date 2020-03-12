@@ -92,9 +92,10 @@ install_cppnode()
 }
 
 install_nmos_init(){
-    install -m 755 ./nmos.init.reg /etct/init.d/nmos
+    install -m 755 ./nmos.init.reg /etc/init.d/nmos
     update-rc.d nmos defaults
     systemctl enable nmos
+    systemctl start nmos
 }
 
 install_nmos() {
