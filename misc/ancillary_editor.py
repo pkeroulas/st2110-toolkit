@@ -13,10 +13,12 @@
 
 # Instead of passing arg, activate these params:
 EDIT_ENABLED = True
-EDIT_MARKER_ENABLED = True
-EDIT_FIELD_ENABLED = True
-EDIT_DID_ENABLED =  False
-EDIT_PKT_IDS = [10, 55] # like displayed in wireshark
+EDIT_MARKER_ENABLED = False
+EDIT_FIELD_ENABLED = False
+EDIT_DID_ENABLED = True
+EDIT_PAYLOAD_ENABLED = True
+EDIT_ALL = False
+EDIT_PKT_IDS = [10, 55] # if not EDIT_ALL; IDs: like displayed in wireshark
 
 import sys
 from array import array
@@ -54,6 +56,8 @@ class BitWriter(object):
 
     def writebits(self, bits, n):
         while n > 0:
+            if self.bcount == 8:
+                self.flush()
             self._writebit(bits & 1 << n-1)
             n -= 1
         if self.bcount == 8:
@@ -117,10 +121,10 @@ def editPayload(reader, writer):
     new_crc = 0
     data_count = 0
     for i, t in enumerate(tab):
-        extra=""
+        msg=""
 
         if i == 0:
-            extra="DID = " + hex(t & 0xff)
+            msg="DID = " + hex(t & 0xff)
             old_crc += t
             if (((t & 0xff) == 0x60) and EDIT_DID_ENABLED):
                 print(" ... Ancillary Time Code edited 0x60 -> 0x01")
@@ -129,7 +133,7 @@ def editPayload(reader, writer):
             new_crc += tab[i]
 
         elif i == 1:
-            extra="SDID = " + hex(t & 0xff)
+            msg="SDID = " + hex(t & 0xff)
             old_crc += t
             if edited:
                 print(" ... edited 0xxx -> 0x101")
@@ -140,7 +144,15 @@ def editPayload(reader, writer):
             data_count = t & 0xff
             old_crc += t
             new_crc += t
-            extra="data_count = " + str(data_count)
+            #msg="data_count = " + str(data_count)
+
+        elif i == 3 and EDIT_PAYLOAD_ENABLED:
+            data_count = t & 0xff
+            old_crc += t
+            new_crc += t
+            tab[i] = ~t;
+            new_crc += tab[i]
+            msg="payload[0]: " + str(t) +" -> " + str(tab[i])
 
         elif i == data_count + 3: # this is checksum
             if edited:
@@ -149,18 +161,18 @@ def editPayload(reader, writer):
                 if not new_crc & 0x100:
                     new_crc = new_crc + 0x200
 
-            extra="sum = " + hex(t & CRC_MASK) + ", crc = " + hex(old_crc & CRC_MASK) + ", new crc = " + hex(tab[i])
+            msg="sum = " + hex(t & CRC_MASK) + ", crc = " + hex(old_crc & CRC_MASK) + ", new crc = " + hex(tab[i])
 
         elif i > data_count + 3: #this might not work for other paylaod
-            extra="stuffing"
+            msg="stuffing"
 
         else:
             old_crc += t
             new_crc += t
-            extra="data = "+ str((t&0b1111111111) >> 2)
+            msg="data = "+ str((t&0b1111111111) >> 2)
 
-        if not extra == "":
-            print("raw:" + hex(t)+ "->" + str(int(t)) + " " + extra)
+        if not msg == "":
+            print("raw:" + hex(t)+ "->" + str(int(t)) + " " + msg)
 
         writer.writebits(tab[i],10)
 
@@ -193,7 +205,7 @@ for index, pkt in enumerate(cap):
     # init streams udp payload: RTP
     i_stream = StringIO.StringIO(pkt.load)
     o_stream = StringIO.StringIO(pkt.load)
-    if not EDIT_ENABLED or not index+1 in EDIT_PKT_IDS:
+    if not EDIT_ENABLED or not (index+1 in EDIT_PKT_IDS or EDIT_ALL):
         continue
 
     # init bit readers
@@ -220,7 +232,7 @@ for index, pkt in enumerate(cap):
         writer.writebits(field&0b00111111, 8)
         print("Field: " + hex(field >> 6) + " --> 0")
 
-    if EDIT_DID_ENABLED:
+    if EDIT_DID_ENABLED or EDIT_PAYLOAD_ENABLED:
         # jump to DID/SDID
         i_stream.seek(24)
         o_stream.seek(24)
