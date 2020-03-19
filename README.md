@@ -28,19 +28,7 @@ Sponsored by:
 Install everything (tools, FFmpeg and all the dependencies) using the install scrip:
 
 ```sh
-$ ./install.sh install_all
-```
-
-Or you can install a single component:
-
-```sh
-$ ./install.sh install_ffmpeg
-```
-
-Or build a Docker container:
-
-```sh
-docker build -t centos/transcoder:v0 .
+$ ./install.sh <transcoder|capture|ebulist|nmos>
 ```
 
 ## Configuration
@@ -221,11 +209,11 @@ netstat -s -u
 ## Todos
 
 * rework nic_setup.sh
-* poller: display ffmpeg status
+* deal with transcoder Dockerfile
+* nmos-poller: display ffmpeg status
 * ffmpeg: a static route to multicast must be added, why? would it work
   with a route to source IP only? is it possible to tell ffmpeg which
   interface to use
-* document Mellanox NIC installation
 
 ## Additional resources
 
