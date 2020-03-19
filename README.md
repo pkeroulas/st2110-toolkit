@@ -51,7 +51,7 @@ The first thing to do on system startup is to setup the network
 interface controller (NIC).
 
 ```sh
-$ sudo ./nic_setup.sh eth0
+$ sudo ./capture/nic_setup.sh eth0
 [...]
 ```
 
@@ -73,8 +73,8 @@ provided by the source. See [flow description.](./doc/embrionix.md) for
 more details.
 
 ```sh
-$ ./get_sdp.py <sender_IP> <flows>
-$ ./get_sdp.py 192.168.1.176 0 2 18
+$ ./capture/get_sdp.py <sender_IP> <flows>
+$ ./capture/get_sdp.py 192.168.1.176 0 2 18
 [...]
 ------------------------------------------------------------------------
 SDP written to emb_encap_176.sdp
@@ -88,7 +88,7 @@ Firewall rules may also be needed to unblock the traffic from the NIC to
 the userspace socket interface. This is all done by this script:
 
 ```sh
-$ ./network_setup.sh sdp.file
+$ ./capture/network_setup.sh sdp.file
 [...]
 ```
 
@@ -155,6 +155,7 @@ If you already have an SDP file, it can be used as an input for the
 capture script which parses every RTP streams.
 
 ```sh
+$ cd ./capture/
 $ sudo ./capture.sh help
 [...]
 $ sudo ./capture.sh sdp file.sdp
@@ -179,7 +180,7 @@ details.
 Find your live media interface name and execute:
 
 ```sh
-$ ./network_setup.sh file.sdp
+$ ./capture/network_setup.sh file.sdp
 [...]
 ```
 
@@ -187,7 +188,7 @@ You can validate that the multicast IGMP group is joined and that data
 is received thanks to the socket reader:
 
 ```sh
-$ cd misc/
+$ cd capture/
 $ gcc -o socket_reader -std=c99 socket_reader.c
 $ ./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
 [...]

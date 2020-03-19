@@ -6,8 +6,6 @@ export LANG=en_US.utf8 \
     YASM_VERSION=1.3.0 \
     NASM_VERSION=2.13.02 \
     MP3_VERSION=3.99.5 \
-    PTP_VERSION=2.0 \
-    SMCROUTE_VERSION=2.4.3 \
     PREFIX=/usr/local \
     MAKEFLAGS="-j$[$(nproc) + 1]"
 
@@ -134,26 +132,6 @@ install_ffmpeg()
     make install
     make distclean
     rm -rf $DIR
-}
-
-install_smcroute()
-{
-    echo "Installing smcroute"
-    DIR=$(mktemp -d)
-    cd $DIR/
-    wget https://github.com/troglobit/smcroute/releases/download/2.4.3/smcroute-$SMCROUTE_VERSION.tar.gz
-    tar xaf smcroute-$SMCROUTE_VERSION.tar.gz
-    cd smcroute-$SMCROUTE_VERSION
-    ./autogen.sh
-    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
-    make
-    make install
-    make distclean
-    rm -rf $DIR
-
-    bin=$(readlink -f $(which smcroutectl))
-    chgrp pcap $bin
-    setcap cap_net_raw,cap_net_admin=eip $bin
 }
 
 install_transcoder()
