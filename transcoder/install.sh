@@ -155,3 +155,13 @@ install_smcroute()
     chgrp pcap $bin
     setcap cap_net_raw,cap_net_admin=eip $bin
 }
+
+install_transcoder()
+{
+    install_yasm
+    install_nasm
+    install_x264
+    install_fdkaac
+    install_mp3
+    install_ffmpeg
+}
