@@ -153,7 +153,8 @@ status()
         get_status "LIST node API" "ps aux" "[n]ode server.js .*--live"
         get_status "LIST node GUI" "ps aux" "[n]ode .*gui"
     else
-        get_status "LIST" "docker ps" "list"
+        # in prod, API and GUI are both servered by the same docker container
+        get_status "LIST container" "docker ps" "list"
     fi
     get_status "LIST API response" "curl http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/nul" "USER_NOT_AUTHENTICATED"
     get_status "LIST GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/nul" "ebu_logo.svg"
@@ -185,7 +186,8 @@ install()
         git submodule update --init --recursive
         sudo ./scripts/setup_build_env.sh
         echo "Get token to access online translation file."
-        ./apps/gui/data/translationsGenerator.js -t
+        cd ./apps/gui/data/ && node translationsGenerator.js -t
+        cd -
         ./scripts/deploy/deploy.sh
     # whereas non dev mode means install from public docker image
     else
@@ -230,8 +232,6 @@ upgrade()
         curl -O https://raw.githubusercontent.com/ebu/pi-list/master/docs/docker-compose.yml
         docker-compose pull
     fi
-
-    start
 }
 
 case "$1" in
