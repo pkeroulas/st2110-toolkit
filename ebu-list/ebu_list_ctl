@@ -45,16 +45,24 @@ else
     LIST_GUI_PORT=80
 fi
 
+show_header()
+{
+    printf  "\e[1;29m%s\e[m\n" "$1"
+}
+
 show_status()
 {
     if [ "$2" = 'UP' ]; then
         color=32 #green
+        len=5
     elif [ "$2" = 'DOWN' ]; then
         color=31 #red
+        len=5
     else
         color=34 #blue
+        len=25
     fi
-    printf  "%-30.30s \e[1;${color}m%-20.20s\e[m %s\n" "$1" "$2" "$3"
+    printf  "%-20.20s \e[1;${color}m%-${len}.${len}s \e[1;34m%-25.25s %s\e[m\n" "$1" "$2" "$3" "$4"
 }
 
 get_status()
@@ -64,12 +72,12 @@ get_status()
     else
         ret="DOWN"
     fi
-    show_status "$1" "$ret"
+    show_status "$1" "$ret" $4
 }
 
 start()
 {
-    if get_status "LIST *" "$0 status" "LIST.*UP" | grep -q UP; then
+    if get_status "API response" "curl http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/nul" "USER_NOT_AUTHENTICATED" | grep -q UP; then
         echo "EBU-LIST is already up"
         return
     fi
@@ -118,60 +126,90 @@ stop()
     echo "You may need to 'sudo service docker restart' before starting EBU-LIST again (if Mongo DB doesn't respond)."
 }
 
+port_status()
+{
+    id=$1
+    if [ -z $2 ]; then return 1; fi
+    iface=$2
+
+    media_ip=$(ip addr show $iface | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+    media_gw_ip=$(ip route | sed -n 's/default via \(.*\) dev '""$(echo $iface | tr -d '\n')""' .*/\1/p')
+
+    switch_name=$(lldpcli show neighbors port $iface | tr -s ' ' | sed -n 's/.*SysName: \(.*\)/\1/p')
+    switch_ip=$(lldpcli show neighbors port $iface | tr -s ' ' | sed -n 's/.*MgmtIP: \(.*\)/\1/p')
+    media_gw_port=$(lldpcli show neighbors port $iface | tr -s ' ' | sed -n 's/.*PortID: \(.*\)/\1/p')
+    get_status "Interface $id" "ip addr show $iface" "$iface: .* UP" "$iface $media_ip"
+    get_status "Gateway   $id" "ping -c 1 -W 1 $media_gw_ip" "1 received" "$media_gw_port $media_gw_ip"
+    get_status "Switch    $id" "ping -c 1 -W 1 $switch_ip" "1 received" "$switch_name $switch_ip"
+}
+
+probe_status()
+{
+    id=$1
+    if [ -z $2 ]; then return 1; fi
+    iface=$2
+    get_status "probe $id" "ps aux" "[c]aptured .*$iface"
+}
+
 status()
 {
-    media_ip=$(ip addr show $MEDIA_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
-    media_gw_ip=$(ip route | sed -n 's/default via \(.*\) dev '""$(echo $MEDIA_IFACE | tr -d '\n')""' .*/\1/p')
-    ptp_filter="src host $media_ip && dst host 224.0.1.129"
-
-    media_gw_name=$(lldpcli show neighbors port $MEDIA_IFACE | tr -s ' ' | sed -n 's/.*SysName: \(.*\)/\1/p')
-    media_gw_mgmt_ip=$(lldpcli show neighbors port $MEDIA_IFACE | tr -s ' ' | sed -n 's/.*MgmtIP: \(.*\)/\1/p')
-    media_gw_port=$(lldpcli show neighbors port $MEDIA_IFACE | tr -s ' ' | sed -n 's/.*PortID: \(.*\)/\1/p')
 
     echo "-----------------------------------------------"
     echo "                EBU-LIST Status"
     echo "-----------------------------------------------"
-    show_status "Profile" "$PROFILE"
-    show_status "Hostname" "$(hostname)"
-    show_status "Managment interface" "$MGMT_IFACE" "$MGMT_IP"
-    show_status "Media gateway name" "$media_gw_name" "$media_gw_mgmt_ip"
-    show_status "Media interface" "$MEDIA_IFACE" "$media_ip"
-    show_status "Media gateway iface" "$media_gw_port" "$media_gw_ip"
-    get_status "Media interface" "ip addr show $MEDIA_IFACE" "$MEDIA_IFACE: .* UP"
-    get_status "Media gateway" "ping -c 1 -W 1 $media_gw_ip" "1 received"
-    get_status "Media NIC driver" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
-    get_status "Ptp for Linux daemon" "ps aux" "[p]tp4l"
-    get_status "Ptp to NIC" "ps aux" "[p]hc2sys"
-    get_status "Ptp lock" "journalctl -n10" "phc2sys.* s2 freq "
+    show_header "Media interfaces"
+    show_status "Name" "$(hostname)"
+    get_status "Managment iface" "ping -c 1 -W 1 $MGMT_IP" "1 received" "$MGMT_IFACE $MGMT_IP"
+    echo "-----------------------------------------------"
+    show_header "Media interfaces"
+    get_status "NIC driver" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
+    port_status 0 $MEDIA_IFACE_0
+    port_status 1 $MEDIA_IFACE_1
+    echo "-----------------------------------------------"
+    ptp_filter="src host $MEDIA_IFACE && dst host 224.0.1.129"
+    show_header "PTP"
+    get_status "ptp4l" "ps aux" "[p]tp4l"
+    # TODO dual-port
+    get_status "phc2sys" "ps aux" "[p]hc2sys"
+    get_status "Lock" "journalctl -n10" "phc2sys.* s2 freq "
     get_status "Ptp traffic" "timeout 2 tcpdump -i $MEDIA_IFACE -c2 $ptp_filter" "2 packets captured"
-    get_status "Docker daemon" "ps aux" "[d]ockerd"
-    get_status "Docker network" "ping -c 1 -W 1 172.17.0.1" "1 received"
+    echo "-----------------------------------------------"
+    show_header "Docker"
+    get_status "Daemon" "ps aux" "[d]ockerd"
+    get_status "Network" "ping -c 1 -W 1 172.17.0.1" "1 received"
     get_status "Service Mongo DB" "docker ps" "mongo"
     get_status "Service Influx DB" "docker ps" "influxdb"
     get_status "Service Rabbit MQ" "docker ps" "rabbitmq"
+    echo "-----------------------------------------------"
+    show_header "LIST"
+    show_status "Profile" "$PROFILE"
+    #TODO: get LIST version
     if [ $LIST_DEV = "true" ]; then
-        get_status "LIST node API" "ps aux" "[n]ode server.js .*--live"
-        get_status "LIST node GUI" "ps aux" "[n]ode .*gui"
+        get_status "node API" "ps aux" "[n]ode server.js .*--live"
+        get_status "node GUI" "ps aux" "[n]ode .*gui"
     else
         # in prod, API and GUI are both servered by the same docker container
-        get_status "LIST container" "docker ps" "list"
+        get_status "container" "docker ps" "list"
     fi
-    get_status "LIST API response" "curl http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/nul" "USER_NOT_AUTHENTICATED"
-    get_status "LIST GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/nul" "ebu_logo.svg"
-    get_status "LIST capture" "ps aux" "[c]aptured"
-    #TODO: get LIST version
+    get_status "API response" "curl http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/nul" "USER_NOT_AUTHENTICATED"
+    get_status "GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/nul" "ebu_logo.svg"
+    probe_status 0 $MEDIA_IFACE_0
+    probe_status 1 $MEDIA_IFACE_1
 }
 
 log()
 {
+    tail -f -n200 /tmp/list*.log &
+
     if [ $LIST_DEV == "true" ]; then
-        tail -f -n200 /tmp/list*.log
-    else
         tail -f -n200 /tmp/list*.log &
+        cd $LIST_PATH/apps/external/
+    else
         cd $LIST_PATH
-        docker-compose logs -f --tail=500
-        killall tail
     fi
+    docker-compose logs -f --tail=500
+    # ctrl-C
+    killall tail
 }
 
 install()

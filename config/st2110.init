@@ -24,13 +24,25 @@ if [ -f $ST2110_CONF_FILE ]; then
     . $ST2110_CONF_FILE
 fi
 
-if [ ! -d /sys/class/net/$MEDIA_IFACE ]; then
-    log_st2110 "$MEDIA_IFACE doesn't exist, exit."
-fi
+setup_iface()
+{
+    if [ -z $1 ]; then return; fi
+    iface=$1
 
-if [ $(cat /sys/class/net/$MEDIA_IFACE/operstate) != "up" ]; then
-    log_st2110 "$MEDIA_IFACE is not up, exit."
-fi
+    if [ ! -d /sys/class/net/$iface ]; then
+        log_st2110 "$iface doesn't exist, exit."
+    fi
+
+    if [ $(cat /sys/class/net/$iface/operstate) != "up" ]; then
+        log_st2110 "$iface is not up, exit."
+    fi
+
+    # doesn't look to work with  MT27800 Family [ConnectX-5]
+    ethtool --set-priv-flags $iface sniffer on
+
+    # HW timestamp any incoming pkt
+    hwstamp_ctl -i $iface -r 1
+}
 
 start_list()
 {
@@ -53,6 +65,22 @@ stop_list()
     su $ST2110_USER -c "ebu_list_ctl stop"
 }
 
+start_probe()
+{
+    if [ -z $1 ]; then return; fi
+    iface=$1
+
+    log_st2110 "Start EBU capture probe on port $iface"
+    cat > /home/$ST2110_USER/captured_${iface}.yml << EOF
+id: $(uuidgen)
+label: "LIST capture probe #${iface}: $(cat /etc/hostname)"
+broker_url: "amqp://localhost:5672"
+interface: $iface
+EOF
+    VMA_HW_TS_CONVERSION=4 LD_PRELOAD=libvma.so \
+        captured /home/$ST2110_USER/captured_${iface}.yml 2>&1 > /tmp/list-captured_${iface}.log &
+}
+
 start_capture()
 {
     log_st2110 "Start captured."
@@ -63,15 +91,8 @@ start_capture()
     done
     sleep 10 # not sure why but this is needed
 
-    log_st2110 "Start EBU capture probe"
-    cat > /home/$ST2110_USER/captured.yml << EOF
-id: $(uuidgen)
-label: "LIST capture probe: $(cat /etc/hostname)"
-broker_url: "amqp://localhost:5672"
-interface: $MEDIA_IFACE
-EOF
-    VMA_HW_TS_CONVERSION=4 LD_PRELOAD=libvma.so \
-        captured /home/$ST2110_USER/captured.yml 2>&1 > /tmp/list-capture.log &
+    start_probe $MEDIA_IFACE_0
+    start_probe $MEDIA_IFACE_1
 }
 
 stop_capture()
@@ -86,11 +107,24 @@ PTP_DOMAIN=$(sed -n 's/domainNumber\t\+\([0-9]*\)/\1/p' $PTP_CONFIG)
 PTP_PTP4L_PID=/var/run/ptp4l.pid
 PTP_PHC2SYS_PID=/var/run/phc2sys.pid
 
+start_ptp_sync()
+{
+    if [ -z $1 ]; then return; fi
+    iface=$1
+
+    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID.$iface --exec /usr/local/sbin/phc2sys -- -s $iface -c CLOCK_REALTIME -w -n $PTP_DOMAIN
+}
+
 start_ptp()
 {
     log_st2110 "Start linuxptp"
     start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PTP4L_PID --exec /usr/local/sbin/ptp4l -- -f $PTP_CONFIG -s -i $PTP_IFACE
-    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID --exec /usr/local/sbin/phc2sys -- -s $PTP_IFACE -c CLOCK_REALTIME -w -n $PTP_DOMAIN
+
+    # Manage 2 ports with 2 phc2sys (1st iface is master for both sys
+    # clock and 2nd iface). But is it better to have 2 instances of
+    # ptp4l instead? phc2sys would dynamically choose between the 2 ifaces
+    start_ptp_sync $MEDIA_IFACE_0
+    start_ptp_sync $MEDIA_IFACE_1
 }
 
 log_ptp()
@@ -98,12 +132,23 @@ log_ptp()
     journalctl -xef | grep "phc2sys\|ptp4l"
 }
 
+stop_ptp_sync()
+{
+    if [ -z $1 ]; then return; fi
+    iface=$1
+
+    start-stop-daemon --stop --pidfile $PTP_PHC2SYS_PID.$iface --oknodo
+}
+
 stop_ptp()
 {
     log_st2110 "Stop linuxptp"
     start-stop-daemon --stop --pidfile $PTP_PTP4L_PID --oknodo
-    start-stop-daemon --stop --pidfile $PTP_PHC2SYS_PID --oknodo
-    rm -f $PTP_PHC2SYS_PID $PTP_PTP4L_PID
+
+    stop_ptp_sync $MEDIA_IFACE_0
+    stop_ptp_sync $MEDIA_IFACE_1
+
+    rm -f $PTP_PHC2SYS_PID* $PTP_PTP4L_PID
 }
 
 start_mellanox()
@@ -115,13 +160,13 @@ start_mellanox()
         log_st2110 "Couldn't detect MST device: $MLNX_DEV"
         exit 1
     fi
+
+    # set the timestamp of incoming packets at the precise time of
+    # arrival at the 2 NIC ports 0b11=3
     mcra $MLNX_DEV 0xd8068 3
 
-    # doesn't look to work with  MT27800 Family [ConnectX-5]
-    ethtool --set-priv-flags $MEDIA_IFACE sniffer on
-
-    # HW timestamp any incoming pkt
-    hwstamp_ctl -i $MEDIA_IFACE -r 1
+    setup_iface $MEDIA_IFACE_0
+    setup_iface $MEDIA_IFACE_1
 
     # TODO: announce hostname through lldpd
 }
