@@ -71,22 +71,13 @@ start_probe()
     iface=$1
 
     log_st2110 "Start EBU capture probe on port $iface"
-    cat > /home/$ST2110_USER/captured_${iface}.yml << EOF
-id: $(uuidgen)
-label: "LIST capture probe #${iface}: $(cat /etc/hostname)"
-broker_url: "amqp://localhost:5672"
-interface: $iface
-EOF
-    VMA_HW_TS_CONVERSION=4 LD_PRELOAD=libvma.so \
-        captured /home/$ST2110_USER/captured_${iface}.yml 2>&1 > /tmp/list-captured_${iface}.log &
 }
 
 start_capture()
 {
-    log_st2110 "Start captured."
+    log_st2110 "Start probes."
     while ! netstat -lptn | grep -q ":5672"; do
         log_st2110 "wait mqtt port to be open"
-        # captured will crash
         sleep 1
     done
     sleep 10 # not sure why but this is needed
@@ -97,8 +88,7 @@ start_capture()
 
 stop_capture()
 {
-    log_st2110 "Stop captured."
-    killall captured
+    log_st2110 "Stop capture probes."
 }
 
 PTP_IFACE=$MEDIA_IFACE
@@ -160,10 +150,6 @@ start_mellanox()
         log_st2110 "Couldn't detect MST device: $MLNX_DEV"
         exit 1
     fi
-
-    # set the timestamp of incoming packets at the precise time of
-    # arrival at the 2 NIC ports 0b11=3
-    mcra $MLNX_DEV 0xd8068 3
 
     setup_iface $MEDIA_IFACE_0
     setup_iface $MEDIA_IFACE_1

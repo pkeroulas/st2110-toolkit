@@ -148,7 +148,7 @@ probe_status()
     id=$1
     if [ -z $2 ]; then return 1; fi
     iface=$2
-    get_status "probe $id" "ps aux" "[c]aptured .*$iface"
+    get_status "probe $id" "ps aux" "[c]apture.*$iface"
 }
 
 status()

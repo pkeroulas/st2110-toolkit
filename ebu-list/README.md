@@ -197,8 +197,7 @@ Regarding the capturing method, in EBU-LIST source tree, see
 
 * regular `tcpdump` run with generic NIC (limited precision
   regarding packet timestamping, not suitable for UHD video)
-* custom `recorder` (not installed by default) relies on Mellanox VMA
-  accelaration. EBU support is needed for activation, provide NIC serial number)
+* alternative capture method for better time precision
 
 ### Control
 

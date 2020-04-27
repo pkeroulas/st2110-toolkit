@@ -20,7 +20,6 @@ install_list()
 
     LIST_DIR=/home/$ST2110_USER/pi-list
     install -m 755 $THIS_DIR/ebu-list/ebu_list_ctl /usr/sbin/
-    install -m 755 $THIS_DIR/ebu-list/captured /usr/sbin/
     su $ST2110_USER -c "ebu_list_ctl install"
 }
 
