@@ -65,32 +65,6 @@ stop_list()
     su $ST2110_USER -c "ebu_list_ctl stop"
 }
 
-start_probe()
-{
-    if [ -z $1 ]; then return; fi
-    iface=$1
-
-    log_st2110 "Start EBU capture probe on port $iface"
-}
-
-start_capture()
-{
-    log_st2110 "Start probes."
-    while ! netstat -lptn | grep -q ":5672"; do
-        log_st2110 "wait mqtt port to be open"
-        sleep 1
-    done
-    sleep 10 # not sure why but this is needed
-
-    start_probe $MEDIA_IFACE_0
-    start_probe $MEDIA_IFACE_1
-}
-
-stop_capture()
-{
-    log_st2110 "Stop capture probes."
-}
-
 PTP_IFACE=$MEDIA_IFACE
 PTP_CONFIG=/etc/linuxptp/ptp4l.conf
 PTP_DOMAIN=$(sed -n 's/domainNumber\t\+\([0-9]*\)/\1/p' $PTP_CONFIG)
@@ -175,14 +149,9 @@ usage()
 }
 case "$1" in
     start)
-        log_st2110 "Increasing the number of hugepages resources in the system."
-        echo 1000000000 > /proc/sys/kernel/shmmax
-        echo 800 > /proc/sys/vm/nr_hugepages
-
         start_mellanox
         start_ptp
         start_list
-        start_capture
         #smcrouted
         ;;
 
@@ -190,7 +159,6 @@ case "$1" in
         stop_mellanox
         stop_ptp
         stop_list
-        stop_capture
         #smcroutectl kill
         ;;
     conf) # hidden
