@@ -99,10 +99,11 @@ PTP_PHC2SYS_PID=/var/run/phc2sys.pid
 
 start_ptp_sync()
 {
-    if [ -z $1 ]; then return; fi
-    iface=$1
+    if [ -z $1 -o -z $2 ]; then return; fi
+    master=$1
+    slave=$2
 
-    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID.$iface --exec /usr/local/sbin/phc2sys -- -s $iface -c CLOCK_REALTIME -w -n $PTP_DOMAIN
+    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID.$slave --exec /usr/local/sbin/phc2sys -- -s $master -c $slave -w -n $PTP_DOMAIN
 }
 
 start_ptp()
@@ -113,21 +114,16 @@ start_ptp()
     # Manage 2 ports with 2 phc2sys (1st iface is master for both sys
     # clock and 2nd iface). But is it better to have 2 instances of
     # ptp4l instead? phc2sys would dynamically choose between the 2 ifaces
-    start_ptp_sync $MEDIA_IFACE_0
-    start_ptp_sync $MEDIA_IFACE_1
-}
-
-log_ptp()
-{
-    journalctl -xef | grep "phc2sys\|ptp4l"
+    start_ptp_sync $MEDIA_IFACE_0 'CLOCK_REALTIME'
+    start_ptp_sync $MEDIA_IFACE_0 $MEDIA_IFACE_1
 }
 
 stop_ptp_sync()
 {
     if [ -z $1 ]; then return; fi
-    iface=$1
+    slave=$1
 
-    start-stop-daemon --stop --pidfile $PTP_PHC2SYS_PID.$iface --oknodo
+    start-stop-daemon --stop --pidfile $PTP_PHC2SYS_PID.$slave --oknodo
 }
 
 stop_ptp()
@@ -135,10 +131,15 @@ stop_ptp()
     log_st2110 "Stop linuxptp"
     start-stop-daemon --stop --pidfile $PTP_PTP4L_PID --oknodo
 
-    stop_ptp_sync $MEDIA_IFACE_0
+    stop_ptp_sync 'CLOCK_REALTIME'
     stop_ptp_sync $MEDIA_IFACE_1
 
     rm -f $PTP_PHC2SYS_PID* $PTP_PTP4L_PID
+}
+
+log_ptp()
+{
+    journalctl -xef | grep "phc2sys\|ptp4l"
 }
 
 start_mellanox()
