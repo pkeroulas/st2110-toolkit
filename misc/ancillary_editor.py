@@ -1,5 +1,7 @@
 #!/usr/bin/python
 #
+# Author "Patrick Keroulas" <patrick.keroulas@radio-canada.ca>
+#
 # Role:
 # - take a pcap file as argument
 # - interpret packet as st2110-40 (RTP, ancillary data)
