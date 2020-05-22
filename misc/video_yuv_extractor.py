@@ -7,9 +7,10 @@
 #
 # At CBC, pix format commonly found in RFC4175 payload is packed YUV
 # 4:2:2 10-bit/component but none of this not support by ffmpeg.
-# Two conversions are possible:
+# These conversions are possible:
 # 1) packet 4:2:2 8-bit  > FFmpeg: "uyvy422"
-# 2) planar 4:2:2 10-bit > FFmpeg: "yuv42210be"
+# 2) planar 4:2:2 8-bit  > FFmpeg: "yuv422p"
+# 3) planar 4:2:2 10-bit > FFmpeg: "yuv422p10be" ?????????????????
 #
 # More info about YUV pixel formats:
 # http://www.fourcc.org/yuv.php#UYVY
@@ -64,12 +65,15 @@ def showProgess(progress):
       +---------------------------------------------------------------+
 """
 
-yuv = open('output.yuv', mode='wb')
+yuv_file = open('output.yuv', mode='wb')
 recording = False
 frame_counter = 0
-frame = []
+y_stream = io.BytesIO(bytes())
+u_stream = io.BytesIO(bytes())
+v_stream = io.BytesIO(bytes())
+n_bytes = 0
 def extractPayload(pkt):
-    global recording, yuv, frame_counter, writer, frame
+    global recording, yuv_file, frame_counter, y_stream, u_stream, v_stream, n_bytes
     i_stream = StringIO.StringIO(pkt.load)
     buf = i_stream.getvalue()
 
@@ -91,26 +95,41 @@ def extractPayload(pkt):
     # pixel group extracting
     PGroup = namedtuple('pgroup', ['u', 'y0', 'v', 'y1'])
     cf = compile('u10u10u10u10')
-    NBytes = 5
+    pgroup_size = 5
     i = 0
     while i < length:
-        i += NBytes
-        unpacked = cf.unpack(i_stream.read(NBytes))
+        i += pgroup_size
+        unpacked = cf.unpack(i_stream.read(pgroup_size))
         p = PGroup(*unpacked)
-        # uyvy422, 8-bit
-        frame += [n>>2 for n in [p.u, p.y0, p.v, p.y1]]
+
+        # uyvy422
+        #y_stream.write(pack('u8u8u8u8', p.u>>2, p.y0>>2, p.v>>2, p.y1>>2)) # less performant
+        #y_stream.write(chr(p.u>>2) + chr(p.y0>>2) + chr(p.v>>2) + chr(p.y1>>2))
+
+        # yuv422p
+        y_stream.write(chr(p.y0>>2) + chr(p.y1>>2))
+        u_stream.write(chr(p.u>>2))
+        v_stream.write(chr(p.v>>2))
 
     if marker == 1:
-        b = io.BytesIO(bytearray(frame))
-        shutil.copyfileobj(b, yuv, 4)
+        y_stream.seek(0)
+        u_stream.seek(0)
+        v_stream.seek(0)
+        shutil.copyfileobj(y_stream, yuv_file)
+        shutil.copyfileobj(u_stream, yuv_file)
+        shutil.copyfileobj(v_stream, yuv_file)
+
+        y_stream.seek(0)
+        u_stream.seek(0)
+        v_stream.seek(0)
         frame_counter += 1
-        frame = []
+        n_bytes = 0
 
 # GO!
 print('Filter dst IP: \'' + filter + '\'')
 print('Processing...')
 
 sniff(offline=pcap, filter=filter, store = 0, prn = extractPayload)
-yuv.close()
-print('Done.                  ')
+yuv_file.close()
 
+print('Done.                  ')
