@@ -6,12 +6,12 @@
 # out 'output.yuv'
 #
 # At CBC, pix format commonly found in RFC4175 payload is packed YUV
-# 4:2:2 10-bit/component but none of this not support by ffmpeg.
+# 4:2:2 10-bit/component but none of this not supported by ffmpeg.
 #
 # More info about YUV pixel formats:
-# http://www.fourcc.org/yuv.php#UYVY
-# $ ffmpeg -pix_fmts
-# FFmpeg/libavutil/pixfmt.h
+# - http://www.fourcc.org/yuv.php#UYVY
+# - FFmpeg/libavutil/pixfmt.h
+# - $ ffmpeg -pix_fmts
 #
 # playback:
 # $ ffplay -f rawvideo -vcodec rawvideo -s 1920*540 -pix_fmt uyvy422 -i output.yuv
@@ -27,9 +27,9 @@ from bitstruct import *
 
 if (len(sys.argv) < 4):
     print(sys.argv[0] + '<pcap file> <dst IP filter> <yuv_mode>\n\
-    yuv_mode: 1 packet 4:2:2 8-bit  > FFmpeg: "uyvy42u"\n\
-              2 planar 4:2:2 8-bit  > FFmpeg: "yuv422p"\n\
-              3 planar 4:2:2 10-bit > FFmpeg: "yuv422p10be"\n\
+    yuv_mode: 1 = packet 4:2:2 8-bit  > FFmpeg: "uyvy42u"\n\
+              2 = planar 4:2:2 8-bit  > FFmpeg: "yuv422p"\n\
+              3 = planar 4:2:2 10-bit > FFmpeg: "yuv422p10be"\n\
 \n\
     output: output.yuv')
     exit(-1)

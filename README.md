@@ -204,7 +204,11 @@ Measure the udp packet drops:
 netstat -s -u
 ```
 
-## [NMOS.](./doc/nmos.md)
+## [NMOS](./nmos/README.md)
+
+## Misc
+
+`misc` directory contains helper scripts which operates on pcap files.
 
 ## Todos
 
