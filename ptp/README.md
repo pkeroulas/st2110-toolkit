@@ -42,6 +42,18 @@ $ ./testptp -d /dev/ptp3 -g
 clock time: 3333336.759303339 or Sun Feb  8 08:55:36 1970
 ```
 
+$ ./testptp -d /dev/ptp3 -g
+```sh
+system and phc clock time offset request okay
+system time: 1589581164.437482989
+phc    time: 1589581201.437483653
+system time: 1589581164.437484167
+system/phc clock time offset is -37000000075 ns
+system     clock time delay  is 1178 ns
+```
+
+The difference between UTC and International Atomic Time (TAI) is 37 seconds.
+
 Then `tcpdump -j adapter_unsynced ...` will provide capture from 1970
 regardless of the local system time. Turn on `ptp4l` to restore PTP
 current time.

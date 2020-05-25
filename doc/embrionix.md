@@ -46,3 +46,7 @@ Version 3.1.1673
 * '1 ms of decoding': 2pkt/field, wrong marker bit, not compliant
 * 'Packet by Packet': 1 anc type / pkt + 1 empty pkt for marker
 
+# Frame sync
+
+* no frame_sync is not frame_sync=0us
+* rollover: frame_sync = N % 1448

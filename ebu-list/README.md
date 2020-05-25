@@ -230,24 +230,37 @@ $ ebu_list_ctl
 -----------------------------------------------
                 EBU-LIST Status
 -----------------------------------------------
-MGT INTERFACE                 : eno2            192.168.2.164
-MEDIA INTERFACE               : enp1s0f0        192.168.105.209
-Media interface               : UP
-Mellanox Software             : UP
-Ptp for Linux daemon          : UP
-Ptp to NIC                    : UP
-Ptp lock                      : UP
-Ptp traffic                   : UP
-Docker daemon                 : UP
-Docker network                : UP
-Mongo DB                      : UP
-Influx DB                     : UP
-Rabbit MQ                     : UP
-LIST node API                 : UP
-LIST node GUI                 : UP
-LIST API response             : UP
-LIST GUI response             : UP
-LIST capture                  : UP
+Media interfaces
+Name                 ebulist-dev-els
+Managment iface      UP    eno1                      192.168.2.227
+-----------------------------------------------
+Media interfaces
+NIC driver           UP
+Interface 1          UP    enp101s0f1                192.168.104.145
+Gateway   1          UP    ifname                    Ethernet50/1
+Switch    1          UP    XXXXXXXXXXXXXXXXXX        192.168.253.7
+-----------------------------------------------
+PTP
+ptp4l                UP
+phc2sys              UP
+Lock                 UP
+Ptp traffic          UP
+-----------------------------------------------
+Docker
+Daemon               UP
+Network              UP
+Service Mongo DB     UP
+Service Influx DB    UP
+Service Rabbit MQ    UP
+Service Http proxy   UP
+-----------------------------------------------
+LIST
+Profile
+node API             UP
+node GUI             UP
+API response         UP
+GUI response         UP
+probe 1              UP
 ```
 
 #### Upgrade
