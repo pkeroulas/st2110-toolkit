@@ -38,7 +38,12 @@ pcap = sys.argv[1]
 filter = 'dst ' + sys.argv[2]
 YUV_MODE = ['uyvy422', 'yuv422p', 'yuv422p10be']
 yuv_mode = YUV_MODE[int(sys.argv[3])-1]
-yuv_file = open('output.yuv', mode='wb')
+yuv_filename = 'output.yuv'
+yuv_file = open(yuv_filename, mode='wb')
+
+y_stream = io.BytesIO(bytes())
+u_stream = io.BytesIO(bytes())
+v_stream = io.BytesIO(bytes())
 
 def showProgess(progress):
     sys.stdout.write("%s                                          \r" % (progress) )
@@ -68,41 +73,30 @@ def showProgess(progress):
       +---------------------------------------------------------------+
 """
 
-recording = False
-frame_counter = 0
-y_stream = io.BytesIO(bytes())
-u_stream = io.BytesIO(bytes())
-v_stream = io.BytesIO(bytes())
+# line header defined by RFC 4175
+LineHeader = namedtuple('line_header', ['length', 'field', 'line', 'continuation', 'offset'])
+line_header_compiler = compile('u16u1u15u1u15')
+line_header_size = 6
 
-def extractPayload(pkt):
-    global recording, frame_counter
+def getLineHeader(f):
+    global LineHeader, line_header_compiler, line_header_size, frame_counter
+    unpacked = line_header_compiler.unpack(f.read(line_header_size))
+    header =  LineHeader(*unpacked)
+    showProgess("frame="+str(frame_counter)+", line="+str(header.line) + ", offset= " + str(header.offset) + "c=" + str(header.continuation))
+    return header
+
+# pixel group extracting
+PGroup = namedtuple('pgroup', ['u', 'y0', 'v', 'y1'])
+pgroup_compiler = compile('u10u10u10u10')
+pgroup_size = 5
+
+def getLinePayload(f, h):
+    global PGroup, pgroup_compiler, pgroup_size
     global yuv_mode, yuv_file, y_stream, u_stream, v_stream
-    i_stream = StringIO.StringIO(pkt.load)
-    buf = i_stream.getvalue()
-
-    header = [ord(i) for i in buf[0:20]]
-    marker = (header[1] >> 7) & 0x01;
-    if marker == 1:
-        # 1st end of frame
-        if not recording:
-            recording = True
-            return
-    if not recording:
-        return
-    length = (header[14] << 8) + header[15]
-    line = ((header[16] & 0x7F) << 8) + header[17]
-    showProgess("frame="+str(frame_counter)+", line="+str(line))
-
-    i_stream.seek(20)
-
-    # pixel group extracting
-    PGroup = namedtuple('pgroup', ['u', 'y0', 'v', 'y1'])
-    cf = compile('u10u10u10u10')
-    pgroup_size = 5
     i = 0
-    while i < length:
+    while i < h.length:
         i += pgroup_size
-        unpacked = cf.unpack(i_stream.read(pgroup_size))
+        unpacked = pgroup_compiler.unpack(f.read(pgroup_size))
         p = PGroup(*unpacked)
 
         if (yuv_mode == 'uyvy422'):
@@ -119,6 +113,32 @@ def extractPayload(pkt):
             y_stream.write(pack('u16u16', p.y0, p.y1))
             u_stream.write(pack('u16', p.u))
             v_stream.write(pack('u16', p.v))
+
+# global vars
+recording = False
+frame_counter = 0
+
+def extractPayload(pkt):
+    global recording, frame_counter
+    global yuv_mode, yuv_file, y_stream, u_stream, v_stream
+
+    i_stream = StringIO.StringIO(pkt.load)
+
+    # go find RTP marker bit
+    i_stream.seek(1)
+    marker = (ord(i_stream.read(1)) >> 7) & 0x01;
+    if marker == 1:
+        # 1st end of frame
+        if not recording:
+            recording = True
+            return
+    if not recording:
+        # skip 1st uncomplete frame
+        return
+
+    i_stream.seek(14)
+    h = getLineHeader(i_stream)
+    getLinePayload(i_stream, h)
 
     if marker == 1:
         y_stream.seek(0)
@@ -146,4 +166,4 @@ print('Done.                                ')
 
 # fix dimensions
 print("Suggestion:\n\
-        ffplay -f rawvideo -vcodec rawvideo -s 1920*540 -pix_fmt " + yuv_mode + " -i output.yuv")
+        ffplay -f rawvideo -vcodec rawvideo -s 1920*540 -pix_fmt " + yuv_mode + " -i " + yuv_filename)
