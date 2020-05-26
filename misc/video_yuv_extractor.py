@@ -77,12 +77,26 @@ def showProgess(progress):
 LineHeader = namedtuple('line_header', ['length', 'field', 'line', 'continuation', 'offset'])
 line_header_compiler = compile('u16u1u15u1u15')
 line_header_size = 6
+l_max = 0
+o_max = 0
 
 def getLineHeader(f):
     global LineHeader, line_header_compiler, line_header_size, frame_counter
+    global l_max, o_max
+
     unpacked = line_header_compiler.unpack(f.read(line_header_size))
     header =  LineHeader(*unpacked)
-    showProgess("frame="+str(frame_counter)+", line="+str(header.line) + ", offset= " + str(header.offset) + "c=" + str(header.continuation))
+
+    # compute WxH for the 1st frame only
+    if frame_counter == 0:
+        if header.line > l_max:
+            l_max = header.line
+        if header.offset + (header.length / 5 * 2) > o_max: # a pgroup is 5-byte for 2 px in 4:2:2 10-bit
+            o_max = header.offset + (header.length / 5 * 2)
+
+    #showProgess("frame="+str(frame_counter)+", line="+str(header.line) + ", offset= " + str(header.offset) + "c=" + str(header.continuation))
+    showProgess("frame="+str(frame_counter)+", line="+str(header.line))
+
     return header
 
 # pixel group extracting
@@ -93,6 +107,7 @@ pgroup_size = 5
 def getLinePayload(f, h):
     global PGroup, pgroup_compiler, pgroup_size
     global yuv_mode, yuv_file, y_stream, u_stream, v_stream
+
     i = 0
     while i < h.length:
         i += pgroup_size
@@ -172,4 +187,4 @@ print('Done.                                ')
 
 # fix dimensions
 print("Suggestion:\n\
-        ffplay -f rawvideo -vcodec rawvideo -s 1920*540 -pix_fmt " + yuv_mode + " -i " + yuv_filename)
+        ffplay -f rawvideo -vcodec rawvideo -s " +str(o_max)+ "x" + str(l_max+1) + " -pix_fmt " + yuv_mode + " -i " + yuv_filename)
