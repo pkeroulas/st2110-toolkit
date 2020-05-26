@@ -137,8 +137,14 @@ def extractPayload(pkt):
         return
 
     i_stream.seek(14)
-    h = getLineHeader(i_stream)
-    getLinePayload(i_stream, h)
+
+    h0 = getLineHeader(i_stream)
+    if (h0.continuation):
+        h1 = getLineHeader(i_stream)
+
+    getLinePayload(i_stream, h0)
+    if (h0.continuation):
+        getLinePayload(i_stream, h1)
 
     if marker == 1:
         y_stream.seek(0)
