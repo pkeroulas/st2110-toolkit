@@ -17,7 +17,7 @@ examples:
 \t$ ./get_sdp.py 192.168.1.10 # keep the flows from 1 SDI input: 0-19
 \t$ ./get_sdp.py 192.168.1.10 0 2 18 # typically 1st video, 1st audio and 1st anc
 
-See flow mapping in doc/embrionix.md
+See flow mapping in ../doc/embrionix.md
 """)
 
 def get_sdp_url(ip):
