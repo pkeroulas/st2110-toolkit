@@ -206,9 +206,13 @@ netstat -s -u
 
 ## [NMOS](./nmos/README.md)
 
-## Misc
+## Pcap tools
 
-`misc` directory contains helper scripts which operates on pcap files.
+`misc` directory contains helper scripts which operates on pcap files:
+
+* ancillary_editor: insert different types of failure in SMPTE ST 291-1 payload
+* pkt_drop_detector: count dropped packet for a given RTP stream
+* video_yuv_extractor: convert RFC4175 payload into raw YUF file
 
 ## Todos
 
