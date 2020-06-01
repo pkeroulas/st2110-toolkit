@@ -2,11 +2,15 @@
 #
 # Author "Patrick Keroulas" <patrick.keroulas@radio-canada.ca>
 #
-# Extracts payload of ST 2110-20 packets given dst mcast IP and writes
-# out 'output.yuv'
+# Extract RFC 4175 payload of ST 2110-20 packets given dst mcast IP
+# and write 'output.yuv'
 #
-# At CBC, pix format commonly found in RFC4175 payload is packed YUV
-# 4:2:2 10-bit/component but none of this not supported by ffmpeg.
+# At CBC, a very common pix format in RFC4175 is: packed YUV 4:2:2
+# 10-bit/component but this is not supported by ffmpeg. So several pix
+# format alternatives are prosposed:
+# packed 4:2:2 8-bit  > FFmpeg: "uyvy42u"
+# planar 4:2:2 8-bit  > FFmpeg: "yuv422p"
+# planar 4:2:2 10-bit > FFmpeg: "yuv422p10be"
 #
 # More info about YUV pixel formats:
 # - http://www.fourcc.org/yuv.php#UYVY
@@ -17,7 +21,6 @@
 # $ ffplay -f rawvideo -vcodec rawvideo -s 1920*540 -pix_fmt uyvy422 -i output.yuv
 
 import sys
-from array import array
 import StringIO
 import io
 from scapy.all import *
@@ -26,12 +29,15 @@ from collections import namedtuple
 from bitstruct import *
 
 if (len(sys.argv) < 4):
-    print(sys.argv[0] + '<pcap file> <dst IP filter> <yuv_mode>\n\
-    yuv_mode: 1 = packet 4:2:2 8-bit  > FFmpeg: "uyvy42u"\n\
+    print(sys.argv[0] + ' <pcap file> <dst IP filter> <yuv_mode>\n\
+    yuv_mode: 1 = packed 4:2:2 8-bit  > FFmpeg: "uyvy42u"\n\
               2 = planar 4:2:2 8-bit  > FFmpeg: "yuv422p"\n\
               3 = planar 4:2:2 10-bit > FFmpeg: "yuv422p10be"\n\
 \n\
-    output: output.yuv')
+    output: output.yuv \n\
+\n\
+Exple: \n\
+    $ ' + sys.argv[0] + ' st2110-20-capture.pcap 225.192.1.14 2')
     exit(-1)
 
 pcap = sys.argv[1]
@@ -50,6 +56,8 @@ def showProgess(progress):
     sys.stdout.flush()
 
 """
+RFC 4175 datagram:
+
        0                   1                   2                   3
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -99,7 +107,7 @@ def getLineHeader(f):
 
     return header
 
-# pixel group extracting
+# pixel group: packed 4:2:2 10-bit
 PGroup = namedtuple('pgroup', ['u', 'y0', 'v', 'y1'])
 pgroup_compiler = compile('u10u10u10u10')
 pgroup_size = 5
@@ -129,7 +137,7 @@ def getLinePayload(f, h):
             u_stream.write(pack('u16', p.u))
             v_stream.write(pack('u16', p.v))
 
-# global vars
+# extrator state
 recording = False
 frame_counter = 0
 
@@ -151,6 +159,7 @@ def extractPayload(pkt):
         # skip 1st uncomplete frame
         return
 
+    # skip Flags and Payload type (2), Seq num(2), Timestamp(4), SSRC(4), Ext Seq Num(2)
     i_stream.seek(14)
 
     h0 = getLineHeader(i_stream)
@@ -160,7 +169,9 @@ def extractPayload(pkt):
     getLinePayload(i_stream, h0)
     if (h0.continuation):
         getLinePayload(i_stream, h1)
+    # have never seen more than 2 lines/pkt
 
+    # frame complete
     if marker == 1:
         y_stream.seek(0)
         shutil.copyfileobj(y_stream, yuv_file)
@@ -184,7 +195,5 @@ sniff(offline=pcap, filter=filter, store = 0, prn = extractPayload)
 yuv_file.close()
 
 print('Done.                                ')
-
-# fix dimensions
 print("Suggestion:\n\
-        ffplay -f rawvideo -vcodec rawvideo -s " +str(o_max)+ "x" + str(l_max+1) + " -pix_fmt " + yuv_mode + " -i " + yuv_filename)
+    ffplay -f rawvideo -vcodec rawvideo -s " +str(o_max)+ "x" + str(l_max+1) + " -pix_fmt " + yuv_mode + " -i " + yuv_filename)
