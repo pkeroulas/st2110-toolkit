@@ -65,8 +65,11 @@ Then one can use our FFmpeg-based transcoder following this [instructions.](http
 
 ## Todos
 
-* rework`./capture/nic_setup.sh`
 * deal with transcoder Dockerfile
+*nanoseconds ebu-list: fix ptp lock test
+    "The rms value reported by ptp4l once the slave has locked with the GM shows the root mean square of the time offset between the PHC and the GM clock. If ptp4l consistently reports rms lower than 100 ns, the PHC is synchronized."
+    check_clock.c
+* rework`./capture/nic_setup.sh`
 * nmos-poller: display ffmpeg status
 * ffmpeg: a static route to multicast must be added, why? would it work
   with a route to source IP only? is it possible to tell ffmpeg which

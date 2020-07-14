@@ -29,6 +29,7 @@ Sponsored by:
 |Thermal compound|[Arctic Silver AS5-3.5G Thermal Compound](https://www.newegg.ca/arctic-silver-as5-3-5g/p/N82E16835100007)| 1 |
 |Heat sink|[Noctua NH-L9i, Premium Low-profile CPU Cooler for Intel LGA115x](https://www.newegg.ca/p/N82E16835608029)| 1 |
 |Computer case|[APEVIA X-FIT-200 Black Steel Mini-ITX Tower Computer Case 250W Power Supply](https://www.newegg.ca/p/N82E16811144255)| 1 |
+|Replacement Power Supply|[Sylver Stone FX350-G](https://www.silverstonetek.com/product.php?pid=784&area=en)| 1 |
 
 TODO: photos
 

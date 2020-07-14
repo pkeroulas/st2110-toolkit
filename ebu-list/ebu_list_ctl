@@ -201,12 +201,11 @@ log()
 {
     tail -f -n200 /tmp/list*.log &
 
+    cd $LIST_PATH
     if [ $LIST_DEV == "true" ]; then
-        tail -f -n200 /tmp/list*.log &
-        cd $LIST_PATH/apps/external/
-    else
-        cd $LIST_PATH
+        cd ./apps/external/
     fi
+
     docker-compose logs -f --tail=500
     # ctrl-C
     killall tail

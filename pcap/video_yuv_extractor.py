@@ -195,5 +195,10 @@ sniff(offline=pcap, filter=filter, store = 0, prn = extractPayload)
 yuv_file.close()
 
 print('Done.                                ')
-print("Suggestion:\n\
-    ffplay -f rawvideo -vcodec rawvideo -s " +str(o_max)+ "x" + str(l_max+1) + " -pix_fmt " + yuv_mode + " -i " + yuv_filename)
+print("Suggestions:\n\
+- playback:\n\
+    ffplay -f rawvideo -vcodec rawvideo -s " +str(o_max)+ "x" + str(l_max+1) + " -pix_fmt " + yuv_mode + " -i " + yuv_filename + "\n\
+- convert to .mov:\n\
+    ffmpeg -f rawvideo -vcodec rawvideo  -r 59.94 -s " +str(o_max)+ "x" + str(l_max+1) + " -pix_fmt " + yuv_mode + " -i " + yuv_filename + " -vf 'tinterlace=merge' -c:v v210 -pix_fmt yuv422p10le output.mov \n\
+")
+
