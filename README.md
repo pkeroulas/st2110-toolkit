@@ -60,6 +60,7 @@ Then one can use our FFmpeg-based transcoder following this [instructions.](http
 
 * ancillary editor: insert different types of failure in SMPTE ST 291-1 payload
 * pkt drop detector: count dropped packets for a given RTP stream
+* stream detector: count every (src/dst) IP pair for a given pcap file
 * video yuv extractor: convert RFC4175 payload into raw YUV file
 
 ## Todos
