@@ -70,9 +70,26 @@ install_smcroute()
     setcap cap_net_raw,cap_net_admin=eip $bin
 }
 
+install_dpdk()
+{
+    # sudo apt install rdma-core libibverbs-dev libpcap-dev
+    echo "Installing dpdk"
+    DIR=$(mktemp -d)
+    cd $DIR/
+    git clone https://github.com/pkeroulas/dpdk.git
+    cd dpdk
+    make defconfig
+    sed -i 's/MLX5_PMD=.*/MLX5_PMD=y/' ./build/.config
+    sed -i 's/MLX5_DEBUG=.*/MLX5_DEBUG=y/' ./build/.config
+    sed -i 's/PMD_PCAP=.*/PMD_PCAP=y/' ./build/.config
+    make -j6
+    make install
+}
+
 install_capture()
 {
     install_ptp
     install_mellanox
     install_smcroute
+    install_dpdk
 }
