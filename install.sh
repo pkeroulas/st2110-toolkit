@@ -35,7 +35,7 @@ export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig \
 echo "${PREFIX}/lib" >/etc/ld.so.conf.d/libc.conf
 
 source $THIS_DIR/capture/install.sh
-source $THIS_DIR/ebulist/install.sh
+source $THIS_DIR/ebu-list/install.sh
 source $THIS_DIR/nmos/install.sh
 source $THIS_DIR/transcoder/install.sh
 
