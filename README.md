@@ -26,7 +26,7 @@ Tested distros:
 Install everything (tools, FFmpeg and all the dependencies) using the install scrip:
 
 ```sh
-$ ./install.sh <transcoder|capture|ebulist|nmos>
+$ ./install.sh <common|transcoder|capture|ebulist|nmos>
 ```
 
 ## Configuration

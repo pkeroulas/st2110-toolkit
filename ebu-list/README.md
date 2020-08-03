@@ -125,11 +125,9 @@ As `root` user:
 ```sh
 sudo -i
 cd /home/ebulist/st2110-toolkit
+./install.sh common
+vi /etc/st2110.conf
 source ./install.sh
-install_common_tools
-install_monitoring_tools
-install_config
-source /etc/st2110.conf
 ```
 ### Mellanox network controller
 
