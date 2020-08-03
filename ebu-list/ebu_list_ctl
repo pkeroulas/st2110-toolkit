@@ -77,7 +77,7 @@ get_status()
 
 start()
 {
-    if get_status "API response" "curl http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/nul" "USER_NOT_AUTHENTICATED" | grep -q UP; then
+    if get_status "API response" "curl -v http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "401 Unauthorized" | grep -q UP; then
         echo "EBU-LIST is already up"
         return
     fi
@@ -140,7 +140,7 @@ port_status()
     media_gw_port=$(lldpcli show neighbors port $iface | tr -s ' ' | sed -n 's/.*PortID: \(.*\)/\1/p')
     get_status "Interface $id" "ip addr show $iface" "$iface: .* UP" "$iface $media_ip"
     get_status "Gateway   $id" "ping -c 1 -W 1 $media_gw_ip" "1 received" "$media_gw_port $media_gw_ip"
-    get_status "Switch    $id" "ping -c 1 -W 1 $switch_ip" "1 received" "$switch_name $switch_ip"
+    get_status "Switch    $id" "ping -c 1 -W 1 -I $iface $switch_ip" "1 received" "$switch_name $switch_ip"
 }
 
 probe_status()
@@ -166,11 +166,13 @@ status()
     port_status 0 $MEDIA_IFACE_0
     port_status 1 $MEDIA_IFACE_1
     echo "-----------------------------------------------"
-    ptp_filter="src host $MEDIA_IFACE && dst host 224.0.1.129"
+    # PTP traffic is handle by main interface $MEDIA_IFACE
+    media_ip=$(ip addr show $MEDIA_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+    ptp_filter="src host $media_ip and dst host 224.0.1.129"
     show_header "PTP"
     get_status "ptp4l" "ps aux" "[p]tp4l"
-    # TODO dual-port
-    get_status "phc2sys" "ps aux" "[p]hc2sys"
+    get_status "phc2sys   0" "ps aux" "[p]hc2sys -s $MEDIA_IFACE -c CLOCK_REALTIME"
+    get_status "phc2sys   1" "ps aux" "[p]hc2sys -s $MEDIA_IFACE -c en" #ish
     get_status "Lock" "journalctl -n10" "phc2sys.* s2 freq "
     get_status "Ptp traffic" "timeout 2 tcpdump -i $MEDIA_IFACE -c2 $ptp_filter" "2 packets captured"
     echo "-----------------------------------------------"
@@ -191,7 +193,7 @@ status()
         # in prod, API and GUI are both servered by the same docker container
         get_status "container" "docker ps" "list"
     fi
-    get_status "API response" "curl http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/nul" "USER_NOT_AUTHENTICATED"
+    get_status "API response" "curl -v http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "401 Unauthorized"
     get_status "GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/nul" "ebu_logo.svg"
     probe_status 0 $MEDIA_IFACE_0
     probe_status 1 $MEDIA_IFACE_1

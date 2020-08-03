@@ -225,23 +225,27 @@ Usage:
         upgrade  upgrade to next stable version fron public Github
         dev      upgrade to the next release from private repo
 
-$ ebu_list_ctl
+$ ebu_list_ctl status
 -----------------------------------------------
                 EBU-LIST Status
 -----------------------------------------------
 Media interfaces
-Name                 ebulist-dev-els
-Managment iface      UP    eno1                      192.168.2.227
+Name                 ebulist-light-maint-2
+Managment iface      UP    eno2                      192.168.2.108
 -----------------------------------------------
 Media interfaces
 NIC driver           UP
-Interface 1          UP    enp101s0f1                192.168.104.145
-Gateway   1          UP    ifname                    Ethernet50/1
-Switch    1          UP    XXXXXXXXXXXXXXXXXX        192.168.253.7
+Interface 0          UP    enp1s0f0                  192.168.105.93
+Gateway   0          UP    ifname                    Ethernet24
+Switch    0          UP    XXXXXXXXXXXXXXXXXXXXXXXX. 192.168.253.8
+Interface 1          UP    enp1s0f1                  192.168.107.241
+Gateway   1          UP    ifname                    Ethernet54/1
+Switch    1          UP    XXXXXXXXXXXXXXXXXXXXXXXX. 192.168.253.8
 -----------------------------------------------
 PTP
 ptp4l                UP
-phc2sys              UP
+phc2sys   0          UP
+phc2sys   1          UP
 Lock                 UP
 Ptp traffic          UP
 -----------------------------------------------
@@ -251,15 +255,14 @@ Network              UP
 Service Mongo DB     UP
 Service Influx DB    UP
 Service Rabbit MQ    UP
-Service Http proxy   UP
 -----------------------------------------------
 LIST
-Profile
-node API             UP
-node GUI             UP
+Profile              prod
+container            UP
 API response         UP
 GUI response         UP
-probe 1              UP
+probe 0              DOWN
+probe 1              DOWN
 ```
 
 #### Upgrade
