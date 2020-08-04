@@ -5,7 +5,8 @@
 
 #set -euo pipefail
 
-THIS_DIR=.
+THIS_DIR=$(dirname $(readlink -f $0))
+
 ST2110_CONF_FILE=/etc/st2110.conf
 
 if [ -f /etc/lsb-release ]; then
@@ -35,7 +36,7 @@ export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig \
 echo "${PREFIX}/lib" >/etc/ld.so.conf.d/libc.conf
 
 source $THIS_DIR/capture/install.sh
-source $THIS_DIR/ebulist/install.sh
+source $THIS_DIR/ebu-list/install.sh
 source $THIS_DIR/nmos/install.sh
 source $THIS_DIR/transcoder/install.sh
 
@@ -117,25 +118,25 @@ install_config()
 
 set -x
 case "$1" in
-    transcoder)
+    common)
+        install_common_tools
+        install_dev_tools
         install_config
-        install_capture
+        ;;
+    transcoder)
         install_transcoder
         ;;
     capture)
-        install_config
         install_capture
         ;;
     ebulist)
-        install_config
-        install_capture
         install_list
         ;;
     nmos)
         install_nmos
         ;;
     *)
-        echo "Usage: $0 <transcoder|capture|ebulist|nmos>"
+        echo "Usage: $0 <common|transcoder|capture|ebulist|nmos>"
         ;;
 esac
 set +x

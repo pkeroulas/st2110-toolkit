@@ -4,9 +4,8 @@
 
 ```
 sudo -i
-source ./install.sh
-install_common_tools # gcc, libtool, tar etc.
-install_transcoder   # yasm nasm x264 fdkaac mp3 ffmpeg
+./install.sh common       # gcc, libtool, tar etc.
+./install.sh transcoder   # yasm nasm x264 fdkaac mp3 ffmpeg
 ```
 
 ## Simple tests
