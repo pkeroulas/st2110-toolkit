@@ -4,65 +4,74 @@
 # 1) smcroute (multicast join)
 # 2) dpdk (ipacket capture)
 
-echo "------------------------------------------
-Parse args:"
+timeout=2
+
+wrapper_log(){
+    echo "wrapper: $@"
+}
+
+wrapper_log "Parse args: ------------------------------------------ "
 
 #  typical cmdline to be translated:
 #  $ tcpdump -i interfaceName --time-stamp-precision=nano \
-#   -j adapter_unsynced\--snapshot-length=N -w pcap \
+#   -j adapter_unsynced\--snapshot-length=N -w pcap -G 2 -W 1 \
 #   dst 192.168.1.1 or dst 192.168.1.2
-
-while getopts ":i:w:" o; do
+while getopts ":i:w:G:W:" o; do
     case "${o}" in
         i | interface)
             iface=${OPTARG}
             ;;
         j)
             ;;
-        -)
-            case ${OPTARG} in
-                time-stamp-precision*)
-                    ;;
-                snapshot-length*)
-                    ;;
-            esac
-            ;;
+        #-)
+        #    case ${OPTARG} in
+        #        time-stamp-precision*)
+        #            ;;
+        #        snapshot-length*)
+        #            ;;
+        #    esac
+        #    ;;
         w)
             pcap=${OPTARG}
             ;;
+        G)
+            timeout=${OPTARG}
+            ;;
+        W)
+            #ignore file number
+            ;;
         *)
-            echo  "unsupported option"
+            wrapper_log  "unsupported option ${o}"
             ;;
     esac
 done
 shift $((OPTIND-1))
 
 if [ -z $iface -o -z $pcap ]; then
-    echo "Missing argument"
+    wrapper_log "Missing argument"
     exit 1
 fi
 
 filter=$@
 IPs=$(echo $filter | sed 's/dst//g; s/or//g' | tr -s ' ' '\n')
 
-echo "iface: $iface
+wrapper_log "iface: $iface
 pcap: $pcap
-filter: $filter"
+filter: $filter
+timeout: $timeout"
 
-echo "------------------------------------------
-Check interface $iface"
+wrapper_log "Checking interface: $iface ------------------------------------------ "
 
 if [ ! -d /sys/class/net/$iface ]; then
-	echo "$iface doesn't exist, exit."
+	wrapper_log "$iface doesn\'t exist, exit."
 	exit 1
 fi
 if [ $(cat /sys/class/net/$iface/operstate) != "up" ]; then
-	echo "$iface is not up, exit."
+	wrapper_log "$iface is not up, exit."
 	exit 1
 fi
 
-echo "------------------------------------------
-Joining mcast: $IPs"
+wrapper_log "Joining mcast: $IPs ------------------------------------------ "
 
 if ! smcroutectl show > /dev/null; then
     smcrouted
@@ -71,23 +80,19 @@ fi
 for ip in $IPs; do
 	smcroutectl join $iface $ip
 	if ! netstat -ng | grep -q "$iface.*$ip"; then
-		echo "Can't joint $ip"
+		wrapper_log "Can\'t joint $ip"
 	fi
 done
 
 netstat -ng | grep $iface
 
-# TODO: create filter
-
-duration=2
 # dpdk
-echo "------------------------------------------
-Capturing"
-/home/ebulist/src/st2110-toolkit/capture/dpdk/dpdk-testpmd-pdump.sh \
-    -v -i $iface -w $pcap -t $duration
+wrapper_log "Capturing------------------------------------------"
 
-echo "------------------------------------------
-Leaving mcast"
+/home/ebulist/src/st2110-toolkit/capture/dpdk/dpdk-testpmd-pdump.sh \
+    -v -i $iface -w $pcap -t $timeout
+
+wrapper_log "Leaving mcast ------------------------------------------"
 
 for ip in $IPs; do
 	smcroutectl leave $iface $ip
