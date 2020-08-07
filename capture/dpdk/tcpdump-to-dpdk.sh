@@ -89,7 +89,7 @@ netstat -ng | grep $iface
 # dpdk
 wrapper_log "Capturing------------------------------------------"
 
-/home/ebulist/src/st2110-toolkit/capture/dpdk/dpdk-testpmd-pdump.sh \
+dpdk-testpmd-pdump.sh \
     -v -i $iface -w $pcap -t $timeout
 
 wrapper_log "Leaving mcast ------------------------------------------"

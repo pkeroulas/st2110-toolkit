@@ -30,7 +30,8 @@ install_mellanox()
     iso_file="$1"
     if [ ! -f $iso_file ]; then
         echo "Couldn't find $iso_file.
-Manually fetch it from:
+Manually download latest version from:
+https://www.mellanox.com/products/infiniband-drivers/linux/mlnx_ofed
 https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED"
         return 1
     fi
@@ -70,26 +71,9 @@ install_smcroute()
     setcap cap_net_raw,cap_net_admin=eip $bin
 }
 
-install_dpdk()
-{
-    # sudo apt install rdma-core libibverbs-dev libpcap-dev
-    echo "Installing dpdk"
-    DIR=$(mktemp -d)
-    cd $DIR/
-    git clone https://github.com/pkeroulas/dpdk.git
-    cd dpdk
-    make defconfig
-    sed -i 's/MLX5_PMD=.*/MLX5_PMD=y/' ./build/.config
-    sed -i 's/MLX5_DEBUG=.*/MLX5_DEBUG=y/' ./build/.config
-    sed -i 's/PMD_PCAP=.*/PMD_PCAP=y/' ./build/.config
-    make -j6
-    make install
-}
-
 install_capture()
 {
     install_ptp
     install_mellanox
     install_smcroute
-    install_dpdk
 }

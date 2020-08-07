@@ -41,7 +41,7 @@ Secondary process manages the `pdump` client and write to pcap file.
 
 ### hardware timestamps
 
-
+dev_clock info requires recent version of rdma-core and libiverbs.
 
 ### filter
 
@@ -113,3 +113,9 @@ capinfos /tmp/test.pcap
 
 [Packet drop detector](https://github.com/pkeroulas/st2110-toolkit/blob/master/misc/pkt_drop_detector.py)
 [Vrx validation](https://github.com/ebu/smpte2110-analyzer/blob/master/vrx_analysis.py)
+
+## TODO
+
+* init script
+* clang for bBPF compiling
+* document HW timestamping story
