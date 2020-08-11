@@ -143,14 +143,6 @@ port_status()
     get_status "Switch    $id" "ping -c 1 -W 1 -I $iface $switch_ip" "1 received" "$switch_name $switch_ip"
 }
 
-probe_status()
-{
-    id=$1
-    if [ -z $2 ]; then return 1; fi
-    iface=$2
-    get_status "probe $id" "ps aux" "[c]apture.*$iface"
-}
-
 status()
 {
 
@@ -195,8 +187,7 @@ status()
     fi
     get_status "API response" "curl -v http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "401 Unauthorized"
     get_status "GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/nul" "ebu_logo.svg"
-    probe_status 0 $MEDIA_IFACE_0
-    probe_status 1 $MEDIA_IFACE_1
+    get_status "Capture probe" "ps aux" "[n]ode .*dpdk.yml"
 }
 
 log()
