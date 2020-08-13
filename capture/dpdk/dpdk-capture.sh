@@ -171,7 +171,6 @@ pkt_drop_end=$(ethtool -S $iface | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\
 dpdk_log "rx: $(echo "$pkt_rx_end - $pkt_rx_start" | bc)"
 dpdk_log "drop: $(echo "$pkt_drop_end - $pkt_drop_start" | bc)"
 
-mv $pcap.$port $pcap
-#TODO if dual port merge
-#TODO files after a period
+time mv $tmp.$port $pcap
 
+#TODO if dual port and $ mergecap -w outfile.pcap 1.pcap 2.pcap

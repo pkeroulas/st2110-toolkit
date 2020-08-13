@@ -192,13 +192,26 @@ Config file is `/etc/ptp/ptp4l.conf`.
 #### Capture Engine
 
 Regarding the capturing method, in EBU-LIST source tree, see
-'apps/capture_probe/config.yml' to select one of the 2 solution:
+'list/apps/capture_probe/config.yml' to select one of the 2 solution:
 
 * regular `tcpdump` run with generic NIC (limited precision
   regarding packet timestamping, not suitable for UHD video)
 * alternative capture method for better time precision
 
-### Control
+dpdk-based captured:
+
+```sh
+apt install node npm
+git clone https://github.com/ebu/pi-list.git
+cd app/capture_probe/
+npm install
+cd js_common_server
+npm install
+cd list/
+sudo node server.js config.yml
+```
+
+### Controls
 
 Master init script needs root priviledge to start the NIC and PTP and start
 a user session to run EBU-LIST

@@ -39,6 +39,7 @@ setup_iface()
 
     # doesn't look to work with  MT27800 Family [ConnectX-5]
     ethtool --set-priv-flags $iface sniffer on
+    ethtool -G $iface rx 100 # trigger a change so to avoid exiting
     ethtool -G $iface rx 8192
 
     # HW timestamp any incoming pkt
@@ -172,9 +173,9 @@ EOF
 stop_probe()
 {
     log_st2110 "Stop dpdk probe"
+    smcroutectl kill
     pid=$(ps aux | grep "[n]ode.*dpdk.*yml" | tr -s ' ' | cut -d ' ' -f2)
     kill $pid
-    smcroutectl kill
 }
 
 log_system(){

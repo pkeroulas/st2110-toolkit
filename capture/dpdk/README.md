@@ -104,6 +104,13 @@ Result:
 
 15% pkts dropped by interface. This is due to libcap that makes too many copies and syscalls and that should improve "soon" according to community.
 
+## Tunning
+
+```
+ethtool --set-priv-flags $iface sniffer on
+ethtool -G $iface rx 8192
+hwstamp_ctl -i $iface -r 1
+```
 
 ## Quality control:
 
@@ -114,8 +121,34 @@ capinfos /tmp/test.pcap
 [Packet drop detector](https://github.com/pkeroulas/st2110-toolkit/blob/master/misc/pkt_drop_detector.py)
 [Vrx validation](https://github.com/ebu/smpte2110-analyzer/blob/master/vrx_analysis.py)
 
+## Performance
+
+version dev_info/v1:
+
+|*Bitrate in Gbps*|*Drop*|*Vrx*|
+|-----------------|------|-----|
+| 2.6 | ok | ok |
+| 3.9 | ok | ok |
+| 5.2 | ok | ok |
+| 6.5 | ok | ok | <----- max on disk
+| 10  | ok | ok | <----- need to write into RAM
+
+testpmd options to explore:
+```
+exple:
+--burst=32 --rxfreet=32 --mbcache=250 --txpt=32 --rxht=8 --rxwt=0 --txfreet=32 --txrst=32
+
+*   ``--burst=N``
+    Set the number of packets per burst to N, where 1 <= N <= 512. The default value is 32.
+
+*   ``--mbcache=N``
+    Set the cache of mbuf memory pools to N, where 0 <= N <= 512.  The default value is 16.
+```
+
 ## TODO
 
-* init script
-* clang for bBPF compiling
+* without sudo, blocked by [smcroute](https://github.com/troglobit/smcroute/pull/112)
 * document HW timestamping story
+* set a flag for -7 and merge pcap
+* clang for bBPF compiling, maybe not necessary as we only join
+  multicast we're interested in.
