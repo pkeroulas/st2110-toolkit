@@ -39,6 +39,7 @@ setup_iface()
 
     # doesn't look to work with  MT27800 Family [ConnectX-5]
     ethtool --set-priv-flags $iface sniffer on
+    ethtool -G $iface rx 8192
 
     # HW timestamp any incoming pkt
     hwstamp_ctl -i $iface -r 1
@@ -125,6 +126,7 @@ start_mellanox()
         log_st2110 "Couldn't detect MST device: $MLNX_DEV"
         exit 1
     fi
+    mcra $MLNX_DEV 0xd8068 3
 
     setup_iface $MEDIA_IFACE_0
     setup_iface $MEDIA_IFACE_1
@@ -136,6 +138,43 @@ stop_mellanox()
 {
     log_st2110 "Stop Mellanox"
     mst stop
+}
+
+start_probe()
+{
+    log_st2110 "Start dpdk probe"
+    smcrouted
+
+    echo 1000000000 > /proc/sys/kernel/shmmax
+    echo 800 > /proc/sys/vm/nr_hugepages
+
+    cd $LIST_PATH/apps/capture_probe/
+    cat > ./config-dpdk.yml << EOF
+probe:
+    id: $(uuidgen)
+    label: "LIST capture probe #${iface}: $(cat /etc/hostname)"
+rabbitmq:
+    hostname: localhost
+    port: 5672
+
+tcpdump:
+    interface: $iface
+EOF
+
+    while ! netstat -lptn | grep -q ":5672"; do
+        log_st2110 "wait mqtt port to be open"
+        sleep 1
+    done
+
+    node ./server.js ./config-dpdk.yml 2>&1 > /tmp/list-dpdk.log &
+}
+
+stop_probe()
+{
+    log_st2110 "Stop dpdk probe"
+    pid=$(ps aux | grep "[n]ode.*dpdk.*yml" | tr -s ' ' | cut -d ' ' -f2)
+    kill $pid
+    smcroutectl kill
 }
 
 log_system(){
@@ -152,14 +191,14 @@ case "$1" in
         start_mellanox
         start_ptp
         start_list
-        #smcrouted
+        start_probe
         ;;
 
     stop)
         stop_mellanox
         stop_ptp
         stop_list
-        #smcroutectl kill
+        stop_probe
         ;;
     conf) # hidden
         bash -c "cd /home/$ST2110_USER/st2110-toolkit; source ./install.sh; install_config"
