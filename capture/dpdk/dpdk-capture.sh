@@ -125,6 +125,10 @@ sleep 3
 
 # TODO: compile and pass a filter
 
+
+pkt_rx_start=$(ethtool -S $iface | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
+pkt_drop_start=$(ethtool -S $iface | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\1/')
+
 dpdk_log "Start pdump port:$port"
 if [ $dual_port -eq 1 ]; then
     args="--multi --pdump port=0,queue=*,rx-dev=$pcap.0 --pdump \"port=1,queue=*,rx-dev=$pcap.1\""
@@ -148,15 +152,6 @@ if [ $verbose -eq 1 ]; then
 fi
 rm $testpmd_log
 
-if [ $verbose -eq 1 ]; then
-    dpdk_log "pcapinfo port $port"
-    capinfos $pcap.$port
-fi
-
-mv $pcap.$port $pcap
-#TODO if dual port merge
-#TODO files after a period
-
 if [ ! -z "$filter" ]; then
     dpdk_log "Leaving mcast ------------------------------------------"
 
@@ -164,3 +159,18 @@ if [ ! -z "$filter" ]; then
         smcroutectl leave $iface $ip
     done
 fi
+
+if [ $verbose -eq 1 ]; then
+    dpdk_log "pcapinfo port $port"
+    capinfos $pcap.$port
+fi
+
+pkt_rx_end=$(ethtool -S $iface | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
+pkt_drop_end=$(ethtool -S $iface | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\1/')
+dpdk_log "rx: $(echo "$pkt_rx_end - $pkt_rx_start" | bc)"
+dpdk_log "drop: $(echo "$pkt_drop_end - $pkt_drop_start" | bc)"
+
+mv $pcap.$port $pcap
+#TODO if dual port merge
+#TODO files after a period
+
