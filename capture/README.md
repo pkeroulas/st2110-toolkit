@@ -1,5 +1,9 @@
 # Capture
 
+Note that following instructions rely on tcpdump capture which is
+limited in terms of performance and timestamps accuracy. For best
+performance consult [DPDK page](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/README.md).
+
 ## NIC
 
 The first thing to do on system startup is to setup the network

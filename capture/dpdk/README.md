@@ -2,7 +2,7 @@
 
 [User guide and introduction.](https://doc.dpdk.org/guides/index.html)
 
-## Getting stated
+## Getting started
 
 ### Build
 
@@ -32,6 +32,7 @@ iface=......
 ethtool --set-priv-flags $iface sniffer on
 ethtool -G $iface rx 8192
 hwstamp_ctl -i $iface -r 1
+dpdk-devbind --status | grep "ConnectX"
 ```
 
 ### Execution
@@ -52,18 +53,16 @@ Secondary process manages the `pdump` client and write to pcap file.
 
 ### Hardware timestamps
 
-Raw timestamps are the captured values of the free running counter (one
-for each ethernet port) and needs to converted into nanoseconds to fit
-in pcap files and to satisfy the accuracy required by EBU-LIST analyzer.
+Raw timestamps are the captured values of the free running counter (one for each ethernet port) and needs to converted into nanoseconds to fit in pcap files and to satisfy the accuracy required by EBU-LIST analyzer.
 
 2 methods for conversion:
 
-|               | device frequency                                | HW clock info                                         |
+| **Method**    | Device Frequency                                | HW Clock Info                                         |
 |---------------|-------------------------------------------------|-------------------------------------------------------|
-| **principle** | a device constant attribute that can be queried on startup | Use the converter implemented by Mellanox libiverbs `infiniband/mlxdv5.h` |
-| **branch**    | https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/v6 | https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1     |
-| **pros**      | it is easy to implement, more acceptable for upstream contribution | **it just works**, with same precision as libvma |
-| **cons**      | **accuracy as bad as SW timestamping** | clock info needs to be updated thanks to a timer + this **doesn't make a consensus in dpdk community**  `` S. Ovsiienko (Mellanox): "it requires recent version of rdma-core and libiverbs [...]  mlx5dv_get_clock_info() relies on timestamps of kernel queues, it might not work in DPDK non-isolated mode (DPDK takes all the traffic, kernel sees nothing)" `` |
+| **Idea**      | a device constant attribute that can be queried on startup | Use the converter implemented by Mellanox libiverbs `infiniband/mlxdv5.h` |
+| **Branch**    | https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/v6 | https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1     |
+| **Pros**      | it is easy to implement, more acceptable for upstream contribution | **it just works**, with same precision as libvma |
+| **Cons**      | **accuracy as bad as SW timestamping** | clock info needs to be updated thanks to a timer + this **doesn't make a consensus in dpdk community**  `` S. Ovsiienko (Mellanox): "it requires recent version of rdma-core and libiverbs [...]  mlx5dv_get_clock_info() relies on timestamps of kernel queues, it might not work in DPDK non-isolated mode (DPDK takes all the traffic, kernel sees nothing)" `` |
 
 ### Filter
 
@@ -106,29 +105,29 @@ make
 sudo ./examples/rxtx_callbacks/build/rxtx_callbacks -l 1 -n 4 -- -t
 ```
 
-### Tcpdump:
+### Tcpdump
 
-Build:
+* Build
 
-* dpdk v20.05 config: ` CONFIG_RTE_BUILD_SHARED_LIB=y `
-* libpcap 1.8.1 source to be located in same folder as `./tcpdump/`.  `./configure --with-dpdk=<ABSOLUTE_path_to_dpdk> `
-* tcpdump:  `make` ( gcc  -DHAVE_CONFIG_H   -I. -I../libpcap  -g -O2  -o
-  tcpdump fptype.o tcpdump.o  libnetdissect.a -lcrypto
-  ../libpcap/libpcap.a -libverbs  -L/tmp/staging/usr/local/lib -ldpdk
-  -lrt -lm -lnuma -ldl -pthread)
+    - dpdk v20.05 config: `CONFIG_RTE_BUILD_SHARED_LIB=y`
+    - libpcap 1.8.1 source to be located in same folder as `./tcpdump/`.  `./configure --with-dpdk=<ABSOLUTE_path_to_dpdk> `
+    - libpcap must be patched attached file to support HW tiemstamping
+    - tcpdump:  `make`(`gcc  -DHAVE_CONFIG_H   -I. -I../libpcap  -g -O2  -o tcpdump fptype.o tcpdump.o  libnetdissect.a -lcrypto ../libpcap/libpcap.a -libverbs  -L/tmp/staging/usr/local/lib -ldpdk -lrt -lm -lnuma -ldl -pthread`)
 
-Exec:
+* Exec
 
 ```
 sudo DPDK_CFG="--log-level=debug -dlibrte_mempool_ring.so -dlibrte_common_mlx5.so -dlibrte_pmd_mlx5.so ./tcpdump -i dpdk:0 --time-stamp-precision=nano -j adapter_unsynced dst port 20000
 ```
 
-Results: 15% pkts dropped by interface. This is due to libcap that makes too many copies and syscalls and that should improve "soon" according to community.
+* Results
+
+**15% pkts dropped by interface**. This is due to libcap that makes too many copies and syscalls and that should be improved "soon" according to community.
 
 ### Solution
 
 DPDK builtin utilities (testpmd and dpdk-pdump) are chosen for their versatily considering that the tunning might be a long process.
-[This script](https://github.com/pkeroulas/st2110-toolkit/blob/dpdk/capture/master/dpdk-capture.sh) wraps the capture program in a tcpdump-like command line interpreter. The overhead induced by multiple process being started/stopped is not an issue in our use case.
+[This script](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/dpdk-capture.sh) wraps the capture program in a tcpdump-like command line interpreter. The overhead induced by multiple process being started/stopped is not an issue in our use case.
 [Custom dev_info/v1](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1) is the only satisfying version so far.
 
 ## Performances
