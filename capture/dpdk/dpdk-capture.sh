@@ -41,6 +41,7 @@ while getopts ":i:w:G:W:v" o; do
         #    ;;
         w)
             pcap=${OPTARG}
+            tmp=/run/$(basename $pcap)
             ;;
         G)
             timeout=${OPTARG}
@@ -70,6 +71,7 @@ IPs=$(echo $filter | sed 's/dst//g; s/or//g' | tr -s ' ' '\n')
 
 dpdk_log "iface: $iface
 pcap: $pcap
+tmp: $tmp
 filter: $filter
 timeout: $timeout"
 
@@ -119,22 +121,21 @@ pci=$(dpdk-devbind --status | grep "ConnectX" | \
     cut -d ' ' -f1 | sed 's/\(.*\)/ -w \1 /' | tr -d '\n')
 # create a detached session to run PMD server
 screen -dmS testpmd -L -Logfile $testpmd_log \
-    testpmd $pci -n4 -- --enable-rx-timestamp
+    testpmd $pci -n4 -- --enable-rx-timestamp --mbcache=512
 
 sleep 3
 
 # TODO: compile and pass a filter
-
 
 pkt_rx_start=$(ethtool -S $iface | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
 pkt_drop_start=$(ethtool -S $iface | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\1/')
 
 dpdk_log "Start pdump port:$port"
 if [ $dual_port -eq 1 ]; then
-    args="--multi --pdump port=0,queue=*,rx-dev=$pcap.0 --pdump \"port=1,queue=*,rx-dev=$pcap.1\""
+    args="--multi --pdump port=0,queue=*,rx-dev=$tmp.0 --pdump \"port=1,queue=*,rx-dev=$tmp.1\""
     # maybe -c 2 needed
 else
-    args="--pdump port=$port,queue=*,rx-dev=$pcap.$port"
+    args="--pdump port=$port,queue=*,rx-dev=$tmp.$port"
 fi
 dpdk-pdump -- $args 2>&1 &
 
@@ -162,7 +163,7 @@ fi
 
 if [ $verbose -eq 1 ]; then
     dpdk_log "pcapinfo port $port"
-    capinfos $pcap.$port
+    capinfos $tmp.$port
 fi
 
 pkt_rx_end=$(ethtool -S $iface | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
