@@ -90,8 +90,12 @@ start_ptp()
     # Manage 2 ports with 2 phc2sys (1st iface is master for both sys
     # clock and 2nd iface). But is it better to have 2 instances of
     # ptp4l instead? phc2sys would dynamically choose between the 2 ifaces
-    start_ptp_sync $MEDIA_IFACE_0 'CLOCK_REALTIME'
-    start_ptp_sync $MEDIA_IFACE_0 $MEDIA_IFACE_1
+    start_ptp_sync $MEDIA_IFACE 'CLOCK_REALTIME'
+    if [ $MEDIA_IFACE = $MEDIA_IFACE_0 ]; then
+        start_ptp_sync $MEDIA_IFACE $MEDIA_IFACE_1
+    else
+        start_ptp_sync $MEDIA_IFACE $MEDIA_IFACE_0
+    fi
 }
 
 stop_ptp_sync()

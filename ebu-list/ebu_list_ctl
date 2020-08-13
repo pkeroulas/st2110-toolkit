@@ -104,6 +104,9 @@ start()
             " ./config.yml
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
         npm run dev -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
+
+        log_ebu_list "Start stream pre-processor"
+        $LIST_PATH/build/bin/stream_pre_processor amqp://$MGMT_IP:5672 2>&1 > /tmp/list-pre-processor.log &
     else
         log_ebu_list "Start containers: mongo, influxdb, rabbitmq and EBU-LIST"
         cd $LIST_PATH
@@ -118,6 +121,7 @@ stop()
 {
     if [ $LIST_DEV = "true" ]; then
         killall -9 node
+        killall stream_pre_processor
         cd $LIST_PATH/apps/external/
     else
         cd $LIST_PATH
