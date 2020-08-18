@@ -141,13 +141,13 @@ The following tools validate the resulting pcap file (duration, bitrate, TS accu
 * [Packet drop detector](https://github.com/pkeroulas/st2110-toolkit/blob/master/misc/pkt_drop_detector.py)
 * [Vrx validation](https://github.com/ebu/smpte2110-analyzer/blob/master/vrx_analysis.py)
 
-| Bitrate in Gbps | Drop | Vrx | Comments |
+| Bitrate in Gbps | pkt drops | Vrx | Comments |
 |-----------------|------|-----|----------|
-| 1.3 | ok | ok | 1080i video @ 60fps     |
-| 5.2 | ok | ok | 2160p @ 30fps           |
-| 6.5 | ok | ok | max on SSD              |
-| 10  | ok | ok | need to write into RAM  |
-
+| 1.3 | 0 | ok | 1080i video @ 60fps     |
+| 5.2 | 0 | ok | 2160p @ 30fps           |
+| 6.5 | 0 | ok | max on SSD              |
+| 10  | 0 | ok | 1 sec, need to write into RAM |
+| 10  | 840/1993k | fail | 2 sec, need to write into RAM |
 
 ## Dual port capture for ST 2022-7
 
