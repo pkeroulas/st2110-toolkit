@@ -150,8 +150,7 @@ sleep 3
 
 dpdk_log "Start pdump"
 if [ $dual_port -eq 1 ]; then
-    args="-- --multi --pdump port=0,queue=0,rx-dev=$pcap-0.pcap --pdump port=1,queue=0,rx-dev=$pcap-1.pcap"
-    #args="-l 0-3 -n 2"
+    args="-- --pdump port=0,queue=0,rx-dev=$pcap-0.pcap --pdump port=1,queue=0,rx-dev=$pcap-1.pcap"
 else
     port=$(echo $iface | sed 's/.*\(.\)/\1/')
     args="-- --pdump port=$port,queue=*,rx-dev=$pcap-$port.pcap"
@@ -193,8 +192,9 @@ done
 #dpdk_log "drop: $(echo "$pkt_drop_end - $pkt_drop_start" | bc)"
 
 if [ $dual_port -eq 1 ]; then
-    mergecap -w $pcap.pcap $pcap-0.pcap $pcap-1.pcap
+    mergecap -w $pcap.pcap -F nsecpcap $pcap-0.pcap $pcap-1.pcap
     echo $(ls $pcap-[01].pcap) merged into $pcap.pcap
+    rm -f $pcap-0.pcap $pcap-1.pcap
 else
     port=$(echo $iface | sed 's/.*\(.\)/\1/')
     mv $pcap-$port.pcap $pcap.pcap

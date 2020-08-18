@@ -154,9 +154,10 @@ The following tools validate the resulting pcap file (duration, bitrate, TS accu
 Change dpdk-pump cmd:
 
 ```sh
-./build/app/dpdk-pdump -- --multi \
+./build/app/dpdk-pdump -- \
     --pdump 'port=0,queue=*,rx-dev=/tmp/test0.pcap' \
     --pdump 'port=1,queue=*,rx-dev=/tmp/test1.pcap'
+mergecap -w test.pcap -F nsecpcap test0.pcap test1.pcap
 ```
 
 ## TODO
