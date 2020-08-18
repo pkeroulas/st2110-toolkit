@@ -1,6 +1,6 @@
 # DPDK
 
-[User guide and introduction.](https://doc.dpdk.org/guides/index.html)
+[DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that by-passes the kernel network stack and let the packets be processed directly from the userspace. This allows to maximize the through for traffic capture. It supports larger set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
 
 ## Getting started
 
@@ -40,15 +40,13 @@ dpdk-devbind --status | grep "ConnectX"
 Primary process, read from eth driver and manage `pdump` server:
 
 ```sh
-./build/app/testpmd -w 0000:01:00.0 -w 0000:01:00.1 -n4 -- --enable-rx-timestamp
+./build/app/testpmd -w 0000:01:00.0 -w 0000:01:00.1 -n4 --
 ```
 
 Secondary process manages the `pdump` client and write to pcap file.
 
 ```sh
-./build/app/dpdk-pdump -- --multi \
-    --pdump 'port=0,queue=*,rx-dev=/tmp/test0.pcap' \
-    --pdump 'port=1,queue=*,rx-dev=/tmp/test1.pcap' \
+./build/app/dpdk-pdump -- --pdump 'port=0,queue=*,rx-dev=/tmp/test.pcap'
 ```
 
 ### Hardware timestamps
@@ -107,6 +105,9 @@ sudo ./examples/rxtx_callbacks/build/rxtx_callbacks -l 1 -n 4 -- -t
 
 ### Tcpdump
 
+Working with tcpdump would be ideal because the versatily and the
+maturity.
+
 * Build
 
     - dpdk v20.05 config: `CONFIG_RTE_BUILD_SHARED_LIB=y`
@@ -132,6 +133,8 @@ DPDK builtin utilities (testpmd and dpdk-pdump) are chosen for their versatily c
 
 ## Performances
 
+Before starting the test, make sure that both NIC clock and system clock are synchronized with PTP. Note that DPDK will prevent the PTP daemon from receiving the PTP traffic but this is acceptable as long as the capture duration is a few seconds.
+
 The following tools validate the resulting pcap file (duration, bitrate, TS accuracy, pkt drop, etc):
 
 * [capinfos](https://www.wireshark.org/docs/man-pages/capinfos.html)
@@ -145,10 +148,21 @@ The following tools validate the resulting pcap file (duration, bitrate, TS accu
 | 6.5 | ok | ok | max on SSD              |
 | 10  | ok | ok | need to write into RAM  |
 
+
+## Dual port capture for ST 2022-7
+
+Change dpdk-pump cmd:
+
+```sh
+./build/app/dpdk-pdump -- --multi \
+    --pdump 'port=0,queue=*,rx-dev=/tmp/test0.pcap' \
+    --pdump 'port=1,queue=*,rx-dev=/tmp/test1.pcap'
+```
+
 ## TODO
 
 * run without sudo (blocked by [smcroute](https://github.com/troglobit/smcroute/pull/112))
-* set a flag for ST2022-7 and merge pcap
+* For 64-bit applications, it is recommended to use [1 GB hugepages](https://doc.dpdk.org/guides/linux_gsg/sys_reqs.html#linux-gsg-hugepages)
 * clang for bBPF compiling, maybe not necessary as we only join multicast we're interested in.
 * explore `testpmd` options for optimization:
 ```
@@ -160,4 +174,10 @@ exple from the doc:
 
 *   ``--mbcache=N``
     Set the cache of mbuf memory pools to N, where 0 <= N <= 512.  The default value is 16.
+*   ``--mp-alloc <native|anon|xmem|xmemhuge>``
+
+    Select mempool allocation mode:
+    * xmemhuge: create and populate mempool using externally and anonymously
+      allocated hugepage area
+
 ```

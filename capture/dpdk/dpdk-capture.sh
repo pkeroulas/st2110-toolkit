@@ -4,14 +4,19 @@ usage(){
     echo "$0 interprets tcpdump-like parameters and passes them to
     dpdk utilties, i.e. tespmd and dpdk-pdump
 Usage:
-    $0 -i interface -w file.pcap [-G <secondes>] [-v] [ filter expr ]
-" >&2
+    $0 -i interface0 [-i interface1] -w file.pcap [-G <secondes>] [-v[v]] [ filter expr ]
+
+Exples:
+    $0 -i enp1s0f0 -w /tmp/single.pcap -G 1 dst 225.192.10.1
+    $0 -vv -i enp1s0f0 -i enp1s0f1 -w /tmp/dual.pcap -G 1
+    " >&2
 }
 
 timeout=2
 verbose=0
 dual_port=0
 testpmd_log=/tmp/dpdk-testpmd.log
+iface=""
 
 dpdk_log(){
     echo "dpdk-capture: $@"
@@ -26,8 +31,11 @@ dpdk_log "Parse args: ------------------------------------------ "
 while getopts ":i:w:G:W:v" o; do
     case "${o}" in
         i | interface)
-            iface=${OPTARG}
-            port=$(echo $iface | sed 's/.*\(.\)/\1/')
+            if [ ! -z "$iface" ]; then
+                dual_port=1
+            fi
+
+            iface="$iface ${OPTARG}"
             ;;
         j)
             ;;
@@ -41,7 +49,6 @@ while getopts ":i:w:G:W:v" o; do
         #    ;;
         w)
             pcap=${OPTARG}
-            tmp=/run/$(basename $pcap)
             ;;
         G)
             timeout=${OPTARG}
@@ -51,93 +58,105 @@ while getopts ":i:w:G:W:v" o; do
             ;;
         v)
             verbose=1
+            ;;
+        vv)
+            verbose=1
             set -x
             ;;
-            #TODO dual-port
         *)
             dpdk_log  "unsupported option ${o}"
+            usage
+            exit 1
             ;;
     esac
 done
+
 shift $((OPTIND-1))
 
-if [ -z $iface -o -z $pcap ]; then
+if [ -z "$iface" -o -z "$pcap" ]; then
     dpdk_log "Missing argument"
+    usage
     exit 1
 fi
 
 filter=$@
 IPs=$(echo $filter | sed 's/dst//g; s/or//g' | tr -s ' ' '\n')
+pcap=$(echo $pcap | sed 's/\(.*\)\.pcap/\1/')
 
 dpdk_log "iface: $iface
 pcap: $pcap
-tmp: $tmp
 filter: $filter
+dual_port: $dual_port
 timeout: $timeout"
 
-dpdk_log "Checking interface: $iface ------------------------------------------ "
 
-if [ ! -d /sys/class/net/$iface ]; then
-	dpdk_log "$iface doesn\'t exist, exit."
-	exit 1
-fi
-if [ $(cat /sys/class/net/$iface/operstate) != "up" ]; then
-	dpdk_log "$iface is not up, exit."
-	exit 1
-fi
+dpdk_log "Checking interface: $i ------------------------------------------ "
 
-if [ ! -z "$filter" ]; then
-    dpdk_log "Joining mcast: $IPs ------------------------------------------ "
-
-    if ! smcroutectl show > /dev/null; then
-        smcrouted
+for i in $iface; do
+    if [ ! -d /sys/class/net/$i ]; then
+        dpdk_log "$i doesn\'t exist, exit."
+        exit 1
     fi
-
-    for ip in $IPs; do
-        smcroutectl join $iface $ip
-        if ! netstat -ng | grep -q "$iface.*$ip"; then
-            dpdk_log "Can\'t joint $ip"
-        fi
-    done
-
+    if [ $(cat /sys/class/net/$i/operstate) != "up" ]; then
+        dpdk_log "$i is not up, exit."
+        exit 1
+    fi
     if [ $verbose -eq 1 ]; then
-        netstat -ng | grep $iface
+        dpdk_log "Devices"
+        dpdk-devbind --status | grep "if=$i"
+        #0000:01:00.0 'MT27800 Family [ConnectX-5] 1017' if=enp1s0f0 drv=mlx5_core unused= *Active*
     fi
-else
-    dpdk_log "No filter"
-fi
+done
+
+dpdk_log "Joining mcast: $IPs ------------------------------------------ "
+for i in $iface; do
+    if [ ! -z "$filter" ]; then
+
+        if ! smcroutectl show > /dev/null; then
+            smcrouted
+        fi
+
+        for ip in $IPs; do
+            smcroutectl join $i $ip
+            if ! netstat -ng | grep -q "$i.*$ip"; then
+                dpdk_log "Can\'t joint $ip"
+            fi
+        done
+
+        if [ $verbose -eq 1 ]; then
+            netstat -ng | grep $i
+        fi
+    else
+        dpdk_log "No filter"
+    fi
+done
 
 # dpdk
 dpdk_log "Capturing------------------------------------------"
-
-if [ $verbose -eq 1 ]; then
-    dpdk_log "Devices"
-    dpdk-devbind --status | grep "if=$iface"
-    #0000:01:00.0 'MT27800 Family [ConnectX-5] 1017' if=enp1s0f0 drv=mlx5_core unused= *Active*
-fi
 
 dpdk_log "Start PMD"
 pci=$(dpdk-devbind --status | grep "ConnectX" | \
     cut -d ' ' -f1 | sed 's/\(.*\)/ -w \1 /' | tr -d '\n')
 # create a detached session to run PMD server
 screen -dmS testpmd -L -Logfile $testpmd_log \
-    testpmd $pci -n4 -- --enable-rx-timestamp --mbcache=512
+    testpmd $pci -l 0-3 -n 4 -- --enable-rx-timestamp --forward-mode=rxonly
 
 sleep 3
 
 # TODO: compile and pass a filter
 
-pkt_rx_start=$(ethtool -S $iface | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
-pkt_drop_start=$(ethtool -S $iface | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\1/')
+#pkt_rx_start=$(ethtool -S $i | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
+#pkt_drop_start=$(ethtool -S $i | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\1/')
 
-dpdk_log "Start pdump port:$port"
+dpdk_log "Start pdump"
 if [ $dual_port -eq 1 ]; then
-    args="--multi --pdump port=0,queue=*,rx-dev=$tmp.0 --pdump \"port=1,queue=*,rx-dev=$tmp.1\""
-    # maybe -c 2 needed
+    args="-- --multi --pdump port=0,queue=0,rx-dev=$pcap-0.pcap --pdump port=1,queue=0,rx-dev=$pcap-1.pcap"
+    #args="-l 0-3 -n 2"
 else
-    args="--pdump port=$port,queue=*,rx-dev=$tmp.$port"
+    port=$(echo $iface | sed 's/.*\(.\)/\1/')
+    args="-- --pdump port=$port,queue=*,rx-dev=$pcap-$port.pcap"
 fi
-dpdk-pdump -- $args 2>&1 &
+dpdk-pdump $args 2>&1 &
 
 sleep $timeout
 
@@ -153,24 +172,30 @@ if [ $verbose -eq 1 ]; then
 fi
 rm $testpmd_log
 
-if [ ! -z "$filter" ]; then
-    dpdk_log "Leaving mcast ------------------------------------------"
+for i in $iface; do
+    if [ ! -z "$filter" ]; then
+        dpdk_log "Leaving mcast ------------------------------------------"
+        for ip in $IPs; do
+            smcroutectl leave $i $ip
+        done
+    fi
 
-    for ip in $IPs; do
-        smcroutectl leave $iface $ip
-    done
+    port=$(echo $i | sed 's/.*\(.\)/\1/')
+    if [ $verbose -eq 1 ]; then
+        dpdk_log "pcapinfo port $port"
+        capinfos $pcap-$port.pcap
+    fi
+done
+
+#pkt_rx_end=$(ethtool -S $i | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
+#pkt_drop_end=$(ethtool -S $i | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\1/')
+#dpdk_log "rx: $(echo "$pkt_rx_end - $pkt_rx_start" | bc)"
+#dpdk_log "drop: $(echo "$pkt_drop_end - $pkt_drop_start" | bc)"
+
+if [ $dual_port -eq 1 ]; then
+    mergecap -w $pcap.pcap $pcap-0.pcap $pcap-1.pcap
+    echo $(ls $pcap-[01].pcap) merged into $pcap.pcap
+else
+    port=$(echo $iface | sed 's/.*\(.\)/\1/')
+    mv $pcap-$port.pcap $pcap.pcap
 fi
-
-if [ $verbose -eq 1 ]; then
-    dpdk_log "pcapinfo port $port"
-    capinfos $tmp.$port
-fi
-
-pkt_rx_end=$(ethtool -S $iface | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
-pkt_drop_end=$(ethtool -S $iface | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\1/')
-dpdk_log "rx: $(echo "$pkt_rx_end - $pkt_rx_start" | bc)"
-dpdk_log "drop: $(echo "$pkt_drop_end - $pkt_drop_start" | bc)"
-
-time mv $tmp.$port $pcap
-
-#TODO if dual port and $ mergecap -w outfile.pcap 1.pcap 2.pcap
