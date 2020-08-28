@@ -1,6 +1,6 @@
 # DPDK
 
-[DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that by-passes the kernel network stack and let the packets be processed directly from the userspace. This allows to maximize the through for traffic capture. It supports larger set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
+[DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that bypasses the kernel network stack and lets the packets be processed directly from the userspace. This allows to maximize the through for traffic capture. It supports a larger set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
 
 ## Getting started
 
