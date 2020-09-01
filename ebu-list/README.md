@@ -74,19 +74,18 @@ APT::Periodic::Update-Package-Lists "0";
 
 ### RAID 0 array for user data
 
-From here, most of installation commands require root priviledges.
+Raid 0 consists in splitting data into segment and writting portions on
+multiple disks simultaneous to maximize the throughput.
+
+Find the 2 SATA drives and create RAID 0 array. From here, most of
+installation commands require root priviledges.
 
 ```sh
 sudo -i
-```
-
-Find the 2 SATA drives and create RAID 0 array:
-
-```sh
 apt install mdadm
-ls /dev/md*
 lsblk | grep sd
 mdadm --create --verbose /dev/md0 --level=0 --raid-devices=2 /dev/sda /dev/sdb
+ls /dev/md*
 cat /proc/mdstat
 ```
 
@@ -100,7 +99,14 @@ mount /dev/md0 /media/raid0
 chown -R ebulist:ebulist /media/raid0/*
 ```
 
-For persistent mounting, add this line in `/etc/fstab`:
+For persistent naming:
+
+```sh
+mdadm --detail --scan >> /etc/mdadm/mdadm.conf
+update-initramfs -u # sync ramdisk version of conf file
+```
+
+And persitent mounting, add this in `/etc/fstab`:
 
 ```
 /dev/md0 /media/raid0   ext4    defaults 0      1
