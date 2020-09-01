@@ -52,7 +52,13 @@ def checkSeqNum(pkt):
     #print(pkt[TCP].sport)
 
     # init streams udp payload: RTP
-    buf = StringIO.StringIO(pkt.load).getvalue()
+    try:
+        buf = StringIO.StringIO(pkt.load).getvalue()
+    except Exception as e:
+        print(e)
+        print(pkt)
+        return
+
     # read RTP sequence number
     ts = (ord(buf[2]) << 8 ) + ord(buf[3])
 
@@ -61,14 +67,18 @@ def checkSeqNum(pkt):
         print("\nNew: " + desc)
         counters[desc] = {'pkt': 1, 'drop': 0 , 'old_ts': ts }
         return
+    counters[desc]['pkt'] += 1;
+
+    # include UDP but not PTP (not RTP)
+    if 'ptp_' in desc or not 'UDP' in desc:
+        return
 
     old_ts = counters[desc]['old_ts']
     if (old_ts != None) and ((old_ts + 1) != ts) and not ((old_ts == 65535) and (ts == 0)):
         drop = (ts - old_ts)
-        print(desc + '('+ str(old_ts) + '...' + str(ts) + ') = ' + str(drop) + 'drops!')
+        print(desc + ' drop('+ str(old_ts) + '...' + str(ts) + ') = ' + str(drop) + ' pkts!')
         counters[desc]['drop'] += drop;
 
-    counters[desc]['pkt'] += 1;
     counters[desc]['old_ts'] = ts
 
 
