@@ -16,9 +16,9 @@ Sponsored by:
 
 ### Part list
 
-|*What*|*Item*|*Qty*|
+| What | Item | Qty |
 |------|------|-----|
-|Motherboard|[ASRock Z390 PHANTOM GAMING-ITX/AC LGA 1151 (300 Series) Intel Z390 HDMI SATA 6Gb/s USB 3.1 Mini ITX Intel Motherboard](https://www.asrock.com/MB/Intel/Z390%20Phantom%20Gaming-ITXac/index.asp)| 1 (obsolete)|
+|Motherboard|[Gigabyte Z390 AORUS PRO Wifi Intel Z390/socket1151 rev 1.0](https://www.gigabyte.com/ca/Motherboard/Z390-I-AORUS-PRO-WIFI-rev-10)| 1 (obsolete)|
 |CPU|[Intel Core i5-9600K Coffee Lake 6-Core 3.7 GHz (4.6 GHz Turbo) LGA 1151 (300 Series) 95W BX80684I59600K Desktop Processor Intel UHD Graphics 630](https://www.newegg.ca/core-i5-9th-gen-intel-core-i5-9600k/p/N82E16819117959)| 1 |
 |RAM|[G.SKILL Aegis 16GB (2 x 8GB) 288-Pin DDR4 SDRAM DDR4 3000 (PC4 24000) Intel Z170 Platform Memory (Desktop Memory) Model F4-3000C16D-16GISB ](https://www.newegg.ca/g-skill-16gb-288-pin-ddr4-sdram/p/N82E16820232417)| 1 |
 |SSD for user data|[SAMSUNG 860 EVO Series 2.5" 500GB SATA III V-NAND 3-bit MLC Internal Solid State Drive (SSD) MZ-76E500B/AM](https://www.newegg.ca/samsung-860-evo-series-500gb/p/N82E16820147674) | 2 |
@@ -42,6 +42,8 @@ TODO: photos
 * press F2 to enter the BIOS setup.
 * select UEFI USB stick as a primary boot device
 * set correct time
+* set `AC back` = `Always on` (auto startup on power failure)
+* `Fan failure warning` = `on`
 * save and exit BIOS
 
 #### OS install
