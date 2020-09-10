@@ -1,6 +1,6 @@
 # DPDK
 
-[DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that bypasses the kernel network stack and lets the packets be processed directly from the userspace. This allows to maximize the through for traffic capture. It supports a larger set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
+[DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that bypasses the kernel network stack and lets the packets be processed directly from the userspace. This allows to maximize the through for [traffic capture](https://doc.dpdk.org/guides/howto/packet_capture_framework.html). It supports a larger set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
 
 ## Getting started
 
@@ -60,7 +60,7 @@ Raw timestamps are the captured values of the free running counter (one for each
 | **Idea**      | a device constant attribute that can be queried on startup | Use the converter implemented by Mellanox libiverbs `infiniband/mlxdv5.h` |
 | **Branch**    | https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/v6 | https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1     |
 | **Pros**      | it is easy to implement, more acceptable for upstream contribution | **it just works**, with same precision as libvma |
-| **Cons**      | **accuracy as bad as SW timestamping** | clock info needs to be updated thanks to a timer + this **doesn't make a consensus in dpdk community**  `` S. Ovsiienko (Mellanox): "it requires recent version of rdma-core and libiverbs [...]  mlx5dv_get_clock_info() relies on timestamps of kernel queues, it might not work in DPDK non-isolated mode (DPDK takes all the traffic, kernel sees nothing)" `` |
+| **Cons**      | **accuracy as bad as SW timestamping** | clock info needs to be updated thanks to a timer + this **[doesn't make a consensus in dpdk community](https://www.mail-archive.com/dev@dpdk.org/msg171599.html)**. See TODO section to go ahead  |
 
 ### Filter
 
@@ -123,7 +123,7 @@ sudo DPDK_CFG="--log-level=debug -dlibrte_mempool_ring.so -dlibrte_common_mlx5.s
 
 * Results
 
-**15% pkts dropped by interface**. This is due to libcap that makes too many copies and syscalls and that should be improved "soon" according to community.
+**15% pkts dropped by interface**. This is due to libcap that makes [too many copies and syscalls and that should be improved later](https://inbox.dpdk.org/users/20200723165755.46cef46c@hermes.lan/).
 
 ### Solution
 
@@ -168,6 +168,18 @@ mergecap -w test.pcap -F nsecpcap test0.pcap test1.pcap
 
 ## TODO
 
+* upstream changes following Mellanox recommendation:
+
+``
+[The proposed method] requires recent version of rdma-core and libiverbs [...]
+Please note, the mlx5dv_ts_to_ns() is based on timestamps in CQE from kernel queues
+and does not work in non-isolated mode (because DPDK catches all the traffic).
+In 20.08 we are introducing the packet scheduling feature and it provides
+the more reliable way to read the current device clock - read_clock() always
+works if schedule sending is engaged and provides the clock data from the dedicated
+clock queue without involving rdma_core or kernel.
+``
+
 * run without sudo (blocked by [smcroute](https://github.com/troglobit/smcroute/pull/112))
 * For 64-bit applications, it is recommended to use [1 GB hugepages](https://doc.dpdk.org/guides/linux_gsg/sys_reqs.html#linux-gsg-hugepages)
 * clang for bBPF compiling, maybe not necessary as we only join multicast we're interested in.
@@ -186,5 +198,4 @@ exple from the doc:
     Select mempool allocation mode:
     * xmemhuge: create and populate mempool using externally and anonymously
       allocated hugepage area
-
 ```
