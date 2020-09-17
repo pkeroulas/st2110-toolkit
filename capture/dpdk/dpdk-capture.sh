@@ -2,7 +2,8 @@
 
 usage(){
     echo "$0 interprets tcpdump-like parameters and passes them to
-    dpdk utilties, i.e. tespmd and dpdk-pdump
+    dpdk utilties, i.e. testpmd and dpdk-pdump. It also sends IGMP
+    requests (requires sudo) when a filter expression is given.
 Usage:
     $0 -i interface0 [-i interface1] -w file.pcap [-G <secondes>] [-v[v]] [ filter expr ]
 

@@ -1,6 +1,11 @@
-# DPDK
+# Capture using DPDK
 
-[DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that bypasses the kernel network stack and lets the packets be processed directly from the userspace. This allows to maximize the through for [traffic capture](https://doc.dpdk.org/guides/howto/packet_capture_framework.html). It supports a larger set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
+[DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that bypasses the kernel network stack and lets the packets be processed directly in the userspace. This allows to maximize the through for [traffic capture](https://doc.dpdk.org/guides/howto/packet_capture_framework.html). It supports a large set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
+
+The architecture relies on a Poll Mode Driver intead of hardware interrupts, it is more CPU-intensive but it is faster.
+It's all in userspace so easier for tweaking. It come with application examples like testpmd and dpdk-pdump for traffic capture.
+
+![arch](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/dpdk-capture-diagram.jpg)
 
 ## Getting started
 
@@ -15,9 +20,9 @@ make defconfig
 Apply following config (`./build/.config`):
 
 ```sh
-CONFIG_RTE_LIBRTE_MLX5_PMD=y
-CONFIG_RTE_LIBRTE_PMD_PCAP=y
-CONFIG_RTE_LIBRTE_BPF_ELF=y
+CONFIG_RTE_LIBRTE_MLX5_PMD=y # Mellanox ConnectX-5 ethernet driver
+CONFIG_RTE_LIBRTE_PMD_PCAP=y # write pcap files
+CONFIG_RTE_LIBRTE_BPF_ELF=y  # Berkley Packet Filter support
 ```
 
 ```sh
@@ -117,7 +122,7 @@ maturity.
 
 * Exec
 
-```
+```sh
 sudo DPDK_CFG="--log-level=debug -dlibrte_mempool_ring.so -dlibrte_common_mlx5.so -dlibrte_pmd_mlx5.so ./tcpdump -i dpdk:0 --time-stamp-precision=nano -j adapter_unsynced dst port 20000
 ```
 
@@ -130,6 +135,10 @@ sudo DPDK_CFG="--log-level=debug -dlibrte_mempool_ring.so -dlibrte_common_mlx5.s
 DPDK builtin utilities (testpmd and dpdk-pdump) are chosen for their versatily considering that the tunning might be a long process.
 [This script](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/dpdk-capture.sh) wraps the capture program in a tcpdump-like command line interpreter. The overhead induced by multiple process being started/stopped is not an issue in our use case.
 [Custom dev_info/v1](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1) is the only satisfying version so far.
+
+```sh
+./dpdk-capture.sh -i enp1s0f0 -w /tmp/HD.pcap -G 1 dst 225.192.10.1
+```
 
 ## Performances
 
@@ -157,13 +166,8 @@ Could write HD stream (1.3Gbps) for 60 sec (10GB) on RAID 0 without any drop.
 
 ## Dual port capture for ST 2022-7
 
-Change dpdk-pump cmd:
-
 ```sh
-./build/app/dpdk-pdump -- \
-    --pdump 'port=0,queue=*,rx-dev=/tmp/test0.pcap' \
-    --pdump 'port=1,queue=*,rx-dev=/tmp/test1.pcap'
-mergecap -w test.pcap -F nsecpcap test0.pcap test1.pcap
+./dpdk-capture.sh -i enp1s0f0 -i enp1s0f1 -w /tmp/2_HD.pcap -G 1 dst 225.192.10.1 or dst 225.192.10.2
 ```
 
 ## TODO
