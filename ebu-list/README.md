@@ -78,6 +78,7 @@ APT::Periodic::Update-Package-Lists "0";
 
 Raid 0 consists in splitting data into segment and writting portions on
 multiple disks simultaneous to maximize the throughput.
+See [additional performance tests](#throughput) for alternatives.
 
 Find the 2 SATA drives and create RAID 0 array. From here, most of
 installation commands require root priviledges.
@@ -113,11 +114,6 @@ And persitent mounting, add this in `/etc/fstab`:
 ```
 /dev/md0 /media/raid0   ext4    defaults 0      1
 ```
-
-### Data cache
-
-TODO:
-[Create bcache to improve SSD performance.](https://www.linux.com/tutorials/using-bcache-soup-your-sata-drives/)
 
 ### Install ST 2110 depencies
 
@@ -294,3 +290,42 @@ ebu_list_ctl upgrade
 sudo service docker start
 ebu_list_ctl status
 ```
+
+### Throughput
+
+Use M.2 nvme SDD as a buffer for pcap file capture.
+
+```sh
+lsblk | grep nvme  # find the one that IS NOT used for OS
+fdisk /dev/nvme0n1 # create new partition 'n', primary 'p', default size, save 'w'
+mkfs.ext4 -F /dev/nvme0n1p1
+mkdir -p /media/buffer
+mount /dev/nvme0n1p1 /media/buffer
+chown -R ebulist:ebulist /media/buffer/*
+```
+TODO tune block sizes
+
+For persistent mounting, add this line in `/etc/fstab`:
+
+```
+UUID=nvme_UUID /media/buffer ext4 defaults 0 0
+```
+
+Determine write throughput for a given drive:
+
+```
+dd if=/dev/zero of=/media/buffer/zero.img bs=1G count=1 oflag=dsync
+```
+
+| Drive | FS | W speed MB/s |
+|-------|----|--------------|
+| RAM   |    | 2,400 |
+| nvme0 | ext4 | 262 |
+| nvme1 | ext4 | 683 |
+| SSD   | ext4, raid0 | 651 |
+
+To be tested:
+
+* nvme0 used as [bcache device](https://www.linux.com/tutorials/using-bcache-soup-your-sata-drives/)
+* Fusion IO card (spec: 900 MB/s)
+
