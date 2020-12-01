@@ -84,18 +84,21 @@ start_ptp_sync()
 
 start_ptp()
 {
+    if [ -z $PTP_IFACE_0 ]; then
+        log_st2110 "Start linuxptp: fail, no interface"
+        return;
+    fi
+
     log_st2110 "Start linuxptp"
-    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PTP4L_PID --exec /usr/local/sbin/ptp4l -- -f $PTP_CONFIG -s -i $PTP_IFACE
+    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PTP4L_PID --exec /usr/local/sbin/ptp4l -- -f $PTP_CONFIG -s -i $PTP_IFACE_0
+
+    # Sync sys clock with NIC clock
+    start_ptp_sync $PTP_IFACE_0 'CLOCK_REALTIME'
 
     # Manage 2 ports with 2 phc2sys (1st iface is master for both sys
     # clock and 2nd iface). But is it better to have 2 instances of
     # ptp4l instead? phc2sys would dynamically choose between the 2 ifaces
-    start_ptp_sync $MEDIA_IFACE 'CLOCK_REALTIME'
-    if [ $MEDIA_IFACE = $MEDIA_IFACE_0 ]; then
-        start_ptp_sync $MEDIA_IFACE $MEDIA_IFACE_1
-    else
-        start_ptp_sync $MEDIA_IFACE $MEDIA_IFACE_0
-    fi
+    start_ptp_sync $PTP_IFACE_0 $PTP_IFACE_1
 }
 
 stop_ptp_sync()
@@ -112,7 +115,7 @@ stop_ptp()
     start-stop-daemon --stop --pidfile $PTP_PTP4L_PID --oknodo
 
     stop_ptp_sync 'CLOCK_REALTIME'
-    stop_ptp_sync $MEDIA_IFACE_1
+    stop_ptp_sync $PTP_IFACE_1
 
     rm -f $PTP_PHC2SYS_PID* $PTP_PTP4L_PID
 }
