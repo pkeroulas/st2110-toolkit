@@ -38,7 +38,7 @@ setup_iface()
     fi
 
     # doesn't look to work with  MT27800 Family [ConnectX-5]
-    ethtool --set-priv-flags $iface sniffer on
+    #ethtool --set-priv-flags $iface sniffer on
     ethtool -G $iface rx 100 # trigger a change so to avoid exiting
     ethtool -G $iface rx 8192
 
@@ -67,7 +67,6 @@ stop_list()
     su $ST2110_USER -c "ebu_list_ctl stop"
 }
 
-PTP_IFACE=$MEDIA_IFACE
 PTP_CONFIG=/etc/linuxptp/ptp4l.conf
 PTP_DOMAIN=$(sed -n 's/domainNumber\t\+\([0-9]*\)/\1/p' $PTP_CONFIG)
 PTP_PTP4L_PID=/var/run/ptp4l.pid
@@ -135,11 +134,6 @@ start_mellanox()
         exit 1
     fi
     mcra $MLNX_DEV 0xd8068 3
-
-    setup_iface $MEDIA_IFACE_0
-    setup_iface $MEDIA_IFACE_1
-
-    # TODO: announce hostname through lldpd
 }
 
 stop_mellanox()
@@ -182,7 +176,7 @@ stop_probe()
     log_st2110 "Stop dpdk probe"
     smcroutectl kill
     pid=$(ps aux | grep "[n]ode.*dpdk.*yml" | tr -s ' ' | cut -d ' ' -f2)
-    kill $pid
+    if [ ! -z $pid ]; then kill $pid; fi
 }
 
 log_system(){
@@ -196,14 +190,18 @@ usage()
 }
 case "$1" in
     start)
-        start_mellanox
+        setup_iface $MEDIA_IFACE_0
+        setup_iface $MEDIA_IFACE_1
+        # TODO: announce hostname through lldpd
+
+        #start_mellanox
         start_ptp
         start_list
         start_probe
         ;;
 
     stop)
-        stop_mellanox
+        #stop_mellanox
         stop_ptp
         stop_list
         stop_probe

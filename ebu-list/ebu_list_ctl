@@ -153,12 +153,11 @@ status()
     echo "-----------------------------------------------"
     echo "                EBU-LIST Status"
     echo "-----------------------------------------------"
-    show_header "Media interfaces"
-    show_status "Name" "$(hostname)"
-    get_status "Managment iface" "ping -c 1 -W 1 $MGMT_IP" "1 received" "$MGMT_IFACE $MGMT_IP"
+    show_status "Hostname" "$(hostname)"
+    get_status "Mgt interface" "ping -c 1 -W 1 $MGMT_IP" "1 received" "$MGMT_IFACE $MGMT_IP"
     echo "-----------------------------------------------"
     show_header "Media interfaces"
-    get_status "NIC driver" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
+    #get_status "NIC driver" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
     port_status 0 $MEDIA_IFACE_0
     port_status 1 $MEDIA_IFACE_1
     echo "-----------------------------------------------"
