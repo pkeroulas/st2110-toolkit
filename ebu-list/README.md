@@ -329,3 +329,7 @@ To be tested:
 * nvme0 used as [bcache device](https://www.linux.com/tutorials/using-bcache-soup-your-sata-drives/)
 * Fusion IO card (spec: 900 MB/s)
 
+## TODO:
+
+* import ebu-list-sdk and query versions in `status` cmd
+* add internet access in `status` cmd

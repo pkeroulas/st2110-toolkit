@@ -1,3 +1,5 @@
+#TODO remove driver (no need for hca_attr if clock_dev) + mst stuff
+#but install rdma-core libibverbs
 
 install_dpdk()
 {
