@@ -106,7 +106,7 @@ start()
         npm run dev -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
 
         log_ebu_list "Start stream pre-processor"
-        $LIST_PATH/build/bin/stream_pre_processor amqp://$MGMT_IP:5672 2>&1 > /tmp/list-pre-processor.log &
+        $LIST_PATH/build/bin/stream_pre_processor amqp://localhost:5672 2>&1 > /tmp/list-pre-processor.log &
     else
         log_ebu_list "Start containers: mongo, influxdb, rabbitmq and EBU-LIST"
         cd $LIST_PATH
