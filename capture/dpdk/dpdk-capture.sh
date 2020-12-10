@@ -59,10 +59,7 @@ while getopts ":i:w:G:W:v" o; do
             ;;
         v)
             verbose=1
-            ;;
-        vv)
-            verbose=1
-            set -x
+            #set -x
             ;;
         *)
             dpdk_log  "unsupported option ${o}"
@@ -84,7 +81,8 @@ filter=$@
 IPs=$(echo $filter | sed 's/dst//g; s/or//g' | tr -s ' ' '\n')
 pcap=$(echo $pcap | sed 's/\(.*\)\.pcap/\1/')
 
-dpdk_log "iface: $iface
+dpdk_log "
+iface: $iface
 pcap: $pcap
 filter: $filter
 dual_port: $dual_port
@@ -132,6 +130,10 @@ for i in $iface; do
     fi
 done
 
+dpdk_log "Pausing PTP------------------------------------------"
+# prevent linuxptp from interfering with the timestamping
+/etc/init.d/ptp stop
+
 # dpdk
 dpdk_log "Capturing------------------------------------------"
 
@@ -171,6 +173,9 @@ if [ $verbose -eq 1 ]; then
     cat $testpmd_log
 fi
 rm $testpmd_log
+
+dpdk_log "Resuming PTP: $ptp_cmd -------------------------------------"
+/etc/init.d/ptp start
 
 for i in $iface; do
     if [ ! -z "$filter" ]; then

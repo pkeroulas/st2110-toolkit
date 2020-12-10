@@ -114,6 +114,9 @@ install_config()
     install -m 755 $THIS_DIR/config/st2110.init /etc/init.d/st2110
     update-rc.d st2110 defaults
     update-rc.d st2110 enable
+    install -m 755 $THIS_DIR/ptp/ptp.init /etc/init.d/ptp
+    update-rc.d ptp defaults
+    update-rc.d ptp enable
 }
 
 set -x

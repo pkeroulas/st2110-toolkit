@@ -142,13 +142,18 @@ DPDK builtin utilities (testpmd and dpdk-pdump) are chosen for their versatily c
 
 ## Performances
 
-Before starting the test, make sure that both NIC clock and system clock are synchronized with PTP. Note that DPDK will prevent the PTP daemon from receiving the PTP traffic but this is acceptable as long as the capture duration is a few seconds.
+### Timestamps precision
 
-The following tools validate the resulting pcap file (duration, bitrate, TS accuracy, pkt drop, etc):
+Before starting the test, make sure that both NIC clock and system clock are synchronized with PTP master, using `linuxptp` for instance.
 
-* [capinfos](https://www.wireshark.org/docs/man-pages/capinfos.html)
+Note that a running DPDK application prevents the PTP daemon from receiving the PTP traffic. Both `ptp4l` and `phc2sys` somehow have a bad impact on hardware clock, which makes the packet timestamping drift (few 10usec/s) until the app terminates and PTP traffic is received again. This occurs no matter if `linuxptp` elects the NIC clock as the best master clock during the interruption or not. However, turning PTP daemon off during the capture causes no time drift. There must be a way to prevent `linuxptp` from catching the whole traffic (BPF filter?) but `dpdk-capture.sh` just shuts down PTP service temporarly; this is acceptable since the capture duration is generally a few seconds.
+
+Given a very stable (FPGA-based) stream source, the capture script produces a pcap file that can be validated using the following tools:
+
+* [capinfos](https://www.wireshark.org/docs/man-pages/capinfos.html): duration, bitrate, format
 * [Packet drop detector](https://github.com/pkeroulas/st2110-toolkit/blob/master/misc/pkt_drop_detector.py)
-* [Vrx validation](https://github.com/ebu/smpte2110-analyzer/blob/master/vrx_analysis.py)
+* [Vrx validation](https://github.com/ebu/smpte2110-analyzer/blob/master/vrx_analysis.py): jitter
+* [EBU-list checks everything](https://tech.ebu.ch/list) including time drift (RTP Latency should be stable)
 
 ### Bitrate
 
