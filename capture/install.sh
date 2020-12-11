@@ -2,7 +2,7 @@
 # It is imported in $TOP/install.sh
 
 export LANG=en_US.utf8 \
-    PTP_VERSION=2.0 \
+    PTP_VERSION=3.1 \
     SMCROUTE_VERSION=2.4.3
 
 install_ptp()

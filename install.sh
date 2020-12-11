@@ -26,8 +26,6 @@ export LANG=en_US.utf8 \
     YASM_VERSION=1.3.0 \
     NASM_VERSION=2.13.02 \
     MP3_VERSION=3.99.5 \
-    PTP_VERSION=2.0 \
-    SMCROUTE_VERSION=2.4.3 \
     PREFIX=/usr/local \
     MAKEFLAGS="-j$[$(nproc) + 1]"
 
