@@ -146,7 +146,11 @@ screen -dmS testpmd -L -Logfile $testpmd_log \
 
 sleep 3
 
-# TODO: compile and pass a filter
+# filter out ptp
+# testpmd must be in --interactive
+#screen -S testpmd -X stuff "bpf-load rx 0 0 J /tmp/bpf_no_ptp.o
+#start
+#"
 
 #pkt_rx_start=$(ethtool -S $i | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
 #pkt_drop_start=$(ethtool -S $i | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\1/')

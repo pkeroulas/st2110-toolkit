@@ -78,12 +78,14 @@ ntuple filter is not supported on port 1
 net_mlx5: mlx5_flow.c:5644: flow_fdir_ctrl_func(): port 0 flow director mode 0 not supported
 ```
 
-The workaround is to supply `test-pmd` a compiled eBPF. `clang` `libc6-dev-i386` are required.
+The workaround is to supply `test-pmd` a compiled eBPF. `clang` `libc6-dev-i386` are required to compile example `./bpf.c`.
 
 ```
 clang -O2 -I /usr/include/x86_64-linux-gnu/ -U __GNUC__ -target bpf -c ./bpf.c
 testpmd> bpf-load rx 0 0 J ./bpf.o
 ```
+
+Note that bpf filter applies to forward flow but the whole traffic from a port is still redirected oto dpdk.
 
 ## Dpdk-based 3rd party apps for captures
 
@@ -146,7 +148,7 @@ DPDK builtin utilities (testpmd and dpdk-pdump) are chosen for their versatily c
 
 Before starting the test, make sure that both NIC clock and system clock are synchronized with PTP master, using `linuxptp` for instance.
 
-Note that a running DPDK application prevents the PTP daemon from receiving the PTP traffic. Both `ptp4l` and `phc2sys` somehow have a bad impact on hardware clock, which makes the packet timestamping drift (few 10usec/s) until the app terminates and PTP traffic is received again. This occurs no matter if `linuxptp` elects the NIC clock as the best master clock during the interruption or not. However, turning PTP daemon off during the capture causes no time drift. There must be a way to prevent `linuxptp` from catching the whole traffic (BPF filter?) but `dpdk-capture.sh` just shuts down PTP service temporarly; this is acceptable since the capture duration is generally a few seconds.
+Note that a running DPDK application prevents the PTP daemon from receiving the PTP traffic. Both `ptp4l` and `phc2sys` somehow have a bad impact on hardware clock, which makes the packet timestamping drift (few 10usec/s) until the app terminates and PTP traffic is received again. This occurs no matter if `linuxptp` elects the NIC clock as the best master clock during the interruption or not. However, turning PTP daemon off during the capture causes no time drift. There must be a way to prevent `linuxptp` from catching the whole traffic but `dpdk-capture.sh` just shuts down PTP service temporarly; this is acceptable since the capture duration is generally a few seconds.
 
 Given a very stable (FPGA-based) stream source, the capture script produces a pcap file that can be validated using the following tools:
 
