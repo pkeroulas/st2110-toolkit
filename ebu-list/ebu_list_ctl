@@ -143,8 +143,8 @@ port_status()
     switch_ip=$(lldpcli show neighbors port $iface | tr -s ' ' | sed -n 's/.*MgmtIP: \(.*\)/\1/p')
     media_gw_port=$(lldpcli show neighbors port $iface | tr -s ' ' | sed -n 's/.*PortID: \(.*\)/\1/p')
     get_status "Interface $id" "ip addr show $iface" "$iface: .* UP" "$iface $media_ip"
-    get_status "Gateway   $id" "ping -c 1 -W 1 $media_gw_ip" "1 received" "$media_gw_port $media_gw_ip"
-    get_status "Switch    $id" "ping -c 1 -W 1 -I $iface $switch_ip" "1 received" "$switch_name $switch_ip"
+    get_status "Gateway   $id" "ping -c 1 -W 1 -I $iface $media_gw_ip" "1 received" "$media_gw_port $media_gw_ip"
+    get_status "Switch    $id" "ping -c 1 -W 1 $switch_ip" "1 received" "$switch_name $switch_ip"
 }
 
 status()
