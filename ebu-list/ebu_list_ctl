@@ -98,12 +98,12 @@ start()
 
         log_ebu_list "Start the server"
         cd $LIST_PATH/apps/listwebserver
-        sed -i "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
+        sed "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
             s,\(cpp:\).*,\1 $LIST_PATH/build/bin,;
             s,\(webappDomain:\).*,\1 http://$MGMT_IP:$LIST_GUI_PORT,;
-            " ./config.yml
+            " ./config.yml > ./running_config.yml
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
-        npm run dev -- config.yml --dev --live 2>&1 > /tmp/list-server.log &
+        npm run dev -- ./running_config.yml --dev --live 2>&1 > /tmp/list-server.log &
 
         log_ebu_list "Start stream pre-processor"
         $LIST_PATH/build/bin/stream_pre_processor amqp://localhost:5672 2>&1 > /tmp/list-pre-processor.log &
