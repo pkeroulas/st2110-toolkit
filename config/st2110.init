@@ -90,6 +90,11 @@ start_probe()
     log_st2110 "Start dpdk probe"
     smcrouted
 
+    ifaces="$MEDIA_IFACE_0"
+    if [ ! -z $MEDIA_IFACE_1 ]; then
+        ifaces="$ifaces,$MEDIA_IFACE_1"
+    fi
+
     echo 1000000000 > /proc/sys/kernel/shmmax
     echo 800 > /proc/sys/vm/nr_hugepages
 
@@ -97,13 +102,13 @@ start_probe()
     cat > ./config-dpdk.yml << EOF
 probe:
     id: $(uuidgen)
-    label: "LIST capture probe #${iface}: $(cat /etc/hostname)"
+    label: "LIST capture probe ${ifaces}: $(cat /etc/hostname)"
 rabbitmq:
     hostname: localhost
     port: 5672
 
 tcpdump:
-    interface: $iface
+    interfaces: ${ifaces}
 EOF
 
     while ! netstat -lptn | grep -q ":5672"; do
