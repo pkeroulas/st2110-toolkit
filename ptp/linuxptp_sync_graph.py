@@ -26,13 +26,13 @@ from common import Server, Command
 Params
 """
 N = 200 # samples number (~= duration in sec)
-SLAVE_1_NAME = 'Dell R730'
-SLAVE_1_MAC = 'b49691.fffe.0a717c'
+SLAVE_1_NAME = ''
+SLAVE_1_MAC = ''
 # remote host
-SERVER_USER = 'root'
-SERVER_PWD = 'sflsrc'
-SERVER_IP = '10.194.203.34'
-PTP_DOMAIN = '127'
+SERVER_USER = ''
+SERVER_PWD = ''
+SERVER_IP = ''
+PTP_DOMAIN = ''
 
 """
 Clock object:
