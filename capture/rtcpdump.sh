@@ -17,7 +17,10 @@
 # - capturing a high bitrate port isn't good idea given the additional
 # data transfer over the network (plus, on Arista switch, the traffic is
 # mirrored to Cpu which might be overflowed). This is why the capture is
-# limited to 1000 pkts by default.
+# limited to 10000 pkts by default.
+
+remote="normal linux"
+pkt_count=10000
 
 usage(){
     echo "Usage:
@@ -26,7 +29,7 @@ notes:
     -r can refer to connexion in your local ssh config
     -p password used if you have sshpass installed
     -i remote interface name. On a switch, it can either be simple '10' or a part of a quad-port '10/2'
-    -c limit of captured packets (default 1000 as safety for network)
+    -c limit of captured packets (default $pkt_count as safety for network)
     -v verbose
     filter_expression is passed to remote tcpdump
 exple:
@@ -36,9 +39,6 @@ exple:
     $0 -r user@$IP -c 50 -i eth0 'port 67 or port 68'
     " >&2
 }
-
-remote="normal"
-pkt_count=1000
 
 while getopts ":r:p:i:c:v:" o; do
     case "${o}" in
@@ -74,6 +74,7 @@ if [ -z "$switch" -o -z "$iface" ]; then
 fi
 
 filter=$@
+echo "Mode : $remote"
 session=scripted
 ssh_cmd="ssh -T $switch "
 if which sshpass >/dev/null; then
@@ -84,36 +85,44 @@ else
     echo "sshpass not installed. Enter switch password."
 fi
 
-echo "Poke......."
+echo "Poke remote."
 if ! $ssh_cmd "ls" > /dev/null; then
     remote="arista"
 fi
-echo "Mode= $remote"
 
 if [ $remote = "arista" ]; then
-
-#    $ssh_cmd "enable
-#conf
-#show running-conf" | head -10
-
-    echo "Capture......."
+    echo "Create a monitor session."
     $ssh_cmd "enable
     conf
     monitor session $session source Et$iface
     monitor session $session destination Cpu
-    bash tcpdump -i mirror0 -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
+    show interfaces ethernet $iface"
 
-    echo "Cleanup......."
+    # need a short break for Cpu iface allocation
+    sessions=$($ssh_cmd "enable
+    conf
+    show monitor session")
+    echo "$sessions"
+    cpu_iface=$(echo "$sessions" | grep $session -A 10 | grep Cpu | sed 's/.*(\(.*\))/\1/')
+
+    trap 'echo Interruption.' 2 # catch SIGINT (Ctrl-C) to exit Arista bash properly
+
+    echo "Capture on Cpu($cpu_iface) ......."
+    $ssh_cmd "enable
+    conf
+    bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
+
+    echo "Cleanup."
     $ssh_cmd "enable
     conf
     no monitor session $session
     "
 else
-    echo "Interfaces......."
+    echo "Interfaces."
     $ssh_cmd "ls /sys/class/net"
     #TODO get interface automatically?
     echo "Capture......."
     $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
 fi
 
-echo "Exit.........."
+echo "Exit.
