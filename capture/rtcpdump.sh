@@ -74,7 +74,6 @@ if [ -z "$switch" -o -z "$iface" ]; then
 fi
 
 filter=$@
-echo "Mode : $remote"
 session=scripted
 ssh_cmd="ssh -T $switch "
 if which sshpass >/dev/null; then
@@ -89,6 +88,7 @@ echo "Poke remote."
 if ! $ssh_cmd "ls" > /dev/null; then
     remote="arista"
 fi
+echo "Mode : $remote"
 
 if [ $remote = "arista" ]; then
     echo "Create a monitor session."
@@ -125,4 +125,4 @@ else
     $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
 fi
 
-echo "Exit.
+echo "Exit."
