@@ -65,42 +65,4 @@ Additional params (capture duration, truncate) can be set in the conf
 file, i.e. `/etc/st2110.conf`. See sample `./config/st2110.conf` for
 details.
 
-## Troubleshoot
-
-Find your live media interface name and execute:
-
-```sh
-$ ./network_setup.sh file.sdp
-[...]
-```
-
-You can validate that the multicast IGMP group is joined and that data
-is received thanks to the socket reader:
-
-```sh
-$ gcc -o socket_reader -std=c99 socket_reader.c
-$ ./socket_reader -g 225.16.0.1 -p 20000 -i 172.30.64.118
-[...]
-```
-
-Validate that the the multicast group is joined through the correct
-interface:
-
-```sh
-netstat -ng | grep <multicast_group>
-```
-
-Note that in certain setup, the initial join may take several second.
-
-When capturing, if `smcroute` returns this error, restart the daemon:
-
-```
-Daemon error: Join multicast group, unknown interface eth0
-$ sudo /etc/init.d/smcroute restart
-```
-
-Measure the udp packet drops:
-
-```sh
-netstat -s -u
-```
+## [Troubleshoot](../troubleshoot.md)

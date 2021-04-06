@@ -2,6 +2,8 @@
 
 ## Install
 
+From top directory,
+
 ```
 sudo -i
 ./install.sh common       # gcc, libtool, tar etc.

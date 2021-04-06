@@ -74,6 +74,8 @@ Then one can use our FFmpeg-based transcoder following this [instructions.](http
   with a route to source IP only? is it possible to tell ffmpeg which
   interface to use
 
+## [Troubleshoot](./troubleshoot.md)
+
 ## Additional resources
 
 * [video](https://github.com/FOXNEOAdvancedTechnology/smpte2110-20-dissector)
