@@ -74,7 +74,7 @@ Then one can use our FFmpeg-based transcoder following this [instructions.](http
   with a route to source IP only? is it possible to tell ffmpeg which
   interface to use
 
-## [Troubleshoot](./troubleshoot.md)
+## [Troubleshoot](./doc/troubleshoot.md)
 
 ## Additional resources
 

@@ -65,4 +65,4 @@ Additional params (capture duration, truncate) can be set in the conf
 file, i.e. `/etc/st2110.conf`. See sample `./config/st2110.conf` for
 details.
 
-## [Troubleshoot](../troubleshoot.md)
+## [Troubleshoot](../doc/troubleshoot.md)

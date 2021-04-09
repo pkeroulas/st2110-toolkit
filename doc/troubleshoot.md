@@ -18,7 +18,7 @@ $ gcc -o socket_reader -std=c99 socket_reader.c
 $ ./socket_reader -g <multicast-address> -p <udp-port> -i <local-IP-of-media-interface>
 ```
 
-Validate that the the multicast group is joined through the correct
+Validate that the multicast group is joined through the correct
 interface:
 
 ```sh
@@ -26,14 +26,14 @@ netstat -ng | grep <multicast-group>
 ```
 
 
-When capturing, if `smcroute` returns this error, restart the daemon:
+When capturing traffic (as opposed to transcoding), if `smcroute` returns this error, restart the daemon:
 
 ```
 Daemon error: Join multicast group, unknown interface eth0
 $ sudo /etc/init.d/smcroute restart
 ```
 
-Measure the udp packet drops:
+Measure the UDP packet drops:
 
 ```sh
 netstat -s -u
@@ -42,12 +42,14 @@ netstat -s -u
 ## NIC: is the stream present?
 
 `tcpdump` is our friend but it can't guess on which interface to throw the IGMP join request.
-You need to create a static route:
+You need to create a static route before:
 
 ```sh
 ip route add <multicast-group> via <gateway-ip> dev <media-interface>
 tcpdump -i <media-interface>
 ```
+
+Verify that multicast is joined using the correct interface with `netstat -ng`.
 
 ## App: is the stream visible?
 
@@ -65,9 +67,9 @@ dropped: 14564
 
 If the stream can be seen by `tcpdump` but not by an app like
 `socket_reader`, it can either be blocked by the firewall or the stream
-source verification.
+source verification. Let's take the example of Centos for which security
+is tighter than Debian.
 
-Let take the example of Centos for which security is tighter than Debian.
 First the firewall must let the UDP port in:
 
 ```sh
@@ -89,4 +91,4 @@ sysctl -w net.ipv4.conf.all.rp_filter=0
 sysctl -w net.ipv4.conf.<media-interface>.rp_filter=0
 ```
 
-Create a new file in `/usr/lib/sysctl.d/` to make it persistent.
+Create a new file in `/usr/lib/sysctl.d/` for persistency.
