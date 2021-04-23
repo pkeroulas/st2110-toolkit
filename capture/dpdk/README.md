@@ -1,13 +1,23 @@
-# Capture using DPDK
+# Capture ST 2110 video streams using DPDK
+
+The proposed solution supports:
+
+- Hardware timestamping in nanoseconds
+- Dual-port
+- Join and capture multiple streams
+- IP/port filtering
+- Up to 10Gbs
+
+And it is tested on a [mini PC running Ubuntu 18.04, equipped with a Mellanox ConnectX-5 card](https://github.com/pkeroulas/st2110-toolkit/tree/master/ebu-list) and a FPGA-based source.
+
+## DPDK, out of the box
 
 [DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that bypasses the kernel network stack and lets the packets be processed directly in the userspace. This allows to maximize the through for [traffic capture](https://doc.dpdk.org/guides/howto/packet_capture_framework.html). It supports a large set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
 
-The architecture relies on a Poll Mode Driver intead of hardware interrupts, it is more CPU-intensive but it is faster.
-It's all in userspace so easier for tweaking. It come with application examples like testpmd and dpdk-pdump for traffic capture.
+The architecture relies on a Poll Mode Driver instead of hardware interrupts, it is more CPU-intensive but it is faster.
+It's all in userspace so easier for tweaking. It comes with application examples like `testpmd` and `dpdk-pdump` for traffic capture.
 
 ![arch](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/dpdk-capture-diagram.jpg)
-
-## Getting started
 
 ### Build
 
@@ -54,9 +64,14 @@ Secondary process manages the `pdump` client and write to pcap file.
 ./build/app/dpdk-pdump -- --pdump 'port=0,queue=*,rx-dev=/tmp/test.pcap'
 ```
 
+Out of the box, DPDK hardly makes the jobs for as a proper ST 2110 capture engine.
+Read the following study to understand the obstacle or just jump to the [proposed solution](##-proposed-solution).
+
 ### Hardware timestamps
 
-Raw timestamps are the captured values of the free running counter (one for each ethernet port) and needs to converted into nanoseconds to fit in pcap files and to satisfy the accuracy required by EBU-LIST analyzer.
+Raw timestamps are the captured values of the free running counter (one for each ethernet port).
+Unfortunataly, DPDK doesn't convert those values coming from mlx5 to nanoseconds.
+The resulting pcap file does't satisfy the accuracy required by EBU-LIST analyzer.
 
 2 methods for conversion:
 
@@ -69,7 +84,7 @@ Raw timestamps are the captured values of the free running counter (one for each
 
 ### Filter
 
-Builtin filters doesn't work for mlx5:
+Builtin filters **doesn't** work for mlx5:
 
 ```sh
 > 5tuple_filter 1 add dst_ip 225.192.10.1 src_ip 192.168.105.1 dst_port 20000 src_port 10000 protocol 17 mask 0x1F tcp_flags 0 priority 2 queue 2
@@ -78,7 +93,8 @@ ntuple filter is not supported on port 1
 net_mlx5: mlx5_flow.c:5644: flow_fdir_ctrl_func(): port 0 flow director mode 0 not supported
 ```
 
-The workaround is to supply `test-pmd` a compiled eBPF. `clang` `libc6-dev-i386` are required to compile example `./bpf.c`.
+The workaround is to supply `testpmd` a compiled eBPF.
+`clang` and `libc6-dev-i386` are required to compile example `./bpf.c`.
 
 ```
 clang -O2 -I /usr/include/x86_64-linux-gnu/ -U __GNUC__ -target bpf -c ./bpf.c
@@ -98,9 +114,9 @@ Note that bpf filter applies to forward flow but the whole traffic from a port i
 | dpdkcap     | n | y | snaplen, realtime stats | ? | https://github.com/dpdkcap/dpdkcap.git |
 | dpdk-pcapng | ? | ? | ? | ? | https://github.com/shemminger/dpdk-pcapng.git |
 
-### Build
+### Sample application
 
-Ususally, dpdk-based apps needs the following variables:
+Ususally, dpdk-based apps need the following variables:
 
 ```
 cd ~/src/dpdk/examples/rxtx_callbacks
@@ -112,8 +128,7 @@ sudo ./examples/rxtx_callbacks/build/rxtx_callbacks -l 1 -n 4 -- -t
 
 ### Tcpdump
 
-Working with tcpdump would be ideal because the versatily and the
-maturity.
+Working with tcpdump would be ideal because the versatily and the maturity.
 
 * Build
 
@@ -132,17 +147,22 @@ sudo DPDK_CFG="--log-level=debug -dlibrte_mempool_ring.so -dlibrte_common_mlx5.s
 
 **15% pkts dropped by interface**. This is due to libcap that makes [too many copies and syscalls and that should be improved later](https://inbox.dpdk.org/users/20200723165755.46cef46c@hermes.lan/).
 
-### Solution
+## Proposed solution
 
-DPDK builtin utilities (testpmd and dpdk-pdump) are chosen for their versatily considering that the tunning might be a long process.
-[This script](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/dpdk-capture.sh) wraps the capture program in a tcpdump-like command line interpreter. The overhead induced by multiple process being started/stopped is not an issue in our use case.
-[Custom dev_info/v1](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1) is the only satisfying version so far.
+DPDK builtin utilities (`testpmd` + `dpdk-pdump`) are chosen for their versatily considering that the tunning might be a long process.
+However, you need to rebuild from this [custom 'dev_info/v1' branch](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1) to satisfy the timestamp accuracy.
+Then, [this script](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/dpdk-capture.sh) wraps the capture program in a tcpdump-like command line interpreter.
+The overhead induced by multiple process being started/stopped is not an issue in our use case.
+
+Additional dependencies:
+
+- `smcroute`
+- `screen`
+- `linuxptp`
 
 ```sh
 ./dpdk-capture.sh -i enp1s0f0 -w /tmp/HD.pcap -G 1 dst 225.192.10.1
 ```
-
-## Performances
 
 ### Timestamps precision
 
@@ -171,13 +191,13 @@ Given a very stable (FPGA-based) stream source, the capture script produces a pc
 
 Could write HD stream (1.3Gbps) for 60 sec (10GB) on RAID 0 without any drop.
 
-## Dual port capture for ST 2022-7
+### Dual port capture for ST 2022-7
 
 ```sh
 ./dpdk-capture.sh -i enp1s0f0 -i enp1s0f1 -w /tmp/2_HD.pcap -G 1 dst 225.192.10.1 or dst 225.192.10.2
 ```
 
-## TODO
+### TODO
 
 * upstream changes following Mellanox recommendation:
 
