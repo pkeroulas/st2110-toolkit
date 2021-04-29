@@ -10,13 +10,35 @@ class NmosNode:
             raise("Node must be type 'rx' or 'tx'")
         self.ip = ip
         self.type = 'receivers' if type == 'rx' else 'senders'
+        self.channels = [0, 1]
 
         # get latest node version
+        self.emsfp_version = self.get_from_url("http://" + self.ip + "/emsfp/node/")[-1]
         self.node_version = self.get_from_url("http://" + self.ip + "/x-nmos/node/")[-1]
         self.connection_version = self.get_from_url("http://" + self.ip + "/x-nmos/connection/")[-1]
 
+        connection_ids = self.get_connection_ids()
+        channel_length = int(len(connection_ids) / 2)
+        self.connections = [ { 'vid ': {}, 'aud1': {} , 'aud2': {}, 'aud3': {}, 'aud4': {}, 'anc ' : {} }, \
+                       { 'vid ': {}, 'aud1': {} , 'aud2': {}, 'aud3': {}, 'aud4': {}, 'anc ' : {} } ]
+        # Embrionix EmSFP specific mapping
+        for i in self.channels:
+            self.connections[i]['vid ']  = self.fill_connection(connection_ids[i*channel_length+0])
+            self.connections[i]['aud1'] = self.fill_connection(connection_ids[i*channel_length+1])
+            self.connections[i]['aud2'] = self.fill_connection(connection_ids[i*channel_length+2])
+            #self.connections[i]['aud3'] = self.fill_connection(connection_ids[i*channel_length+3])
+            #self.connections[i]['aud4'] = self.fill_connection(connection_ids[i*channel_length+4])
+            self.connections[i]['anc ']  = self.fill_connection(connection_ids[i*channel_length+channel_length-1])
+        self.log(json.dumps(self.connections, indent=2))
+
     def log(self, msg):
-        print("     [node]:" + str(msg))
+        print("     [node]["+self.ip +"]["+self.type+"]:" + str(msg))
+
+    def get_emsfp_connection_url(self):
+        return "http://" + self.ip + "/emsfp/node/"+ self.emsfp_version + self.type + "/"
+
+    def get_emsfp_flow_url(self):
+        return "http://" + self.ip + "/emsfp/node/"+ self.emsfp_version + "/flows/"
 
     def get_connection_url(self):
         return "http://" + self.ip + "/x-nmos/connection/" + self.connection_version + "single/" + self.type + "/"
@@ -24,16 +46,7 @@ class NmosNode:
     def get_node_url(self):
         return "http://" + self.ip + "/x-nmos/node/" + self.node_version + self.type + "/"
 
-    def get_receiver_ids(self):
-        res = []
-        try:
-           res = self.get_from_url(self.get_connection_url())
-        except Exception as e:
-            self.log(e)
-            self.log("Unable to get rx id for ip:" + str(self.ip))
-        return res
-
-    def get_ids(self):
+    def get_connection_ids(self):
         res = []
         try:
            res = self.get_from_url(self.get_connection_url())
@@ -42,58 +55,58 @@ class NmosNode:
             self.log("Unable to get tx id for ip:" + str(self.ip))
         return [i.replace('/','') for i in res]
 
-    def get_video_id(self):
-        res = None
-        for id in self.get_ids():
-            if 'video' in self.get_media_type(id):
-                res = id
-                break
-        return res
+    def fill_connection(self, connection):
+        emsfp_connection = self.get_from_url(self.get_emsfp_connection_url()+connection+'/')
+        flow_id = '' if 'flow_id' not in emsfp_connection.keys() else emsfp_connection['flow_id']
+        media = '' if flow_id == '' else self.get_from_url(self.get_emsfp_flow_url()+flow_id[0])['format']['format_type'] # red only
+        return { 'id': connection, 'flow' : flow_id, 'media': media, 'pkt_count' : ''}
 
-    def get_audio_id(self):
-        res = None
-        for id in self.get_ids():
-            if 'audio' in self.get_media_type(id):
-                res = id
-                break
-        return res
+    def update_connections(self):
+        for i in self.channels:
+            for j in self.connections[i]:
+                if self.connections[i][j]:
+                    pkt_count = self.get_pkt_count(self.connections[i][j]['flow'][0]) # just red
+                    if pkt_count != self.connections[i][j]['pkt_count']:
+                        self.connections[i][j]['pkt_count'] = pkt_count
+                        self.log('ch[{}] - {} - pkt:{}'.format(i,j,pkt_count))
+                    else:
+                        self.log('ch[{}] - {} - pkt:{}'.format(i,j,'unchanged!!!!!!!!!!!!!!'))
 
-    def get_media_type(self, id):
-        res = 'unknown'
-        url = self.get_node_url()
+    def get_pkt_count(self, flow_id):
         try:
-            for receiver in self.get_from_url(url):
-                if receiver['id'] == id:
-                    res = receiver['caps']['media_types'][0]
+            res = self.get_from_url(self.get_emsfp_flow_url()+flow_id+'/')
+            return res['network']['pkt_cnt']
         except Exception as e:
             self.log(e)
-            self.log("Unable to get media type url: " + url + id)
-        return res
+            self.log("Unable to get tx id for ip:" + str(self.ip))
 
     def get_sdp(self, id):
         res = 'unknown'
         url = self.get_node_url()
         try:
-            for receiver in self.get_from_url(url):
-                if receiver['id'] == id:
-                    sdp_url = receiver['manifest_href']
+            for slot in self.get_from_url(url):
+                if slot['id'] == id:
+                    sdp_url = slot['manifest_href']
                     res = self.get_from_url(sdp_url)
         except Exception as e:
             self.log(e)
             self.log("Unable to get sdp from url: " + url + id)
-        return res
+        return str(res)
 
     def activate_all(self, active):
         ids = self.get_ids()
         for connection_id in ids:
             self.activate(active, connection_id)
 
+    def activate_ch(self, ch, active):
+        for id in self.connections[ch]:
+            self.activate(active, id)
+
     def activate(self, active, id):
         url = self.get_connection_url() + str(id) + "/staged/"
         patch = {"activation":{"mode":"activate_immediate"},"master_enable":active}
         self.patch_url(url, patch)
-        media_type = self.get_media_type(id)
-        self.log(self.type + "/" + str(id) + "(" + media_type + "): active=" + str(active))
+        self.log(self.type + "/" + str(id) + ": active=" + str(active))
 
     def get_connection_status(self, id):
         res = True
@@ -112,7 +125,7 @@ class NmosNode:
         url = self.get_connection_url() + str(id) + "/active/"
         try:
             connection = self.get_from_url(url)
-            #self.log(json.dumps(connection, indent=1))
+            #self.log(json.dumps(connection, indent=2))
             res = connection['transport_file']['data']
         except Exception as e:
             self.log(e)
@@ -122,13 +135,12 @@ class NmosNode:
     def set_connection_sdp(self, rx_id, tx_id, sdp):
         url = self.get_connection_url() + str(rx_id) + "/staged/"
         patch = {"sender_id":tx_id,"transport_file":{"data":str(sdp),"type":"application/sdp"}}
-        media_type = self.get_media_type(rx_id)
         try:
             self.patch_url(url, patch)
         except Exception as e:
             self.log(e)
             self.log("Unable to set connection status for id:" + url + id)
-        self.log(self.type + "/" + str(rx_id) + "(" + media_type + "): sdp=" + str(sdp)[:200] + "...")
+        #self.log(self.type + "/" + str(rx_id) + " sdp=" + str(sdp)[:200] + "...")
 
     def get_from_url(self, url):
         res = None

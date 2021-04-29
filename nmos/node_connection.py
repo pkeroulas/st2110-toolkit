@@ -27,7 +27,7 @@ def main():
     state = True if sys.argv[3] == 'start' else False
 
     connection_log("Disactivate all rx")
-    receiver.activate_all(False)
+    #receiver.activate_all(False)
     if not state:
         return
 
@@ -37,7 +37,7 @@ def main():
         connection_log("Activate tx id:" + tx_id)
         sender.activate(state, tx_id)
 
-        connection_log("GET tx SDP for id:" + tx_id)
+        connection_log("GET tx SDP from tx id:" + tx_id)
         sdp = sender.get_sdp(tx_id)
         if 'video' in sdp:
             connection_log("Video detected")
@@ -49,7 +49,7 @@ def main():
             connection_log("unknown media in sdp:" + sdp)
             return
 
-        connection_log("PATCH rx SDP id:" + rx_id)
+        connection_log("PATCH rx id:" + rx_id)
         receiver.set_connection_sdp(rx_id, tx_id, sdp)
         connection_log("Activate rx id:" + rx_id)
         receiver.activate(state, rx_id)
