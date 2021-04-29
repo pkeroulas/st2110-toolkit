@@ -1,6 +1,8 @@
 #!/usr/bin/env python2.7
 import json
-import urllib2
+import urllib
+from urllib.request import urlopen
+import urllib.error as urlerror
 
 class NmosNode:
     def __init__(self, ip = '127.0.0.1', type = 'rx'):
@@ -131,12 +133,12 @@ class NmosNode:
     def get_from_url(self, url):
         res = None
         try:
-            content = urllib2.urlopen(url, timeout=1).read()
+            content = urlopen(url, timeout=1).read()
             try:
                 res = json.loads(content)
             except:
                 res = content
-        except urllib2.HTTPError as e:
+        except urlerror.HTTPError as e:
             self.log(e.code)
             self.log(e.url)
             return e.read()
@@ -146,14 +148,14 @@ class NmosNode:
 
     def patch_url(self, url, patch):
         try:
-            #self.log("url:" + url)
+            #self.log("patch url:" + url)
             #self.log(json.dumps(patch, indent = 1))
-            request = urllib2.Request(url, json.dumps(patch))
-            request.get_method = lambda: 'PATCH'
+            data = urllib.parse.urlencode(patch).encode("utf-8")
+            request = urllib.request.Request(url, data=data, method='PATCH')
             request.add_header('Content-Type', 'application/json')
-            content = urllib2.urlopen(request).read()
+            content = urlopen(request).read()
             return json.loads(content)
-        except urllib2.HTTPError as e:
+        except urlerror.HTTPError as e:
             return e.read()
         except Exception as e:
             self.log(e)
