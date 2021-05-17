@@ -191,6 +191,7 @@ status()
     fi
     get_status "API response" "curl -v http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "401 Unauthorized"
     get_status "GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/nul" "ebu_logo.svg"
+    get_status "Pre processor" "ps aux" "[s]tream_pre_processor"
     get_status "Capture probe" "ps aux" "[n]ode .*dpdk.yml"
 }
 
