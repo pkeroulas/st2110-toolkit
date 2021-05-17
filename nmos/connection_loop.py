@@ -3,6 +3,7 @@
 import sys
 from nmos_node import NmosNode
 import time
+from datetime import datetime
 
 def usage():
     print("""
@@ -43,8 +44,10 @@ def main():
 
     #TODO: add counter and timestampt
     while True:
+        now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
         #TODO activate
-        connection_log('*' * 72)
+        connection_log('*' * 72 + now)
         tx.update_connections()
         rx.update_connections()
         patch_channel(tx,rx,0,0)
