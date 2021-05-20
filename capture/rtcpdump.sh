@@ -116,6 +116,7 @@ if [ $remote = "arista" ]; then
     $ssh_cmd "enable
     conf
     no monitor session $session
+    show monitor session
     "
 else
     echo "Interfaces."
