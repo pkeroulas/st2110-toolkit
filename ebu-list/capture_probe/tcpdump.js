@@ -31,7 +31,6 @@ const buildTcpdumpInfo = (globalConfig, captureOptions) => {
         (captureOptions.durationMs/1000).toString(),
         '-W',
         '1',
-        '-v',
         tcpdumpFilter,
     ]);
     console.log(tcpdumpArguments);
@@ -117,18 +116,23 @@ const runTcpdump = async (globalConfig, captureOptions) => {
             }
 
             if (killed) {
-                resolve();
+                logger('live').error('killed');
+                resolve(0);
                 return;
             }
 
             if (code == null || code !== 0) {
-                const message = `tcpdump failed with code: ${code}`;
+                const message = `dpdk-capture failed with code: ${code}`;
                 logger('live').error(message);
-                reject(new Error(message));
+                if (code == 2) { /* retry */
+                    resolve(code);
+                } else {
+                    reject(new Error(message));
+                }
                 return;
             }
 
-            resolve();
+            resolve(0);
         });
 
         let killed = false;
@@ -137,7 +141,7 @@ const runTcpdump = async (globalConfig, captureOptions) => {
             //tcpdumpProcess.kill();
         };
 
-        timer = setTimeout(onTimeout, captureOptions.durationMs);
+        timer = setTimeout(onTimeout, captureOptions.durationMs * 2);
     });
 };
 

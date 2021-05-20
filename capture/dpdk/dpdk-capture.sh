@@ -23,6 +23,11 @@ dpdk_log(){
     echo "dpdk-capture: $@"
 }
 
+if ps aux | grep -q [t]estpmd; then
+   dpdk_log "already in use, exit"
+   exit 2
+fi
+
 dpdk_log "Parse args: ------------------------------------------ "
 
 #  typical cmdline to be translated:

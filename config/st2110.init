@@ -124,7 +124,7 @@ stop_probe()
     log_st2110 "Stop dpdk probe"
     smcroutectl kill
     pid=$(ps aux | grep "[n]ode.*dpdk.*yml" | tr -s ' ' | cut -d ' ' -f2)
-    if [ ! -z $pid ]; then kill $pid; fi
+    if [ ! -z $pid ]; then kill -9 $pid; fi
 }
 
 log_system(){
