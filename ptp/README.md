@@ -8,7 +8,7 @@ and accurate timestamp in captures.
 ## ptp4l
 
 There are tones of online documentation to setup `ptp4l` to sync
-NIC clock to a grand master clock and then, use `pch2sys` to sync
+NIC clock to a master clock and then, use `pch2sys` to sync
 system/OS time to NIC clock. Verify that offset are no more than a few
 tens of ns.
 
@@ -24,26 +24,25 @@ Jan 21 10:07:29 server1-PowerEdge-R540 ptp4l: [602000.090] rms   18 max   28 fre
 
 It is important to verify that the HW clock on the NIC is the actual
 source of timestamp for `tcpdump`/`libcap`. `testptp` can interact with
-this clock to set it manually and measure offset with system time.
-
-* get this utility from [Linux sources](https://elixir.bootlin.com/linux/v4.8.17/source/Documentation/ptp/testptp.c).
-* compile it using `librt`
-* make sure that `ptp4l` and `phc2sys` are off
-* find the proper ptp device id
-* try the utility
+this clock to manually set and measure both hardware and system time.
 
 ```sh
+# get your kernel version
+$ uname -a
+Linux ..... 4.15.0-112-generic ....
+# ptp tester from kernel source
+$ wget https://raw.githubusercontent.com/torvalds/linux/v4.15/tools/testing/selftests/ptp/testptp.c
+# compile it using `librt`
 $ gcc -o testptp testptp.c -lrt
+# make sure that `ptp4l` and `phc2sys` are off
+# find the proper ptp device id
 $ sudo ethtool -T enp101s0f1 | grep PTP
 PTP Hardware Clock: 3
 $ ./testptp -d /dev/ptp3 -T 3333333
 set time okay
 $ ./testptp -d /dev/ptp3 -g
 clock time: 3333336.759303339 or Sun Feb  8 08:55:36 1970
-```
-
-$ ./testptp -d /dev/ptp3 -g
-```sh
+$ ./testptp -d /dev/ptp3 -k 1
 system and phc clock time offset request okay
 system time: 1589581164.437482989
 phc    time: 1589581201.437483653
