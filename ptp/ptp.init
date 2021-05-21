@@ -12,7 +12,8 @@
 # To enable the initscript on SYSV init system:
 #  Copy to /etc/init.d/ptp with root ownership
 #  $ update-rc.d ptp defaults
-#  $ update-rc.d ptp enable
+#  $ systemctl enable ptp
+#  $ systemctl start ptp
 
 set -x
 

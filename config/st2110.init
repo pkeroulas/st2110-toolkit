@@ -12,7 +12,8 @@
 # To enable the initscript on SYSV init system:
 #  Copy to /etc/init.d/st2110 with root ownership
 #  $ update-rc.d st2110 defaults
-#  $ update-rc.d st2110 enable
+#  $ systemctl enable st2110
+#  $ systemctl start st2110
 
 log_st2110()
 {
