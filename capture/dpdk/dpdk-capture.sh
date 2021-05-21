@@ -132,9 +132,11 @@ for i in $iface; do
     fi
 done
 
-dpdk_log "Pausing PTP------------------------------------------"
-# prevent linuxptp from interfering with the timestamping
-/etc/init.d/ptp stop
+if [ $dual_port -eq 1 ]; then
+    dpdk_log "Pausing PTP------------------------------------------"
+    # prevent linuxptp from interfering with the timestamping
+    /etc/init.d/ptp stop
+fi
 
 # dpdk
 dpdk_log "Capturing------------------------------------------"
@@ -182,8 +184,10 @@ if [ $verbose -eq 1 ]; then
 fi
 rm $testpmd_log
 
-dpdk_log "Resuming PTP: $ptp_cmd -------------------------------------"
-/etc/init.d/ptp start
+if [ $dual_port -eq 1 ]; then
+    dpdk_log "Resuming PTP: $ptp_cmd -------------------------------------"
+    /etc/init.d/ptp start
+fi
 
 for i in $iface; do
     if [ ! -z "$filter" ]; then

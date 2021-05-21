@@ -168,7 +168,9 @@ Additional dependencies:
 
 Before starting the test, make sure that both NIC clock and system clock are synchronized with PTP master, using `linuxptp` for instance.
 
-Note that a running DPDK application prevents the PTP daemon from receiving the PTP traffic. Both `ptp4l` and `phc2sys` somehow have a bad impact on hardware clock, which makes the packet timestamping drift (few 10usec/s) until the app terminates and PTP traffic is received again. This occurs no matter if `linuxptp` elects the NIC clock as the best master clock during the interruption or not. However, turning PTP daemon off during the capture causes no time drift. There must be a way to prevent `linuxptp` from catching the whole traffic but `dpdk-capture.sh` just shuts down PTP service temporarly; this is acceptable since the capture duration is generally a few seconds.
+Note that a running DPDK application prevents the PTP daemon from receiving the PTP traffic. Both `ptp4l` and `phc2sys` somehow have a bad impact on NIC hardware clock, which makes the packet timestamping drift (few 10usec/s) until the capture app terminates and PTP traffic is received again. This occurs no matter if `linuxptp` elects the NIC clock as the best master clock during the interruption or not. However, turning PTP daemon off during the capture causes no time drift. There must be a way to prevent `linuxptp` from catching the whole traffic but `dpdk-capture.sh` just shuts down PTP service temporarly; this is acceptable since the capture duration is generally a few seconds. In case `testpmd` stays up forever, you need a fallback plan for other services:
+* DHCP leases can't be renewed: use static a addersse instead
+* PTP: capture on port A only (`testpmd` is given one `-w` pci interface) and dedicate port B to PTP sync (`phc2sys` have sync to port A with port B)
 
 Given a very stable (FPGA-based) stream source, the capture script produces a pcap file that can be validated using the following tools:
 
