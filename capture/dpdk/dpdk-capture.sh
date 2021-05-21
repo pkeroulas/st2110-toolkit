@@ -9,7 +9,7 @@ Usage:
 
 Exples:
     $0 -i enp1s0f0 -w /tmp/single.pcap -G 1 dst 225.192.10.1
-    $0 -vv -i enp1s0f0 -i enp1s0f1 -w /tmp/dual.pcap -G 1
+    $0 -vv -i enp1s0f0 -i enp1s0f1 -w /tmp/dual.pcap -G 1 # dual port means that local ptp slave won't see ptp traffic
     " >&2
 }
 
@@ -23,7 +23,7 @@ dpdk_log(){
     echo "dpdk-capture: $@"
 }
 
-if ps aux | grep -q [t]estpmd; then
+if ps aux | grep -q [p]dump; then
    dpdk_log "already in use, exit"
    exit 2
 fi
@@ -96,6 +96,7 @@ duration: $duration"
 
 dpdk_log "Checking interface: $i ------------------------------------------ "
 
+pci=""
 for i in $iface; do
     if [ ! -d /sys/class/net/$i ]; then
         dpdk_log "$i doesn\'t exist, exit."
@@ -105,11 +106,7 @@ for i in $iface; do
         dpdk_log "$i is not up, exit."
         exit 1
     fi
-    if [ $verbose -eq 1 ]; then
-        dpdk_log "Devices"
-        dpdk-devbind --status | grep "if=$i"
-        #0000:01:00.0 'MT27800 Family [ConnectX-5] 1017' if=enp1s0f0 drv=mlx5_core unused= *Active*
-    fi
+    pci="$pci -w $(dpdk-devbind --status | grep "if=$i" | cut -d ' ' -f1)"
 done
 
 dpdk_log "Joining mcast: $IPs ------------------------------------------ "
@@ -142,14 +139,16 @@ dpdk_log "Pausing PTP------------------------------------------"
 # dpdk
 dpdk_log "Capturing------------------------------------------"
 
-dpdk_log "Start PMD"
-pci=$(dpdk-devbind --status | grep "ConnectX" | \
-    cut -d ' ' -f1 | sed 's/\(.*\)/ -w \1 /' | tr -d '\n')
-# create a detached session to run PMD server
-screen -dmS testpmd -L -Logfile $testpmd_log \
-    testpmd $pci -l 0-3 -n 4 -- --enable-rx-timestamp --forward-mode=rxonly
+if ps aux | grep -q [t]estpmd; then
+    dpdk_log "PMD already up"
+else
+    dpdk_log "Start PMD"
+    # create a detached session to run PMD server
+    screen -dmS testpmd -L -Logfile $testpmd_log \
+        testpmd $pci -l 0-3 -n 4 -- --enable-rx-timestamp --forward-mode=rxonly
 
-sleep 3
+    sleep 3
+fi
 
 # filter out ptp
 # testpmd must be in --interactive
