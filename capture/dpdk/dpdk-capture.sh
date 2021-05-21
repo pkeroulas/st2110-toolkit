@@ -13,7 +13,7 @@ Exples:
     " >&2
 }
 
-timeout=2
+duration=2
 verbose=0
 dual_port=0
 testpmd_log=/tmp/dpdk-testpmd.log
@@ -57,7 +57,7 @@ while getopts ":i:w:G:W:v" o; do
             pcap=${OPTARG}
             ;;
         G)
-            timeout=${OPTARG}
+            duration=${OPTARG}
             ;;
         W)
             #ignore file number
@@ -91,7 +91,7 @@ iface: $iface
 pcap: $pcap
 filter: $filter
 dual_port: $dual_port
-timeout: $timeout"
+duration: $duration"
 
 
 dpdk_log "Checking interface: $i ------------------------------------------ "
@@ -169,10 +169,10 @@ else
 fi
 dpdk-pdump $args 2>&1 &
 
-sleep $timeout
+sleep $duration
 
 dpdk_log "Stop testpmd / pdump -------------------------------------"
-# send a SGINT after after timeout
+# send a SGINT after after duration
 killall -s 2 dpdk-pdump
 
 # send carriage return to stop testpmd
