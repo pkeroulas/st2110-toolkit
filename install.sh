@@ -48,10 +48,8 @@ install_common_tools()
         lldpd \
         ethtool \
         gcc \
-        g++ \
         git \
         libtool \
-        libssl-dev \
         make \
         net-tools \
         patch \
@@ -60,7 +58,6 @@ install_common_tools()
         tcpdump \
         tmux \
         wget \
-        zlib1g-dev
 
     if [ $OS = "redhat" ]; then
         $PACKAGE_MANAGER -y update && $PACKAGE_MANAGER install -y \
@@ -69,6 +66,11 @@ install_common_tools()
             openssl-devel \
             which \
             zlib-devel
+    else
+        $PACKAGE_MANAGER -y update && $PACKAGE_MANAGER install -y \
+            libssl-dev \
+            g++ \
+            zlib1g-dev
     fi
 
     # rigth capabilities in order to use tcpdump, ip, iptables without sudo
