@@ -24,7 +24,7 @@ EDIT_PKT_IDS = [10, 55] # if not EDIT_ALL; IDs: like displayed in wireshark
 
 import sys
 from array import array
-import StringIO
+import io
 from scapy.all import *
 
 if (len(sys.argv) < 2):
@@ -108,7 +108,7 @@ def get_parity(value):
         if value & 1:
             p += 1
         value >= 1
-    print "parity: "+ str(p)
+    print("parity: "+ str(p))
     return int(p & 1)
 
 def editPayload(reader, writer):
@@ -205,8 +205,8 @@ https://tools.ietf.org/id/draft-ietf-payload-rtp-ancillary-14.txt
 cap = rdpcap(sys.argv[1])
 for index, pkt in enumerate(cap):
     # init streams udp payload: RTP
-    i_stream = StringIO.StringIO(pkt.load)
-    o_stream = StringIO.StringIO(pkt.load)
+    i_stream = io.BytesIO(pkt.load)
+    o_stream = io.BytesIO(pkt.load)
     if not EDIT_ENABLED or not (index+1 in EDIT_PKT_IDS or EDIT_ALL):
         continue
 
@@ -216,7 +216,7 @@ for index, pkt in enumerate(cap):
 
     print("=====================================")
     buf = i_stream.getvalue()
-    print("in  [" + str(index) +"], l" + str(len(buf)) + ":" + str([hex(ord(i)) for i in buf]))
+    print("in  [" + str(index) +"], l" + str(len(buf)) + ":" + str([hex(i) for i in buf]))
 
     if EDIT_MARKER_ENABLED:
         # jump to 'M' field
@@ -241,7 +241,7 @@ for index, pkt in enumerate(cap):
         editPayload(reader, writer)
 
     buf = o_stream.getvalue()
-    print("out [" + str(index) +"], l" + str(len(buf)) + ":" + str([hex(ord(i)) for i in buf]))
+    print("out [" + str(index) +"], l" + str(len(buf)) + ":" + str([hex(i) for i in buf]))
     pkt.load = o_stream.getvalue()
 
 # write output file

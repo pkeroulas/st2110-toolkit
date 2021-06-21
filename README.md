@@ -62,6 +62,12 @@ Then one can use our FFmpeg-based transcoder following this [instructions.](http
 * pkt drop detector: count packets and drops for every (src/dst) IP pair found in a given pcap file
 * video yuv extractor: convert RFC4175 payload into raw YUV file
 
+Dependencies:
+
+* python 3
+* [scapy](https://scapy.net/)
+* [bitstruct](https://pypi.org/project/bitstruct/)
+
 ## Todos
 
 * deal with transcoder Dockerfile

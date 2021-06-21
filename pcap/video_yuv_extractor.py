@@ -21,7 +21,6 @@
 # $ ffplay -f rawvideo -vcodec rawvideo -s 1920*540 -pix_fmt uyvy422 -i output.yuv
 
 import sys
-import StringIO
 import io
 from scapy.all import *
 import shutil
@@ -100,7 +99,7 @@ def getLineHeader(f):
         if header.line > l_max:
             l_max = header.line
         if header.offset + (header.length / 5 * 2) > o_max: # a pgroup is 5-byte for 2 px in 4:2:2 10-bit
-            o_max = header.offset + (header.length / 5 * 2)
+            o_max = header.offset + int(header.length / 5 * 2)
 
     #showProgess("frame="+str(frame_counter)+", line="+str(header.line) + ", offset= " + str(header.offset) + "c=" + str(header.continuation))
     showProgess("frame="+str(frame_counter)+", line="+str(header.line))
@@ -124,15 +123,15 @@ def getLinePayload(f, h):
 
         if (yuv_mode == 'uyvy422'):
             #y_stream.write(pack('u8u8u8u8', p.u>>2, p.y0>>2, p.v>>2, p.y1>>2)) # less performant
-            y_stream.write(chr(p.u>>2) + chr(p.y0>>2) + chr(p.v>>2) + chr(p.y1>>2))
+            y_stream.write(bytes([p.u>>2, p.y0>>2, p.v>>2, p.y1>>2]))
 
         elif (yuv_mode == 'yuv422p'):
-            y_stream.write(chr(p.y0>>2) + chr(p.y1>>2))
-            u_stream.write(chr(p.u>>2))
-            v_stream.write(chr(p.v>>2))
+            y_stream.write(bytes([p.y0>>2, p.y1>>2]))
+            u_stream.write(bytes([p.u>>2]))
+            v_stream.write(bytes([p.v>>2]))
 
         elif (yuv_mode == 'yuv422p10be'):
-            # TODO see if chr()... is faster
+            # TODO see if bytes()... is faster
             y_stream.write(pack('u16u16', p.y0, p.y1))
             u_stream.write(pack('u16', p.u))
             v_stream.write(pack('u16', p.v))
@@ -145,11 +144,11 @@ def extractPayload(pkt):
     global recording, frame_counter
     global yuv_mode, yuv_file, y_stream, u_stream, v_stream
 
-    i_stream = StringIO.StringIO(pkt.load)
+    i_stream = io.BytesIO(pkt.load)
 
     # go find RTP marker bit
     i_stream.seek(1)
-    marker = (ord(i_stream.read(1)) >> 7) & 0x01;
+    marker = (i_stream.getvalue()[1] >> 7) & 0x01;
     if marker == 1:
         # 1st end of frame
         if not recording:

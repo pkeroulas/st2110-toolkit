@@ -9,7 +9,7 @@
 import sys
 from array import array
 import pprint
-import StringIO
+import io
 from scapy.all import *
 
 if (len(sys.argv) < 2):
@@ -53,14 +53,15 @@ def checkSeqNum(pkt):
 
     # init streams udp payload: RTP
     try:
-        buf = StringIO.StringIO(pkt.load).getvalue()
+        buf = io.BytesIO(pkt.load).getvalue()
     except Exception as e:
         print(e)
         print(pkt)
         return
 
     # read RTP sequence number
-    ts = (ord(buf[2]) << 8 ) + ord(buf[3])
+    #ts = (ord(buf[2]) << 8 ) + ord(buf[3])
+    ts = (buf[2] << 8 ) + buf[3]
 
     desc = pkt.summary()
     if desc not in counters.keys():
