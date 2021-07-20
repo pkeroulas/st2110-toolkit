@@ -38,7 +38,11 @@ MGMT_IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p
 if [ $LIST_DEV = "true" ]; then
     PROFILE="dev"
     LIST_API_PORT=3030
-    LIST_GUI_PORT=8080
+    if [ $LIST_GUI = 2 ]; then
+        LIST_GUI_PORT=3000
+    else
+        LIST_GUI_PORT=8080
+    fi
 else
     PROFILE="prod"
     LIST_API_PORT=80
@@ -92,9 +96,14 @@ start()
         cd $LIST_PATH/apps/external/
         docker-compose up -d
 
-        log_ebu_list "Start the UI"
-        cd $LIST_PATH/apps/gui/
-        npm start 2>&1 > /tmp/list-gui.log &
+        log_ebu_list "Start the UI v$LIST_GUI"
+        if [ $LIST_GUI = "2" ]; then
+            cd $LIST_PATH/apps/gui-v2/
+            yarn start 2>&1 > /tmp/list-gui.log &
+        else
+            cd $LIST_PATH/apps/gui/
+            npm start 2>&1 > /tmp/list-gui.log &
+        fi
 
         log_ebu_list "Start the server"
         cd $LIST_PATH/apps/listwebserver
@@ -190,7 +199,7 @@ status()
         get_status "container" "docker ps" "list"
     fi
     get_status "API response" "curl -v http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "401 Unauthorized"
-    get_status "GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/nul" "ebu_logo.svg"
+    get_status "GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/null" "logo"
     get_status "Pre processor" "ps aux" "[s]tream_pre_processor"
     get_status "Capture probe" "ps aux" "[n]ode .*dpdk.yml"
 }
