@@ -1,16 +1,19 @@
-#TODO remove driver (no need for hca_attr if clock_dev) + mst stuff
-#but install rdma-core libibverbs
+# Don't use OpenFabric OFED driver but, instead, install default
+# rdma-core and libibverbs to get the appropriate symbols
+# /usr/include/infiniband/verbs.h
 
 install_dpdk()
 {
-    apt install libnuma-dev libpcap-dev screen
+    install -m 755 ./dpdk-capture.sh /usr/sbin/
+
+    apt install libnuma-dev libpcap-dev screen rdma-core libibverbs-dev
 
     echo "Installing dpdk"
     DIR=$(mktemp -d)
     cd $DIR/
     git clone https://github.com/pkeroulas/dpdk.git
     cd dpdk
-    git checkout clock_info -b origin/pdump_mlx5_hw_ts/clock_info/v1
+    git checkout -b clock_info origin/pdump_mlx5_hw_ts/clock_info/v1
 
     make defconfig
     sed -i 's/MLX5_PMD=.*/MLX5_PMD=y/' ./build/.config
@@ -20,8 +23,6 @@ install_dpdk()
     MAKE_PAUSE=n make -j6
     make install
 
-
-    install -m 755 ./dpdk-capture.sh /usr/sbin/
 
     for p in testpmd dpdk-pdump smcroutectl; do
         bin=$(readlink -f $(which $p))

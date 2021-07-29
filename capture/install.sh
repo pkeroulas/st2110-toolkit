@@ -40,6 +40,7 @@ https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED"
     mkdir -p /mnt/iso
     mount -o loop $iso_file /mnt/iso
     /mnt/iso/mlnxofedinstall --with-vma --force-fw-update
+    #/mnt/iso/uninstall to remove
     # if dkms fails to build :
     #/mnt/iso/mlnxofedinstall --with-vma --force-fw-update --without-dkms --add-kernel-support
     echo "Installed libs:"
@@ -75,6 +76,5 @@ install_smcroute()
 install_capture()
 {
     install_ptp
-    install_mellanox
     install_smcroute
 }
