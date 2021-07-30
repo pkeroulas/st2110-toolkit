@@ -16,6 +16,7 @@ else
 fi
 
 # sdp to json
+dos2unix $sdp
 transport_file=$(sed ':a;N;$!ba;s/\n/\\n/g' $sdp) # replace newlines with '\\n'
 json_on='{"sender_id":null,"activation":{"mode":"activate_immediate","requested_time":null},"master_enable":'$activate',"transport_file":{"data":"'$transport_file'","type":"application/sdp"}}'
 echo $json_on > $sdp.json
@@ -28,4 +29,4 @@ curl \
     --header "Content-Type: application/json" \
     -X PATCH \
     --data @"$sdp.json" \
-    $uri 2>/dev/null &
+    $uri
