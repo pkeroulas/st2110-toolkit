@@ -76,7 +76,7 @@ def checkSeqNum(pkt):
 
     old_ts = counters[desc]['old_ts']
     if (old_ts != None) and ((old_ts + 1) != ts) and not ((old_ts == 65535) and (ts == 0)):
-        drop = (ts - old_ts)
+        drop = (ts - old_ts) - 1
         print(desc + ' drop('+ str(old_ts) + '...' + str(ts) + ') = ' + str(drop) + ' pkts!')
         counters[desc]['drop'] += drop;
 
