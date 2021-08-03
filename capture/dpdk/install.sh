@@ -1,6 +1,6 @@
 # Don't use OpenFabric OFED driver but, instead, install default
 # rdma-core and libibverbs to get the appropriate symbols
-# /usr/include/infiniband/verbs.h
+# in /usr/include/infiniband/
 
 install_dpdk()
 {
@@ -22,7 +22,7 @@ install_dpdk()
 
     MAKE_PAUSE=n make -j6
     make install
-
+    rm $DIR
 
     for p in testpmd dpdk-pdump smcroutectl; do
         bin=$(readlink -f $(which $p))

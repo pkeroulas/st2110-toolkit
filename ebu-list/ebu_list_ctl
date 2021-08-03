@@ -239,6 +239,11 @@ install()
         cd $LIST_PATH
         curl -O https://raw.githubusercontent.com/ebu/pi-list/master/docs/docker-compose.yml
         docker-compose pull
+        # for live:
+        #cd $LIST_PATH/js/common_server/
+        #npm install
+        #cd $LIST_PATH/apps/capture_probe/
+        #npm install
     fi
 
     set +eux
