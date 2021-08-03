@@ -6,9 +6,9 @@ The proposed solution supports:
 - Dual-port
 - Join and capture multiple streams
 - IP/port filtering
-- Up to 10Gbs
+- Throughput up to 13Gbps
 
-And it is tested on a [mini PC running Ubuntu 18.04, equipped with a Mellanox ConnectX-5 card](https://github.com/pkeroulas/st2110-toolkit/tree/master/ebu-list) and a FPGA-based source.
+And it is tested on a [mini PC running Ubuntu 18.04, equipped with a Mellanox ConnectX-5 card @ 100Gbps](https://github.com/pkeroulas/st2110-toolkit/tree/master/ebu-list) and a FPGA-based source.
 
 ## DPDK, out of the box
 
@@ -179,19 +179,20 @@ Given a very stable (FPGA-based) stream source, the capture script produces a pc
 * [Vrx validation](https://github.com/ebu/smpte2110-analyzer/blob/master/vrx_analysis.py): jitter
 * [EBU-list checks everything](https://tech.ebu.ch/list) including time drift (RTP Latency should be stable)
 
-### Bitrate
+### Performances
 
 | Bitrate in Gbps | pkt drops | Vrx | Comments |
-|-----------------|------|-----|----------|
-| 1.3 | 0 | ok | 1080i video @ 60fps     |
+|-----------------|-----------|-----|----------|
+| 1.3 | 0 | ok | 1080i @ 60fps     |
 | 5.2 | 0 | ok | 2160p @ 30fps           |
 | 6.5 | 0 | ok | max on SSD              |
-| 10  | 0 | ok | 1 sec, need to write into RAM |
-| 10  | 840/1993k | fail | 2 sec, need to write into RAM |
+| 10.5  | 0 | ok | 2 sec, 2060p @ 60fps, need to write into RAM |
+| 13  | 0 | ok | 1 sec, 2060p @ 60fps, need to write into RAM |
+| 21  | ks | fail | 2x 2060p @ 60fps, pcap bitrate is 13Gpbs |
 
 ### Duration
 
-Could write HD stream (1.3Gbps) for 60 sec (10GB) on RAID 0 without any drop.
+Could write a 1080i@30fps stream (1.3Gbps) for 60 sec (10GB) on RAID 0 without any drop.
 
 ### Dual port capture for ST 2022-7
 
