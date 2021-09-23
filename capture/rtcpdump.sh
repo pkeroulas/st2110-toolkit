@@ -90,7 +90,7 @@ if ! $ssh_cmd "ls" > /dev/null; then
 fi
 echo "Mode : $remote"
 
-if [ $remote = "arista" ]; then
+if [ "$remote" = "arista" ]; then
     echo "Create a monitor session."
     $ssh_cmd "enable
     conf
