@@ -122,7 +122,7 @@ install_ffmpeg()
         --bindir=$PREFIX/bin \
         --extra-libs=-ldl \
         --enable-version3 --enable-gpl --enable-nonfree \
-        --enable-postproc --enable-avresample \
+        --enable-postproc --enable-avresample --enable-libsrt \
         --enable-libx264 --enable-libfdk-aac --enable-libmp3lame \
         --disable-ffplay --disable-ffprobe \
         $ffmpeg_gpu_options \

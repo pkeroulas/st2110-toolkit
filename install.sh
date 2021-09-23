@@ -64,6 +64,8 @@ install_common_tools()
             nc \
             gcc-c++ \
             openssl-devel \
+            srt-libs \
+            srt-devel \
             which \
             zlib-devel
     else
