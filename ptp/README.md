@@ -23,22 +23,30 @@ Jan 21 10:07:29 server1-PowerEdge-R540 ptp4l: [602000.090] rms   18 max   28 fre
 ## Hardware Clock
 
 It is important to verify that the HW clock on the NIC is the actual
-source of timestamp for `tcpdump`/`libcap`. `testptp` can interact with
-this clock to manually set and measure both hardware and system time.
+source of timestamp for `tcpdump`/`libcap`. Verify that the dev file is
+usable.
 
 ```sh
-# get your kernel version
-$ uname -a
+$ sudo hwstamp_ctl -i ens224 -r 1
+current settings:
+tx_type 0
+rx_filter 1
+SIOCSHWTSTAMP failed: Resource temporarily unavailable # RED FLAG with a Intel in a VM !!!!!!!
+$ lsmod | grep pps
+pps_core               20480  1 ptp
+```
+
+`testptp` can interact with this clock to manually set and measure both hardware and system time.
+
+```sh
+$ uname -a # get your kernel version
 Linux ..... 4.15.0-112-generic ....
-# ptp tester from kernel source
-$ wget https://raw.githubusercontent.com/torvalds/linux/v4.15/tools/testing/selftests/ptp/testptp.c
-# compile it using `librt`
-$ gcc -o testptp testptp.c -lrt
+$ wget https://raw.githubusercontent.com/torvalds/linux/v4.15/tools/testing/selftests/ptp/testptp.c # get ptp tester from kernel source
+$ gcc -o testptp testptp.c -lrt # compile it using `librt`
 # make sure that `ptp4l` and `phc2sys` are off
-# find the proper ptp device id
-$ sudo ethtool -T enp101s0f1 | grep PTP
+$ sudo ethtool -T enp101s0f1 | grep PTP # find the proper ptp device id
 PTP Hardware Clock: 3
-$ ./testptp -d /dev/ptp3 -T 3333333
+$ ./testptp -d /dev/ptp3 -T 3333333 # in sec
 set time okay
 $ ./testptp -d /dev/ptp3 -g
 clock time: 3333336.759303339 or Sun Feb  8 08:55:36 1970
@@ -47,11 +55,9 @@ system and phc clock time offset request okay
 system time: 1589581164.437482989
 phc    time: 1589581201.437483653
 system time: 1589581164.437484167
-system/phc clock time offset is -37000000075 ns
+system/phc clock time offset is -37000000075 ns # 37s is the difference between UTC and International Atomic Time (TAI)
 system     clock time delay  is 1178 ns
 ```
-
-The difference between UTC and International Atomic Time (TAI) is 37 seconds.
 
 Then `tcpdump -j adapter_unsynced ...` will provide capture from 1970
 regardless of the local system time. Turn on `ptp4l` to restore PTP
