@@ -192,13 +192,14 @@ status()
     show_status "Profile" "$PROFILE"
     #TODO: get LIST version
     if [ $LIST_DEV = "true" ]; then
-        get_status "node API" "ps aux" "[n]ode server.js .*--live"
+        get_status "node API" "ps aux" "[n]ode .*server.js .*--live"
         get_status "node GUI" "ps aux" "[n]ode .*gui"
     else
         # in prod, API and GUI are both servered by the same docker container
         get_status "container" "docker ps" "list"
     fi
-    get_status "API response" "curl -v http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "401 Unauthorized"
+    get_status "API response" "curl -v
+    http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "major.*minor.*patch"
     get_status "GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/null" "logo"
     get_status "Pre processor" "ps aux" "[s]tream_pre_processor"
     get_status "Capture probe" "ps aux" "[n]ode .*dpdk.yml"
