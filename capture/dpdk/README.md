@@ -10,24 +10,54 @@ The proposed solution supports:
 
 And it is tested on a [mini PC running Ubuntu 18.04, equipped with a Mellanox ConnectX-5 card @ 100Gbps](https://github.com/pkeroulas/st2110-toolkit/tree/master/ebu-list) and a FPGA-based source.
 
-## DPDK, out of the box
+
+- [Getting started](#Getting-started)
+    - [DPDK](#DPDK)
+    - [Build](#Build)
+    - [Mellanox NIC setup](#Mellanox-NIC-setup)
+    - [Execution](#Execution)
+- [Features](#Features)
+    - [Hardware timestamps](#Hardware-timestamps)
+    - [Filter](#Filter)
+- [Search for DPDK-based capture apps](#Search-for-DPDK-based-capture-apps)
+    - [Sample application](#Sample-application)
+    - [Tcpdump](#Tcpdump)
+- [Proposed solution](#Proposed-solution)
+    - [Wrapper script](#Wrapper-script)
+    - [Timestamps precision](#Timestamps-precision)
+    - [Performances](#Performances)
+    - [Duration](#Duration)
+    - [Dual port capture for ST 2022-7](#Dual-port-capture-for-ST-2022-7)
+    - [TODO](#TODO)
+
+## Getting started
+
+### DPDK
 
 [DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that bypasses the kernel network stack and lets the packets be processed directly in the userspace. This allows to maximize the through for [traffic capture](https://doc.dpdk.org/guides/howto/packet_capture_framework.html). It supports a large set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
 
 The architecture relies on a Poll Mode Driver instead of hardware interrupts, it is more CPU-intensive but it is faster.
 It's all in userspace so easier for tweaking. It comes with application examples like `testpmd` and `dpdk-pdump` for traffic capture.
 
-![arch](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/dpdk-capture-diagram.jpg)
+![arch](./dpdk-capture-diagram.jpg)
 
 ### Build
 
+Dependency packages:
+* `rdma-core`
+* `libiverbs`
+
+Out of the box, *DPDK hardly makes the jobs for as a proper ST 2110 capture engine because of the inaccuracy of the incoming packets*.
+[Timestamp](#hardware-timestamps) section brings more details. To overcome that limitation, You need to clone [my fork](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1)
+
 ```sh
-git clone https://github.com/DPDK/dpdk.git
+git clone https://github.com/pkeroulas/dpdk.git
 cd dpdk
+git checkout -b hw_ts pdump_mlx5_hw_ts/clock_info/v1
 make defconfig
 ```
 
-Apply following config (`./build/.config`):
+Apply following config in `./build/.config`:
 
 ```sh
 CONFIG_RTE_LIBRTE_MLX5_PMD=y # Mellanox ConnectX-5 ethernet driver
@@ -40,10 +70,10 @@ make
 sudo make install
 ```
 
-### NIC setup
+### Mellanox NIC setup
 
-```
-iface=......
+```sh
+iface=<name-of-your-interface>
 ethtool --set-priv-flags $iface sniffer on
 ethtool -G $iface rx 8192
 hwstamp_ctl -i $iface -r 1
@@ -64,14 +94,13 @@ Secondary process manages the `pdump` client and write to pcap file.
 ./build/app/dpdk-pdump -- --pdump 'port=0,queue=*,rx-dev=/tmp/test.pcap'
 ```
 
-Out of the box, DPDK hardly makes the jobs for as a proper ST 2110 capture engine.
-Read the following study to understand the obstacle or just jump to the [proposed solution](##-proposed-solution).
+## Features
 
 ### Hardware timestamps
 
 Raw timestamps are the captured values of the free running counter (one for each ethernet port).
-Unfortunataly, DPDK doesn't convert those values coming from mlx5 to nanoseconds.
-The resulting pcap file does't satisfy the accuracy required by EBU-LIST analyzer.
+Unfortunataly, out of the box DPDK doesn't convert those values coming from mlx5 to nanoseconds.
+If not patch, the resulting pcap file does't satisfy the accuracy required by EBU-LIST analyzer.
 
 2 methods for conversion:
 
@@ -101,9 +130,9 @@ clang -O2 -I /usr/include/x86_64-linux-gnu/ -U __GNUC__ -target bpf -c ./bpf.c
 testpmd> bpf-load rx 0 0 J ./bpf.o
 ```
 
-Note that bpf filter applies to forward flow but the whole traffic from a port is still redirected oto dpdk.
+Note that bpf filter applies to forward flows but the whole traffic from a port is still redirected to dpdk.
 
-## Dpdk-based 3rd party apps for captures
+## Search for DPDK-based capture apps
 
 | Solutions   | Filter | Dual port | Pros   | Cons  | Source |
 |-------------|--------|-----------|--------|-------|--------|
@@ -149,9 +178,10 @@ sudo DPDK_CFG="--log-level=debug -dlibrte_mempool_ring.so -dlibrte_common_mlx5.s
 
 ## Proposed solution
 
+### Wrapper script
+
 DPDK builtin utilities (`testpmd` + `dpdk-pdump`) are chosen for their versatily considering that the tunning might be a long process.
-However, you need to rebuild from this [custom 'dev_info/v1' branch](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1) to satisfy the timestamp accuracy.
-Then, [this script](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/dpdk-capture.sh) wraps the capture program in a tcpdump-like command line interpreter.
+[dpdk-capture.sh](./dpdk-capture.sh) wraps them in a tcpdump-like command line interpreter.
 The overhead induced by multiple process being started/stopped is not an issue in our use case.
 
 Additional dependencies:
@@ -168,9 +198,9 @@ Additional dependencies:
 
 Before starting the test, make sure that both NIC clock and system clock are synchronized with PTP master, using `linuxptp` for instance.
 
-Note that a running DPDK application prevents the PTP daemon from receiving the PTP traffic. Both `ptp4l` and `phc2sys` somehow have a bad impact on NIC hardware clock, which makes the packet timestamping drift (few 10usec/s) until the capture app terminates and PTP traffic is received again. This occurs no matter if `linuxptp` elects the NIC clock as the best master clock during the interruption or not. However, turning PTP daemon off during the capture causes no time drift. There must be a way to prevent `linuxptp` from catching the whole traffic but `dpdk-capture.sh` just shuts down PTP service temporarly; this is acceptable since the capture duration is generally a few seconds. In case `testpmd` stays up forever, you need a fallback plan for other services:
-* DHCP leases can't be renewed: use static a addersse instead
-* PTP: capture on port A only (`testpmd` is given one `-w` pci interface) and dedicate port B to PTP sync (`phc2sys` have sync to port A with port B)
+Note that a running DPDK application prevents the PTP daemon from receiving the PTP traffic. Both `ptp4l` and `phc2sys` somehow have a bad impact on NIC hardware clock, which makes the packet timestamping drift (few 10usec/s) until the capture app terminates and PTP traffic is received again. This occurs no matter if `linuxptp` elects the NIC clock as the best master clock during the interruption or not. However, turning PTP daemon off during the capture causes no time drift. There must be a way to prevent `linuxptp` from catching the whole traffic but `dpdk-capture.sh` just shuts down PTP service temporarly; this is acceptable since the capture duration is generally a few seconds. In case `testpmd` stays up forever, you need a fallback plan for some services:
+* DHCP leases can't be renewed: use static a addresse instead
+* PTP: capture on a single port A only (`testpmd` is given one `-w` pci interface) and dedicate port B to PTP sync. Then `phc2sys` have sync to port A with port B
 
 Given a very stable (FPGA-based) stream source, the capture script produces a pcap file that can be validated using the following tools:
 
