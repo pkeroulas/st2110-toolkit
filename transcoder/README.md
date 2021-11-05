@@ -10,7 +10,7 @@ sudo -i
 ./install.sh transcoder   # yasm nasm x264 fdkaac mp3 ffmpeg
 ```
 
-## Simple tests
+## Simple tests with video
 
 FFmpeg takes a ST2110-defined SDP file as input.
 
@@ -86,7 +86,7 @@ checks the size of this file and restarts ffmpeg if needed.
 
 ## Transcoding performance
 
-[Measurments](../doc/transcoder_perf.md) with CPU vs GPU.
+[Measurements](../doc/transcoder_perf.md) with CPU vs GPU.
 
 ## Trancoding ancillary data (SMPTE ST 2110-40)
 

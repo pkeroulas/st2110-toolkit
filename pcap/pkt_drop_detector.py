@@ -2,7 +2,7 @@
 #
 # Author "Patrick Keroulas" <patrick.keroulas@radio-canada.ca>
 #
-# Count packets and drops for every (src/dst) IP pair found a given pcap.
+# Count packets and drops for every RTP stream found in a given pcap.
 # The method is based on `Sequence Number` jump detection, assuming no
 # packet reordering.
 
@@ -70,7 +70,7 @@ def checkSeqNum(pkt):
         return
     counters[desc]['pkt'] += 1;
 
-    # include UDP but not PTP (not RTP)
+    # include UDP but not PTP (which is not RTP)
     if 'ptp_' in desc or not 'UDP' in desc:
         return
 
