@@ -99,7 +99,7 @@ start()
         log_ebu_list "Start the UI v$LIST_GUI"
         if [ $LIST_GUI = "2" ]; then
             cd $LIST_PATH/apps/gui-v2/
-            yarn start 2>&1 > /tmp/list-gui.log &
+            yarn live 2>&1 > /tmp/list-gui.log &
         else
             cd $LIST_PATH/apps/gui/
             npm start 2>&1 > /tmp/list-gui.log &
