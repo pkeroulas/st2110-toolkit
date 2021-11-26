@@ -107,9 +107,10 @@ probe:
 rabbitmq:
     hostname: localhost
     port: 5672
-
-tcpdump:
+capture:
+    engine: dpdk
     interfaces: ${ifaces}
+    destination: ${LIST_DATA_FOLDER}/pcap
 EOF
 
     while ! netstat -lptn | grep -q ":5672"; do
