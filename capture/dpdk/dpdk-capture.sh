@@ -54,7 +54,7 @@ while getopts ":i:w:G:W:v" o; do
         #    esac
         #    ;;
         w)
-            pcap=${OPTARG}
+            output=${OPTARG}
             ;;
         G)
             duration=${OPTARG}
@@ -76,7 +76,7 @@ done
 
 shift $((OPTIND-1))
 
-if [ -z "$iface" -o -z "$pcap" ]; then
+if [ -z "$iface" -o -z "$output" ]; then
     dpdk_log "Missing argument"
     usage
     exit 1
@@ -84,11 +84,11 @@ fi
 
 filter=$@
 IPs=$(echo $filter | sed 's/dst//g; s/or//g' | tr -s ' ' '\n')
-pcap=$(echo $pcap | sed 's/\(.*\)\.pcap/\1/')
+pcap=$(dirname $output)/output
 
 dpdk_log "
 iface: $iface
-pcap: $pcap
+pcap: $output
 filter: $filter
 dual_port: $dual_port
 duration: $duration"
@@ -197,6 +197,11 @@ for i in $iface; do
         done
     fi
 
+    if [ ! -f $pcap-$port.pcap  ]; then
+        dpdk_log "File not found: $pcap-$port.pcap"
+        exit 1
+    fi
+
     port=$(echo $i | sed 's/.*\(.\)/\1/')
     if [ $verbose -eq 1 ]; then
         dpdk_log "pcapinfo port $port"
@@ -210,10 +215,12 @@ done
 #dpdk_log "drop: $(echo "$pkt_drop_end - $pkt_drop_start" | bc)"
 
 if [ $dual_port -eq 1 ]; then
-    mergecap -w $pcap.pcap -F nsecpcap $pcap-0.pcap $pcap-1.pcap
+    mergecap -w $output -F nsecpcap $pcap-0.pcap $pcap-1.pcap
     echo $(ls $pcap-[01].pcap) merged into $pcap.pcap
     rm -f $pcap-0.pcap $pcap-1.pcap
 else
     port=$(echo $iface | sed 's/.*\(.\)/\1/')
-    mv $pcap-$port.pcap $pcap.pcap
+    mv $pcap-$port.pcap $output
 fi
+
+chmod 666 $output
