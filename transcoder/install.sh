@@ -1,12 +1,10 @@
 # !!! Don't execute this script directly !!!
 # It is imported in $TOP/install.sh
 
-export LANG=en_US.utf8 \
-    FDKAAC_VERSION=0.1.4 \
+export FDKAAC_VERSION=0.1.4 \
     YASM_VERSION=1.3.0 \
     NASM_VERSION=2.13.02 \
     MP3_VERSION=3.99.5 \
-    PREFIX=/usr/local \
     MAKEFLAGS="-j$[$(nproc) + 1]"
 
 install_yasm()
