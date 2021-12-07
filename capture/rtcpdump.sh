@@ -37,7 +37,9 @@ params:
 
 example:
     monitor PTP on Arita switch:
-    $0 -r user@server -p passwd -i 10/1 'dst port 319 or dst port 320'
+    $0 -r user@server -p passwd -i Et10/1 'dst port 319 or dst port 320'
+    monitor http on a management port:
+    $0 -r user@server -p passwd -i Ma1 'port 80'
 
     monitor DHCP on Linux host:
     $0 -r user@server -c 50 -i eth0 'port 67 or port 68'
@@ -103,9 +105,9 @@ if [ "$remote" = "arista" ]; then
     echo "Create a monitor session."
     $ssh_cmd "enable
     conf
-    monitor session $session source Et$iface
+    monitor session $session source $iface
     monitor session $session destination Cpu
-    show interfaces ethernet $iface"
+    show interfaces $iface"
 
     # need a short break for Cpu iface allocation
     sessions=$($ssh_cmd "enable
