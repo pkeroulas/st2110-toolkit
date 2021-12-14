@@ -96,12 +96,12 @@ fi
 
 echo "Poke remote."
 if ! $ssh_cmd "ls" > /dev/null; then
-    remote="arista"
-fi
-echo "Mode : $remote"
-
-if [ "$remote" = "arista" ]; then
+    echo "Mode : Arista"
     echo "------------------------"
+    echo "Port: $iface"
+    echo "lldp:"
+    $ssh_cmd "show lldp neighb | grep $iface"
+    echo "stats:"
     echo "Create a monitor session."
     $ssh_cmd "enable
     conf
@@ -109,11 +109,12 @@ if [ "$remote" = "arista" ]; then
     monitor session $session destination Cpu
     show interfaces $iface"
 
+    echo "------------------------"
     # need a short break for Cpu iface allocation
     sessions=$($ssh_cmd "enable
     conf
     show monitor session")
-    echo "------------------------"
+    echo "Monitor session."
     echo "$sessions"
     cpu_iface=$(echo "$sessions" | grep $session -A 10 | grep Cpu | sed 's/.*(\(.*\))/\1/')
 
@@ -133,8 +134,14 @@ if [ "$remote" = "arista" ]; then
     show monitor session
     "
 else
+    echo "Mode : Linux Host"
+    echo "------------------------"
     echo "Interfaces."
-    $ssh_cmd "ls /sys/class/net"
+    ifaces=$($ssh_cmd "ls /sys/class/net")
+    if echo $ifaces | grep  -v -q $iface; then
+        echo $iface not found
+        exit 1
+    fi
     #TODO get interface automatically?
     echo "Capture......."
     $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
