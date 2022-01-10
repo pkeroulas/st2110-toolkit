@@ -172,11 +172,13 @@ status()
     echo "-----------------------------------------------"
     show_status "Hostname" "$(hostname)"
     get_status "Mgt interface" "ping -c 1 -W 1 $MGMT_IP" "1 received" "$MGMT_IFACE $MGMT_IP"
+
     echo "-----------------------------------------------"
     show_header "Media interfaces"
     #get_status "NIC driver" "find /dev/mst/" "/dev/mst/mt.*_pciconf."
     port_status 0 $MEDIA_IFACE_0
     port_status 1 $MEDIA_IFACE_1
+
     echo "-----------------------------------------------"
     ptp_ip=$(ip addr show $PTP_IFACE_0 | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
     ptp_filter="src host $ptp_ip and dst host 224.0.1.129"
@@ -188,6 +190,7 @@ status()
     fi
     get_status "Lock" "journalctl -n10" "phc2sys.* s2 freq "
     get_status "PTP traffic" "timeout 2 tcpdump -i $PTP_IFACE_0 -c2 $ptp_filter" "2 packets captured"
+
     echo "-----------------------------------------------"
     show_header "Docker"
     get_status "Daemon" "ps aux" "[d]ockerd"
@@ -195,20 +198,19 @@ status()
     get_status "Service Mongo DB" "docker ps" "mongo"
     get_status "Service Influx DB" "docker ps" "influxdb"
     get_status "Service Rabbit MQ" "docker ps" "rabbitmq"
+
     echo "-----------------------------------------------"
     show_header "LIST"
     show_status "Profile" "$PROFILE"
-    #TODO: get LIST version
-    if [ $LIST_DEV = "true" ]; then
-        get_status "node API" "ps aux" "[n]ode .*server.js .*--live"
-        get_status "node GUI" "ps aux" "[n]ode .*gui"
-    else
-        # in prod, API and GUI are both servered by the same docker container
+    if [ $PROFILE = "prod" ]; then
         get_status "container" "docker ps" "list"
     fi
-    get_status "API response" "curl -v
-    http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "major.*minor.*patch"
-    get_status "GUI response" "curl http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/null" "logo"
+    get_status "API running" "ps aux" "[n]ode .*server.js .*config.yml"
+    version=$(curl -m 0.5 http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/null)
+    v=$(echo $version | sed 's/{\"major\":\(.*\),\"minor\":\(.*\),\"patch\":\(.*\)\,\"hash\":\(.*\)}/\1\.\2\.\3\.\4/')
+    get_status "API version" "echo $version" "major.*minor.*patch" $v
+    get_status "GUI running" "ps aux" "[n]ode .*gui"
+    get_status "GUI response" "curl -m 0.5 http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/null" "EBU LIST"
     get_status "Pre processor" "ps aux" "[s]tream_pre_processor"
     get_status "Capture probe" "ps aux" "[n]ode .*dpdk.yml"
 }
