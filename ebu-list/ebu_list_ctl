@@ -5,7 +5,7 @@ usage()
     echo "$0 is a wrapper script that manages EBU-LIST
 and related sub-services (DB, backend, UI, etc.)
 Usage:
-    $0 {start|stop|status|log|install|upgrade|dev}
+    $0 [-v] {start|stop|status|log|install|upgrade|dev}
         start    start docker containers and server
         stop     stop docker containers and server
         status   check the status of all the st 2110 services
@@ -20,6 +20,12 @@ log_ebu_list()
 {
     logger -t "st2110-ebulist" "$@"
 }
+
+if [ $1 = "-v" ]; then
+    DEBUG=true
+    set -x
+    shift
+fi
 
 ST2110_CONF_FILE=/etc/st2110.conf
 if [ -f $ST2110_CONF_FILE ]; then
@@ -180,7 +186,7 @@ status()
         get_status "phc2sys   1" "ps aux" "[p]hc2sys -s $PTP_IFACE_0 -c $PTP_IFACE_1"
     fi
     get_status "Lock" "journalctl -n10" "phc2sys.* s2 freq "
-    get_status "Ptp traffic" "timeout 1 tcpdump -i $PTP_IFACE_0 -c2 $ptp_filter" "2 packets captured"
+    get_status "PTP traffic" "timeout 2 tcpdump -i $PTP_IFACE_0 -c2 $ptp_filter" "2 packets captured"
     echo "-----------------------------------------------"
     show_header "Docker"
     get_status "Daemon" "ps aux" "[d]ockerd"
@@ -315,5 +321,9 @@ case "$1" in
 esac
 
 cd $ORIG_PATH
+
+if [ ! -z $DEBUG ]; then
+    set +x
+fi
 
 exit 0
