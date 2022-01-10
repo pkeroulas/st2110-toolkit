@@ -5,7 +5,7 @@ usage(){
     dpdk utilties, i.e. testpmd and dpdk-pdump. It also sends IGMP
     requests (requires sudo) when a filter expression is given.
 Usage:
-    $0 -i interface0 [-i interface1] -w file.pcap [-G <secondes>] [-v[v]] [ filter expr ]
+    $0 -i interface0 [-i interface1] -w file.pcap [-G <secondes>] [-v|V] [ filter expr ]
 
 Exples:
     $0 -i enp1s0f0 -w /tmp/single.pcap -G 1 dst 225.192.10.1
@@ -34,7 +34,7 @@ dpdk_log "Parse args: ------------------------------------------ "
 #  $ tcpdump -i interfaceName --time-stamp-precision=nano \
 #   -j adapter_unsynced\--snapshot-length=N -v -w pcap -G 2 -W 1 \
 #   dst 192.168.1.1 or dst 192.168.1.2
-while getopts ":i:w:G:W:v" o; do
+while getopts ":i:w:G:W:v:V" o; do
     case "${o}" in
         i | interface)
             if [ ! -z "$iface" ]; then
@@ -64,7 +64,10 @@ while getopts ":i:w:G:W:v" o; do
             ;;
         v)
             verbose=1
-            #set -x
+            ;;
+        V)
+            set -x
+            verbose=1
             ;;
         *)
             dpdk_log  "unsupported option ${o}"
