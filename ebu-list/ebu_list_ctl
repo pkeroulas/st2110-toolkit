@@ -87,14 +87,15 @@ get_status()
 
 start()
 {
+    until ping -W 1 -c 1 -q $MGMT_IP > /dev/null; do
+        MGMT_IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+        log_ebu_list "Couln't ping $MGMT_IP for interface $MGMT_IFACE."
+        sleep 1
+    done
+
     if get_status "API response" "curl -v http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "401 Unauthorized" | grep -q UP; then
         echo "EBU-LIST is already up"
         return
-    fi
-
-    if ! ping -W 1 -c 1 -q $MGMT_IP > /dev/null; then
-        log_ebu_list "Couln't ping $MGMT_IP for interface $MGMT_IFACE, exit."
-        exit 1
     fi
 
     export EBU_LIST_LIVE_MODE=true
