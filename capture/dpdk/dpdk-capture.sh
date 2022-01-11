@@ -9,7 +9,7 @@ Usage:
 
 Exples:
     $0 -i enp1s0f0 -w /tmp/single.pcap -G 1 dst 225.192.10.1
-    $0 -vv -i enp1s0f0 -i enp1s0f1 -w /tmp/dual.pcap -G 1 # dual port means that local ptp slave won't see ptp traffic
+    $0 -V -i enp1s0f0 -i enp1s0f1 -w /tmp/dual.pcap -G 1 # dual port means that local ptp slave won't see ptp traffic
     " >&2
 }
 
@@ -200,12 +200,12 @@ for i in $iface; do
         done
     fi
 
+    port=$(echo $i | sed 's/.*\(.\)/\1/')
     if [ ! -f $pcap-$port.pcap  ]; then
         dpdk_log "File not found: $pcap-$port.pcap"
         exit 1
     fi
 
-    port=$(echo $i | sed 's/.*\(.\)/\1/')
     if [ $verbose -eq 1 ]; then
         dpdk_log "pcapinfo port $port"
         capinfos $pcap-$port.pcap
