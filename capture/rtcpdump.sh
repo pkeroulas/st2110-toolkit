@@ -46,7 +46,7 @@ example:
     " >&2
 }
 
-while getopts ":r:p:i:c:v:" o; do
+while getopts ":r:p:i:c:v" o; do
     case "${o}" in
         r)
             switch=${OPTARG}
