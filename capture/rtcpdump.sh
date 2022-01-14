@@ -35,14 +35,15 @@ params:
     -v verbose
     filter_expression is passed to remote tcpdump
 
-example:
-    monitor PTP on Arita switch:
-    $0 -r user@server -p passwd -i Et10/1 'dst port 319 or dst port 320'
-    monitor http on a management port:
-    $0 -r user@server -p passwd -i Ma1 'port 80'
-
-    monitor DHCP on Linux host:
-    $0 -r user@server -c 50 -i eth0 'port 67 or port 68'
+examples:
+    PTP on Arista switch port:
+        $0 -r user@server -p pass -i Et10/1 'dst port 319 or dst port 320'
+    LLDP:
+        $0 -r user@server -p pass -i Et10/1 'ether proto 0x88CC'
+    HTTP on Arista management interface:
+        $0 -r user@server -p pass -i Ma1 'port 80'
+    DHCP/bootp on a Linux host for a given MAC:
+        $0 -r user@server -p pass -i ens192 'ether host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
     " >&2
 }
 
