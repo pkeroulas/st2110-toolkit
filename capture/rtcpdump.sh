@@ -88,7 +88,7 @@ fi
 
 filter=$@
 session=scripted
-ssh_cmd="ssh -T $remote "
+ssh_cmd="ssh -T -o StrictHostKeyChecking=no $remote "
 if which sshpass >/dev/null; then
     if [ ! -z "$passfile" ]; then
         ssh_cmd="sshpass -f $passfile $ssh_cmd"
