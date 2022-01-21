@@ -1,33 +1,18 @@
 #!/bin/bash
-#
-# This script captures port traffic on remote host and shows packets on
-# local wireshark in realtime. Host can either be a regular Linux host
-# or a Arista switch.
-#
-# TLDR: tcpdump (remote) | wireshark (local)
-#
-# Steps:
-# - login to remote through ssh
-# - detect if remote is normal linux host or Arista switch
-# - if Arista, init a monitor session that mirrors targeted port to cpu interface
-# - launch tcpdump in remote bash and output to stdout (raw)
-# - launch local wireshark and read from stdin
-# - clean up monitor session on wireshark exited
-#
-# - tested on Arista switches (DCS-7280CR2A-30, EOS-4.24.2.1F)
-# - capturing a high bitrate port isn't good idea given the additional
-# data transfer over the network (plus, on Arista switch, the traffic is
-# mirrored to Cpu which might be overflowed). This is why the capture is
-# limited to 10000 pkts by default.
 
 remote="normal linux"
 pkt_count=10000
 
 usage(){
-    echo "Usage:
+    echo "
+This script starts `tcpdump` on a remote host and shows packets on
+local wireshark in realtime. The remote can either be a regular Linux host
+or a Arista switch.
+
+Usage:
     $0 -r <user>@<remote_ip> -p <password> -i <remote_interface> [-c <packet_count>] [-v] ['filter_expression']
 
-params:
+Params:
     -r ssh path; can be an alias in your local ssh config
     -p password used if you have sshpass installed, can be a password file
     -i remote interface name. On a switch, it can either be simple '10' or a part of a quad-port '10/2'
@@ -35,7 +20,7 @@ params:
     -v verbose
     filter_expression is passed to remote tcpdump
 
-examples:
+Examples:
     PTP on Arista switch port:
         $0 -r user@server -p pass -i Et10/1 'dst port 319 or dst port 320'
     LLDP:
@@ -44,7 +29,24 @@ examples:
         $0 -r user@server -p pass -i Ma1 'port 80'
     DHCP/bootp on a Linux host for a given MAC:
         $0 -r user@server -p pass -i ens192 'ether host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
-    " >&2
+
+Script steps:
+    - login to remote through ssh
+    - detect if remote is normal linux host or Arista switch
+    - if Arista, init a monitor session that mirrors targeted port to cpu interface
+    - launch tcpdump in remote bash and output to stdout (raw)
+    - launch local wireshark and read from stdin
+    - clean up monitor session on wireshark exited
+
+Others:
+    - tested on Arista switches (DCS-7280CR2A-30, EOS-4.24.2.1F)
+    - capturing a high bitrate port isn't good idea given the additional
+    data transfer over the network (plus, on Arista switch, the traffic is
+    mirrored to Cpu which might be overflowed). This is why the capture is
+    limited to 10000 pkts by default.
+    - note that 'StrictHostKeyChecking=no' option is used for ssh, at
+    you own risks
+" >&2
 }
 
 while getopts ":r:p:i:c:v" o; do
