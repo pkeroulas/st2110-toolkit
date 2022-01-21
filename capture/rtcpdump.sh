@@ -50,16 +50,16 @@ examples:
 while getopts ":r:p:i:c:v" o; do
     case "${o}" in
         r)
-            switch=${OPTARG}
+            remote=${OPTARG}
             ;;
         i)
             iface=${OPTARG}
             ;;
         p)
             if [ -f ${OPTARG} ]; then
-                pass=$(cat ${OPTARG} | tr -d '\n' | tr -d '\r' | tr -d '\0')
+                passfile=${OPTARG}
             else
-                pass=${OPTARG}
+                password=${OPTARG}
             fi
             ;;
         c)
@@ -78,7 +78,7 @@ done
 
 shift $((OPTIND-1))
 
-if [ -z "$switch" -o -z "$iface" ]; then
+if [ -z "$remote" -o -z "$iface" ]; then
     echo "Missing argument"
     usage
     exit 1
@@ -86,56 +86,24 @@ fi
 
 filter=$@
 session=scripted
-ssh_cmd="ssh -T $switch "
+ssh_cmd="ssh -T $remote "
 if which sshpass >/dev/null; then
-    if [ ! -z "$pass" ]; then
-        ssh_cmd="sshpass -p $pass $ssh_cmd"
+    if [ ! -z "$passfile" ]; then
+        ssh_cmd="sshpass -f $passfile $ssh_cmd"
+    elif [ ! -z "$password" ]; then
+        ssh_cmd="sshpass -p $password $ssh_cmd"
+    else #from stdin
+        ssh_cmd="sshpass $ssh_cmd"
     fi
 else
-    echo "sshpass not installed. Enter switch password."
+    echo "sshpass not installed. Enter remote password."
 fi
 
 echo "Poke remote."
-if ! $ssh_cmd "ls" > /dev/null; then
-    echo "Mode : Arista"
-    echo "------------------------"
-    echo "Port: $iface"
-    echo "lldp:"
-    $ssh_cmd "show lldp neighb | grep $iface"
-    echo "stats:"
-    echo "Create a monitor session."
-    $ssh_cmd "enable
-    conf
-    monitor session $session source $iface
-    monitor session $session destination Cpu
-    show interfaces $iface"
 
-    echo "------------------------"
-    # need a short break for Cpu iface allocation
-    sessions=$($ssh_cmd "enable
-    conf
-    show monitor session")
-    echo "Monitor session."
-    echo "$sessions"
-    cpu_iface=$(echo "$sessions" | grep $session -A 10 | grep Cpu | sed 's/.*(\(.*\))/\1/')
-
-    trap 'echo Interruption.' 2 # catch SIGINT (Ctrl-C) to exit Arista bash properly
-
-    echo "------------------------"
-    echo "Capture on Cpu($cpu_iface) ......."
-    $ssh_cmd "enable
-    conf
-    bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
-
-    echo "------------------------"
-    echo "Cleanup."
-    $ssh_cmd "enable
-    conf
-    no monitor session $session
-    show monitor session
-    "
-else
-    echo "Mode : Linux Host"
+# Regular Linux remote: easy
+if $ssh_cmd "ls" > /dev/null; then
+    echo "Mode: Linux Host"
     echo "------------------------"
     echo "Interfaces."
     ifaces=$($ssh_cmd "ls /sys/class/net")
@@ -143,9 +111,47 @@ else
         echo $iface not found
         exit 1
     fi
-    #TODO get interface automatically?
     echo "Capture......."
     $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
+    exit 0
 fi
+
+echo "Mode: Arista"
+echo "------------------------"
+echo "Port: $iface"
+echo "lldp:"
+$ssh_cmd "show lldp neighb | grep $iface"
+echo "stats:"
+echo "Create a monitor session."
+$ssh_cmd "enable
+conf
+monitor session $session source $iface
+monitor session $session destination Cpu
+show interfaces $iface"
+
+echo "------------------------"
+# need a short break for Cpu iface allocation
+sessions=$($ssh_cmd "enable
+conf
+show monitor session")
+echo "Monitor session."
+echo "$sessions"
+cpu_iface=$(echo "$sessions" | grep $session -A 10 | grep Cpu | sed 's/.*(\(.*\))/\1/')
+
+trap 'echo Interruption.' 2 # catch SIGINT (Ctrl-C) to exit Arista bash properly
+
+echo "------------------------"
+echo "Capture on Cpu($cpu_iface) ......."
+$ssh_cmd "enable
+conf
+bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
+
+echo "------------------------"
+echo "Cleanup."
+$ssh_cmd "enable
+conf
+no monitor session $session
+show monitor session
+"
 
 echo "Exit."
