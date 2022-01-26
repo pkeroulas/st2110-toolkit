@@ -39,7 +39,13 @@ Script steps:
     - clean up monitor session on wireshark exited
 
 Others:
-    - tested on Arista switches (DCS-7280CR2A-30, EOS-4.24.2.1F)
+    - tested workstation:
+        * Linux workstation
+        * Windows workstation with WSL installed
+    - tested remote: Arista switches (EOS-4.24.2.1F):
+        * DCS-7280CR2A-30
+        * DCS-7280SR2-48YC6
+        * DCS-7020TR-48
     - capturing a high bitrate port isn't good idea given the additional
     data transfer over the network (plus, on Arista switch, the traffic is
     mirrored to Cpu which might be overflowed). This is why the capture is
@@ -48,6 +54,26 @@ Others:
     you own risks
 " >&2
 }
+
+if mount | grep -q  "type 9p"; then
+    echo "Host: WSL"
+    # FIXME: wireshark complains about IOR.txt wrong permission but the
+    # capture works fine
+    wireshark="/mnt/c/Program\ Files/Wireshark/Wireshark.exe"
+else
+    echo "Host: Linux"
+    wireshark=$(which wireshark)
+fi
+
+if [ ! -f $wireshark ]; then
+    echo "$wireshark not found"
+    exit 1
+fi
+
+if ! which ssh >/dev/null; then
+    echo "ssh client not found"
+    exit 1
+fi
 
 while getopts ":r:p:i:c:v" o; do
     case "${o}" in
@@ -101,11 +127,9 @@ else
     echo "sshpass not installed. Enter remote password."
 fi
 
-echo "Poke remote."
-
 # Regular Linux remote: easy
 if $ssh_cmd "ls" > /dev/null; then
-    echo "Mode: Linux Host"
+    echo "Remote: Linux host"
     echo "------------------------"
     echo "Interfaces."
     ifaces=$($ssh_cmd "ls /sys/class/net")
@@ -114,11 +138,11 @@ if $ssh_cmd "ls" > /dev/null; then
         exit 1
     fi
     echo "Capture......."
-    $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
+    $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | $wireshark -k -i -
     exit 0
 fi
 
-echo "Mode: Arista"
+echo "Remote: Arista switch"
 echo "------------------------"
 echo "Port: $iface"
 echo "lldp:"
@@ -146,7 +170,7 @@ echo "------------------------"
 echo "Capture on Cpu($cpu_iface) ......."
 $ssh_cmd "enable
 conf
-bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | wireshark -k -i -
+bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | $wireshark -k -i -
 
 echo "------------------------"
 echo "Cleanup."
