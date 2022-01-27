@@ -112,7 +112,7 @@ if mount | grep -q  "type 9p"; then
     echo "Host: WSL"
     # FIXME: wireshark complains about IOR.txt wrong permission but the
     # capture works fine
-    wireshark="/mnt/c/Program\ Files/Wireshark/Wireshark.exe"
+    wireshark="/mnt/c/Progra~1/Wireshark/Wireshark.exe"
 else
     echo "Host: Linux"
     wireshark=$(which wireshark)
