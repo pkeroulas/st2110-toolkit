@@ -5,7 +5,7 @@ pkt_count=10000
 
 usage(){
     echo "
-This script starts `tcpdump` on a remote host and shows packets on
+This script starts 'tcpdump' on a remote host and shows packets on
 local wireshark in realtime. The remote can either be a regular Linux host
 or a Arista switch.
 
@@ -52,7 +52,7 @@ Others:
     limited to 10000 pkts by default.
     - note that 'StrictHostKeyChecking=no' option is used for ssh, at
     you own risks
-" >&2
+" 1>&2
 }
 
 if mount | grep -q  "type 9p"; then
@@ -138,7 +138,7 @@ if $ssh_cmd "ls" > /dev/null; then
         exit 1
     fi
     echo "Capture......."
-    $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | $wireshark -k -i -
+    $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | "$wireshark" -k -i -
     exit 0
 fi
 
@@ -170,7 +170,7 @@ echo "------------------------"
 echo "Capture on Cpu($cpu_iface) ......."
 $ssh_cmd "enable
 conf
-bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | $wireshark -k -i -
+bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | "$wireshark" -k -i -
 
 echo "------------------------"
 echo "Cleanup."
