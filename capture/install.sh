@@ -40,7 +40,7 @@ https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED"
     mkdir -p /mnt/iso
     mount -o loop $iso_file /mnt/iso
     /mnt/iso/mlnxofedinstall --with-vma --force-fw-update
-    #/mnt/iso/uninstall to remove
+    #/mnt/iso/uninstall.sh to remove
     # if dkms fails to build :
     #/mnt/iso/mlnxofedinstall --with-vma --force-fw-update --without-dkms --add-kernel-support
     echo "Installed libs:"

@@ -6,7 +6,7 @@ install_dpdk()
 {
     install -m 755 ./dpdk-capture.sh /usr/sbin/
 
-    apt install libnuma-dev libpcap-dev screen rdma-core libibverbs-dev
+    apt install -y libnuma-dev libpcap-dev screen rdma-core libibverbs-dev
 
     echo "Installing dpdk"
     DIR=$(mktemp -d)
