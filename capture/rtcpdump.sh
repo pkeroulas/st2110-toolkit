@@ -1,8 +1,5 @@
 #!/bin/bash
 
-remote="normal linux"
-pkt_count=10000
-
 usage(){
     echo "
 This script starts 'tcpdump' on a remote host and shows packets on
@@ -10,30 +7,34 @@ local wireshark in realtime. The remote can either be a regular Linux host
 or a Arista switch.
 
 Usage:
-    $0 -r <user>@<remote_ip> -p <password> -i <remote_interface> [-c <packet_count>] [-v] ['filter_expression']
+    $0 -r <user>@<remote_ip> -p <password> -i <remote_interface> \
+        [-c <packet_count>] [-v] ['filter_expression']
 
 Params:
     -r ssh path; can be an alias in your local ssh config
     -p password used if you have sshpass installed, can be a password file
-    -i remote interface name. On a switch, it can either be simple '10' or a part of a quad-port '10/2'
+    -i remote interface name. On a switch, it can either be simple '10'
+    or a part of a quad-port '10/2'
     -c limit of captured packets (default $pkt_count as safety for network)
     -v verbose
     filter_expression is passed to remote tcpdump
 
 Examples:
-    PTP on Arista switch port:
+    - PTP on Arista switch port:
         $0 -r user@server -p pass -i Et10/1 'dst port 319 or dst port 320'
-    LLDP:
+    - LLDP:
         $0 -r user@server -p pass -i Et10/1 'ether proto 0x88CC'
-    HTTP on Arista management interface:
+    - HTTP on Arista management interface:
         $0 -r user@server -p pass -i Ma1 'port 80'
-    DHCP/bootp on a Linux host for a given MAC:
-        $0 -r user@server -p pass -i ens192 'ether host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
+    - DHCP/bootp on a Linux host for a given MAC:
+        $0 -r user@server -p pass -i ens192 'ether \
+            host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
 
 Script steps:
     - login to remote through ssh
     - detect if remote is normal linux host or Arista switch
-    - if Arista, init a monitor session that mirrors targeted port to cpu interface
+    - if Arista, init a monitor session that mirrors targeted port to
+    cpu interface
     - launch tcpdump in remote bash and output to stdout (raw)
     - launch local wireshark and read from stdin
     - clean up monitor session on wireshark exited
@@ -55,25 +56,14 @@ Others:
 " 1>&2
 }
 
-if mount | grep -q  "type 9p"; then
-    echo "Host: WSL"
-    # FIXME: wireshark complains about IOR.txt wrong permission but the
-    # capture works fine
-    wireshark="/mnt/c/Program\ Files/Wireshark/Wireshark.exe"
-else
-    echo "Host: Linux"
-    wireshark=$(which wireshark)
-fi
+##################################################################
+# CONST
 
-if [ ! -f $wireshark ]; then
-    echo "$wireshark not found"
-    exit 1
-fi
+pkt_count=10000
+session=scripted
 
-if ! which ssh >/dev/null; then
-    echo "ssh client not found"
-    exit 1
-fi
+##################################################################
+# PARSE ARGS
 
 while getopts ":r:p:i:c:v" o; do
     case "${o}" in
@@ -113,8 +103,31 @@ if [ -z "$remote" -o -z "$iface" ]; then
 fi
 
 filter=$@
-session=scripted
 ssh_cmd="ssh -T -o StrictHostKeyChecking=no $remote "
+
+##################################################################
+# CHECKS
+
+if mount | grep -q  "type 9p"; then
+    echo "Host: WSL"
+    # FIXME: wireshark complains about IOR.txt wrong permission but the
+    # capture works fine
+    wireshark="/mnt/c/Program\ Files/Wireshark/Wireshark.exe"
+else
+    echo "Host: Linux"
+    wireshark=$(which wireshark)
+fi
+
+if [ ! -f  "$wireshark" ]; then
+    echo "$wireshark not found"
+    exit 1
+fi
+
+if ! which ssh >/dev/null; then
+    echo "ssh client not found"
+    exit 1
+fi
+
 if which sshpass >/dev/null; then
     if [ ! -z "$passfile" ]; then
         ssh_cmd="sshpass -f $passfile $ssh_cmd"
@@ -124,8 +137,17 @@ if which sshpass >/dev/null; then
         ssh_cmd="sshpass $ssh_cmd"
     fi
 else
-    echo "sshpass not installed. Enter remote password."
+    echo "
+sshpass not installed. It is going to be painful to enter the ssh
+password at multiple times. Do you still want to proceed? [y/n]"
+    read no
+    if [ $no = "n" ]; then
+        exit 0
+    fi
 fi
+
+##################################################################
+# GO
 
 # Regular Linux remote: easy
 if $ssh_cmd "ls" > /dev/null; then
