@@ -1,0 +1,128 @@
+From 809569272a6d440add528139aba20f401a0fb963 Mon Sep 17 00:00:00 2001
+From: Damien Riegel <damien.riegel@savoirfairelinux.com>
+Date: Thu, 22 Feb 2018 14:33:00 -0500
+Subject: [PATCH 2/3] avformat/rtp: compute smpte2110 timestamps
+
+If the `-smpte2110_timestamp 1` is passed on the command line to the
+RTP demuxer, and the RTP demuxers don't set PTS on the AVPacket they
+return, then the PTS will be computed according to the SMPTE2110
+standard, using the RTP timestamp.
+---
+ libavformat/rtpdec.c | 16 ++++++++++++++++
+ libavformat/rtpdec.h |  4 ++++
+ libavformat/rtsp.c   |  9 ++++++---
+ libavformat/rtsp.h   |  5 +++++
+ 4 files changed, 31 insertions(+), 3 deletions(-)
+
+diff --git a/libavformat/rtpdec.c b/libavformat/rtpdec.c
+index 8d4532ec30..cf76e8a5c0 100644
+--- a/libavformat/rtpdec.c
++++ b/libavformat/rtpdec.c
+@@ -633,6 +633,13 @@ static void finalize_packet(RTPDemuxContext *s, AVPacket *pkt, uint32_t timestam
+     if (timestamp == RTP_NOTS_VALUE)
+         return;
+ 
++    if (s->smpte2110_ts) {
++        pkt->pts = smpte2110_compute_pts(s->ic, s->smpte2110_ts, timestamp,
++                                         s->st->time_base);
++        if (pkt->pts != AV_NOPTS_VALUE)
++            return;
++    }
++
+     if (s->last_rtcp_ntp_time != AV_NOPTS_VALUE && s->ic->nb_streams > 1) {
+         int64_t addend;
+         int delta_timestamp;
+@@ -757,6 +764,15 @@ void ff_rtp_reset_packet_queue(RTPDemuxContext *s)
+     s->prev_ret  = 0;
+ }
+ 
++int ff_rtp_enable_smpte2110_timestamp(RTPDemuxContext *s)
++{
++    s->smpte2110_ts = smpte2110_alloc();
++    if (!s->smpte2110_ts)
++        return AVERROR(ENOMEM);
++
++    return 0;
++}
++
+ static int enqueue_packet(RTPDemuxContext *s, uint8_t *buf, int len)
+ {
+     uint16_t seq   = AV_RB16(buf + 2);
+diff --git a/libavformat/rtpdec.h b/libavformat/rtpdec.h
+index e1ced132db..ae1337dcf4 100644
+--- a/libavformat/rtpdec.h
++++ b/libavformat/rtpdec.h
+@@ -24,6 +24,7 @@
+ #define AVFORMAT_RTPDEC_H
+ 
+ #include "libavcodec/avcodec.h"
++#include "libavutil/smpte2110.h"
+ #include "avformat.h"
+ #include "rtp.h"
+ #include "url.h"
+@@ -51,6 +52,7 @@ int ff_rtp_parse_packet(RTPDemuxContext *s, AVPacket *pkt,
+ void ff_rtp_parse_close(RTPDemuxContext *s);
+ int64_t ff_rtp_queued_packet_time(RTPDemuxContext *s);
+ void ff_rtp_reset_packet_queue(RTPDemuxContext *s);
++int ff_rtp_enable_smpte2110_timestamp(RTPDemuxContext *s);
+ 
+ /**
+  * Send a dummy packet on both port pairs to set up the connection
+@@ -190,6 +192,8 @@ struct RTPDemuxContext {
+ 
+     /* packet loss tracking */
+     uint64_t rtp_packets_missed;
++
++    struct smpte2110_timestamp *smpte2110_ts;
+ };
+ 
+ /**
+diff --git a/libavformat/rtsp.c b/libavformat/rtsp.c
+index 25bdf475b3..d911735ce1 100644
+--- a/libavformat/rtsp.c
++++ b/libavformat/rtsp.c
+@@ -74,8 +74,8 @@
+ #define COMMON_OPTS() \
+     { "reorder_queue_size", "set number of packets to buffer for handling of reordered packets", OFFSET(reordering_queue_size), AV_OPT_TYPE_INT, { .i64 = -1 }, -1, INT_MAX, DEC }, \
+     { "buffer_size",        "Underlying protocol send/receive buffer size",                  OFFSET(buffer_size),           AV_OPT_TYPE_INT, { .i64 = -1 }, -1, INT_MAX, DEC|ENC }, \
+-    { "pkt_size",           "Underlying protocol send packet size",                          OFFSET(pkt_size),              AV_OPT_TYPE_INT, { .i64 = -1 }, -1, INT_MAX, ENC } \
+-
++    { "pkt_size",           "Underlying protocol send packet size",                          OFFSET(pkt_size),              AV_OPT_TYPE_INT, { .i64 = -1 }, -1, INT_MAX, ENC }, \
++    { "smpte2110_timestamp", "Compute PTS based on RTP timestamps, according to SMPTE2110 spec", OFFSET(compute_smpte2110_timestamp), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, DEC}
+ 
+ const AVOption ff_rtsp_options[] = {
+     { "initial_pause",  "do not start playing the stream immediately", OFFSET(initial_pause), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, DEC },
+@@ -859,10 +859,13 @@ int ff_rtsp_open_transport_ctx(AVFormatContext *s, RTSPStream *rtsp_st)
+         rtsp_st->transport_priv = ff_rdt_parse_open(s, st->index,
+                                             rtsp_st->dynamic_protocol_context,
+                                             rtsp_st->dynamic_handler);
+-    else if (CONFIG_RTPDEC)
++    else if (CONFIG_RTPDEC) {
+         rtsp_st->transport_priv = ff_rtp_parse_open(s, st,
+                                          rtsp_st->sdp_payload_type,
+                                          reordering_queue_size);
++        if (rt->compute_smpte2110_timestamp)
++            ff_rtp_enable_smpte2110_timestamp(rtsp_st->transport_priv);
++    }
+ 
+     if (!rtsp_st->transport_priv) {
+          return AVERROR(ENOMEM);
+diff --git a/libavformat/rtsp.h b/libavformat/rtsp.h
+index 1310dd9c08..7a3d13b8cd 100644
+--- a/libavformat/rtsp.h
++++ b/libavformat/rtsp.h
+@@ -419,6 +419,11 @@ typedef struct RTSPState {
+     char default_lang[4];
+     int buffer_size;
+     int pkt_size;
++
++    /**
++     * Derive PTS from the RTP timestamp, according to spec SMPTE2110
++     */
++    int compute_smpte2110_timestamp;
+ } RTSPState;
+ 
+ #define RTSP_FLAG_FILTER_SRC  0x1    /**< Filter incoming UDP packets -
+-- 
+2.25.1
+

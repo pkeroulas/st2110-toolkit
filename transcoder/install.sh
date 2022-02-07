@@ -128,13 +128,20 @@ install_libsrt()
 
 install_ffmpeg()
 {
+    cd $THIS_DIR
+    dir=$(pwd)
+
     ldconfig -v
     echo "Installing ffmpeg"
     DIR=$(mktemp -d)
     cd $DIR/
-    git clone https://github.com/cbcrc/FFmpeg.git
-    cd FFmpeg
-    git checkout SMPTE2110/master
+    git clone https://git.ffmpeg.org/ffmpeg.git
+    cd ffmpeg
+    git checkout master
+
+    patch -p1 < $dir/transcoder/ffmpeg-force-input-threading.patch
+    #patch -p1 < $dir/transcoder/ffmpeg-avformat-rtp-compute-smpte2110-timestamps.patch
+    #patch -p1 < $dir/transcoder/ffmpeg-ffmpeg-avformat-rtp-compute-smpte2110-timestamps.patch
 
     ./configure --prefix=$PREFIX \
         --extra-cflags=-I$PREFIX/include \
