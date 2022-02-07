@@ -7,6 +7,19 @@ export FDKAAC_VERSION=0.1.4 \
     MP3_VERSION=3.99.5 \
     MAKEFLAGS="-j$[$(nproc) + 1]"
 
+if [ -z $PACKAGE_MANAGER ]; then
+    echo  "$PACKAGE_MANAGER undefined. Set to default 'apt'"
+    PACKAGE_MANAGER=apt
+fi
+if [ -z $PREFIX ]; then
+    echo  "$PREFIX undefined. Set to default '/usr/local'"
+    PREFIX=/usr/local
+fi
+if [ -z $PKG_CONFIG_PATH ]; then
+    echo  "$PKG_CONFIG_PATH undefined. Set to default."
+    export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
+fi
+
 install_yasm()
 {
     echo "Installing YASM"
@@ -100,8 +113,17 @@ install_ffnvcodec()
 
 install_streaming_server()
 {
-    apt install nginx libnginx-mod-rtmp
+    $PACKAGE_MANAGER install nginx libnginx-mod-rtmp
     install -m 644 $THIS_DIR/config/nginx.conf /etc/nginx.conf
+}
+
+install_libsrt()
+{
+    if [ $OS = debian ]; then
+        $PACKAGE_MANAGER install libsrt-dev libsrt1
+    else
+        $PACKAGE_MANAGER install srt-devel srt-libs
+    fi
 }
 
 install_ffmpeg()
@@ -120,7 +142,7 @@ install_ffmpeg()
         --bindir=$PREFIX/bin \
         --extra-libs=-ldl \
         --enable-version3 --enable-gpl --enable-nonfree \
-        --enable-postproc --enable-avresample \
+        --enable-postproc --enable-libsrt \
         --enable-libx264 --enable-libfdk-aac --enable-libmp3lame \
         --disable-ffplay --disable-ffprobe \
         $ffmpeg_gpu_options \
@@ -139,5 +161,6 @@ install_transcoder()
     install_x264
     install_fdkaac
     install_mp3
+    install_libsrt
     install_ffmpeg
 }
