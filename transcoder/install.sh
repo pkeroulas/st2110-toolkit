@@ -128,9 +128,9 @@ install_ffmpeg()
     echo "Installing ffmpeg"
     DIR=$(mktemp -d)
     cd $DIR/
-    git clone https://github.com/cbcrc/FFmpeg.git
+    git clone https://git.ffmpeg.org/ffmpeg.git
     cd FFmpeg
-    git checkout SMPTE2110/master
+    git checkout master
 
     ./configure --prefix=$PREFIX \
         --extra-cflags=-I$PREFIX/include \

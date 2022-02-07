@@ -184,13 +184,10 @@ $TRANSCODER_VIDEO_CPU_ENCODE_OPTIONS_270_250  -f mpegts udp://$TRANSCODER_OUTPUT
 
 	cmd="$FFMPEG \
 		-loglevel $TRANSCODER_LOGLEVEL \
-		-strict experimental \
-		-threads 2 \
 		-buffer_size $TRANSCODER_BUFFER_SIZE \
 		-protocol_whitelist file,udp,rtp \
 		-i $sdp \
 		-fifo_size $TRANSCODER_FIFO_SIZE \
-		-smpte2110_timestamp 1 \
 		-passlogfile $PASS_FILE \
 		$audio_encode_options \
 		-r 30 \
