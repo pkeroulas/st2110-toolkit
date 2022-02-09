@@ -93,7 +93,7 @@ sysctl -w net.ipv4.conf.<media-interface>.rp_filter=0
 
 Create a new file in `/usr/lib/sysctl.d/` for persistency.
 
-## RTP dropped packet
+## RTP packet drops
 
 `ffmpeg` may complain about RTP discontinuity with messages including:
 
@@ -104,13 +104,14 @@ Missed previous RTP Marker
 RTP: dropping old packet received too late
 ```
 
-First thing to do is to strip the command to bare minimum:
+First thing to do is to strip the command to bare minimum, and see if
+it's ok without transcoding:
 
 ```
 ffmpeg -y -loglevel verbose -buffer_size 671088640 -protocol_whitelist 'file,udp,rtp' -i mysdp.sdp  -f null /dev/null
 ```
 
-Check that you NIC ring buffer is the largest as possible:
+Check that your NIC ring buffer is the largest as possible:
 
 ```
 sudo ethtool -g <iface>
@@ -127,3 +128,5 @@ UNCONN    1119285120    0   225.164.14.100:20000     0.0.0.0:*          users:((
     skmem:(r1016405760,rb1342177280,t0,tb212992,f256,w0,o112,bl0,d75818)
     #      ^currently   ^max                                     ^pkt drops
 ```
+
+Use `./transcoder/transcoder_stats.sh` for complete stats.
