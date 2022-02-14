@@ -5,7 +5,7 @@
 The primary goal is to decode a large format uncompressed video signal
 (SMPTE ST 2110-20) along with raw audio (SMPTE ST 2110-30); the stream
 synchronization being based on PTP (SMPTE ST 2110-10). After the AV
-content is reconstructed, FFmpeg re-encodes the signal for storage or
+content is reconstructed, `ffmpeg` re-encodes the signal for storage or
 streaming. The project also aims at evaluating the limitation in terms
 of bandwidth, especially when additional streams are provided.
 
@@ -21,8 +21,8 @@ of bandwidth, especially when additional streams are provided.
 +-----------------------+   AES67    +-------------------+              +------------+
 ```
 
-Other tools like Gstreamer may be used as a transcoder but the following
-study focuses on ffmpeg.
+Other tools like `gstreamer` may be used as a transcoder but the following
+study focuses on `ffmpeg`.
 
 ## Install ffmpeg and dependencies
 
@@ -44,8 +44,7 @@ essence: video, audio, ancillary. However, ffmpeg hardly takes multiple
 SDP files as input. A hack consists in combining the essence
 descriptions in one single SDP. See [example](../doc/sdp.sample), where
 audio is declared before video to ensure that ffmpeg process this
-lighter stream first. Note that network redundancy (SMPTE 2022-7) is not
-supported.
+lighter stream first.
 
 ## Simple test
 
@@ -85,6 +84,7 @@ If no packets are received, refer to the [troubleshoot guide](../doc/troubleshoo
 
 ## RTP packet drops
 
+This is the most common error you'll get.
 `ffmpeg` may complain about RTP discontinuity with messages including:
 
 ```
@@ -94,18 +94,48 @@ Missed previous RTP Marker
 RTP: dropping old packet received too late
 ```
 
-First thing to do is to strip the command to bare minimum:
+This is most likely due to the input buffer being too small or the
+transcode process creating a bottleneck that prevents ffpmeg from
+reading the incomming packets fast enough. Here are some of the knobs
+you can try to adjust:
+
+- downscale the image resolution
+- change CPU, see [performance analysis](../doc/transcoder_perf.md)
+- force multithread by applying this [patch](transcoder/ffmpeg-force-input-threading.patch)
+- tune up your network stack, see optimization section below
+- strip the command to bare minimum, and start from here:
 
 ```
 ffmpeg -y -loglevel verbose -buffer_size 671088640 -protocol_whitelist 'file,udp,rtp' -i mysdp.sdp  -f null /dev/null
 ```
 
-If no more packet drops, then the transcoding creates a bottleneck that
-prevents ffpmeg from reading the incomming packets fast enough. Here are
-some of the knobs you can try to adjust:
-- image resolution
-- CPU, see [performance analysis](../doc/transcoder_perf.md)
-- force multithread by applying this [patch](transcoder/ffmpeg-force-input-threading.patch)
+## Start as a service
+
+Once the process is stable, you can start it as a background task.
+Use ./transcode.sh to start the transcoding service in background from
+one or multiple SDP files, then show logs and, finally stop the service.
+
+```sh
+$ ./transcoder.sh help
+[...]
+$ ./transcoder.sh start file.sdp
+==================== Start ... ====================
+Transcoding from file.sdp
+Scaling and encoding: cpu.
+Audio codec is aac.
+[...]
+$ ./transcoder.sh log
+[...]
+$ ./transcoder.sh stop
+==================== Stop ... ====================
+```
+
+Script constants, like destination IP, can be overridden by conf file,
+i.e. `/etc/st2110.conf`. See sample `./config/st2110.conf` for details.
+
+## Optimization
+
+### System network stack
 
 You can also check that your NIC ring buffer is the largest as possible:
 
@@ -136,49 +166,72 @@ UNCONN    1119285120    0   225.164.14.100:20000     0.0.0.0:*          users:((
 
 Use `./transcoder/transcoder_stats.sh` for complete stats.
 
-## Start as a service
+### FFmpeg options
 
-Once the process is stable, you can start it as a background task.
-Use ./transcode.sh to start the transcoding service in background from
-one or multiple SDP files, then show logs and, finally stop the service.
+RTP Input:
 
-```sh
-$ ./transcoder.sh help
-[...]
-$ ./transcoder.sh start file.sdp
-==================== Start ... ====================
-Transcoding from file.sdp
-Scaling and encoding: cpu.
-Audio codec is aac.
-[...]
-$ ./transcoder.sh log
-[...]
-$ ./transcoder.sh stop
-==================== Stop ... ====================
-```
+* `-reorder_queue_size`: jitter buffer size, default is 500 pkts, not relevant if no reordering expected
+* `-buffer_size`: socket memory size in the kernel, overrides /proc/sys/net/core/rmem_default by setsockopt()
+* `-max_delay`
+* `-fifo_size`
 
-Script constants, like destination IP, can be overridden by conf file,
-i.e. `/etc/st2110.conf`. See sample `./config/st2110.conf` for details.
+See usage: `ss -uamp | grep ffmpeg -A1`
 
-## FFmpeg options
+Raw:
 
-Without '-pass 1', the CPU usage is way higher and the audio breaks
-after a few seconds, at least for rtmp output. The 1st con of the option is
-that the output bitrate might less precise. And the generated passlog
-file is quite large (~10GB/day). The 'monitor' function of the transcoder
-checks the size of this file and restarts ffmpeg if needed.
+* `-thread_queue_size`: 8 AVPackets available by default
+* `-vf yadif=0:-1:0`: for de-interlacing
 
-## Hardware acceleration for transcoding
+Output:
+
+`-pass 1` (h264): without this option the CPU usage is way higher and
+the audio breaks after a few seconds, at least for rtmp output. The 1st
+con of the option is that the output bitrate might less precise. And the
+generated passlog file is quite large (~10GB/day). The 'monitor'
+function of the transcoder checks the size of this file and restarts
+ffmpeg if needed.
+
+### Hardware acceleration for transcoding
 
 [Nvidia setup.](../doc/hw_encoding.md)
 
-## Transcoding performance
+### Transcoding performance
 
 [Measurements](../doc/transcoder_perf.md) with CPU vs GPU.
 
-## Trancoding ancillary data (SMPTE ST 2110-40)
+## FFmpeg files
 
-ffmpeg shows some limitations in [transcoding closed
+The demux is composed of:
+
+* libavformat/sdp.c
+* libavformat/udp (multicast join)
+* libavformat/rtsp
+* libavformat/rtpdec
+* libavformat/rtpdec_rfc4175 (dynamic handler)
+* libavcodec/bitpacked_dec
+
+## Limitations
+
+### Network redundancy
+
+SMPTE 2022-7 is not supported. Eventhough, an SDP with dual stream will
+be correctly processed, the output would contains 2 separated tracks.
+
+### A/V synchro
+
+Audio and video are transcoded as packets come in with no regard to
+their respective RTP timestamps. If temporal realignement is important,
+and if RTP timestamps are reliable, consider applying the following
+patches before re-compile:
+
+* ffmpeg-avutil-smpte2110-add-helpers-to-compute-PTS.patch
+* ffmpeg-avformat-rtp-compute-smpte2110-timestamps.patch
+
+And activate in command line: `-smpte2110_timestamp 1`
+
+### Trancoding ancillary data (SMPTE ST 2110-40)
+
+There are some limitations in [transcoding closed
 caption](../doc/closed_captions.md).
 
 Here are some guidelines for [SCTE-35](../doc/scte_104_to_35.md).
