@@ -2,19 +2,18 @@
 
 ## Setup
 
+* ffmpeg v4.2 + ST 2110 patch (see 5.1 at the bottom)
 * Centos 7 virtualized
 * 4 x Intel(R) Xeon(R) Gold 6142 CPU @ 2.60GHz
 * memory 4GB
 * GPU Model: Nvidia Quadro P4000, PassThrough
-* Network adapter: VMXNET 3, DirectPath I/O
+* network adapter: VMXNET 3, DirectPath I/O
 
 ## Load
 
-Input: 1 or 2 streams @ 1080i 60 fps (1.23Gb/s) + 2 audio channels
-
-Output: 720p @ 30 fps (2.5Mpbs) + 2 audio channels
-
-Audio-only test is performed at the end.
+* input: 1 or 2 streams @ 1080i 60 fps (1.23Gb/s) + 2 audio channels
+* output: 720p @ 30 fps (2.5Mpbs) + 2 audio channels
+* audio-only test is performed at the end.
 
 ## Measuring CPU and GPU utilization
 
@@ -102,4 +101,21 @@ the audio encoding parameters are the same as above.
 
 * Input rate: 21Mb/s
 * Output rate: 1.3Mb/s
-* CPU: 5-25%, Mem: 9%
+
+CPU: 5-25%, Mem: 9%
+
+## Update with ffmpeg v5.1
+
+### Setup
+
+* ffmpeg v5.1 + input thread patch
+* input: 1 stream @ 1080i 60 fps (1.23Gb/s) + 2 audio channels
+* output: 720p @ 30 fps (2.5Mpbs) + 2 audio channels
+
+### CPUs comparison
+
+| CPU | usage | Comment |
+| --- | ---- | ------- |
+| 4 x Intel(R) Xeon(R) Gold 6142 CPU @ 2.60GHz | | stable |
+| 4 x Intel(R) Xeon(R) Silver 4114 CPU @ 2.20GHz | | packet drops |
+| 6 x Intel(R) Core(TM) i5-9600K CPU @ 3.70GHz | | stable |
