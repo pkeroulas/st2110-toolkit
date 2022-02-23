@@ -101,9 +101,9 @@ you can try to adjust:
 
 - downscale the image resolution
 - change CPU, see [performance analysis](../doc/transcoder_perf.md)
-- force multithread by applying this [patch](transcoder/ffmpeg-force-input-threading.patch)
+- force multithread by applying this [patch](ffmpeg-force-input-threading.patch)
 - tune up your network stack, see optimization section below
-- strip the command to bare minimum, and start from here:
+- strip the command to bare minimum and start from here to :
 
 ```
 ffmpeg -y -loglevel verbose -buffer_size 671088640 -protocol_whitelist 'file,udp,rtp' -i mysdp.sdp  -f null /dev/null
@@ -203,12 +203,12 @@ ffmpeg if needed.
 
 The demux is composed of:
 
-* libavformat/sdp.c
-* libavformat/udp (multicast join)
-* libavformat/rtsp
-* libavformat/rtpdec
-* libavformat/rtpdec_rfc4175 (dynamic handler)
-* libavcodec/bitpacked_dec
+* `libavformat/sdp`
+* `libavformat/udp` (multicast join)
+* `libavformat/rtsp`
+* `libavformat/rtpdec`
+* `libavformat/rtpdec_rfc4175` (dynamic RTP handler)
+* `libavcodec/bitpacked_dec`
 
 ## Limitations
 
