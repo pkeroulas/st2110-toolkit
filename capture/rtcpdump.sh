@@ -7,7 +7,7 @@ local wireshark in realtime. The remote can either be a regular Linux host
 or a Arista switch.
 
 Usage:
-    $0 -r <user>@<remote_ip> -p <password> -i <remote_interface> \
+    $0 -r <user>@<remote_ip> -p <password> -i <remote_interface> \\
         [-c <packet_count>] [-v] ['filter_expression']
 
 Params:
@@ -24,10 +24,10 @@ Examples:
         $0 -r user@server -p pass -i Et10/1 'dst port 319 or dst port 320'
     - LLDP:
         $0 -r user@server -p pass -i Et10/1 'ether proto 0x88CC'
-    - HTTP on Arista management interface:
-        $0 -r user@server -p pass -i Ma1 'port 80'
+    - HTTP between a Arista sw (on the management interface) and a specific host:
+        $0 -r user@server -p pass -i Ma1 'port 80 and host XXX.XXX.XXX.XXX'
     - DHCP/bootp on a Linux host for a given MAC:
-        $0 -r user@server -p pass -i ens192 'ether \
+        $0 -r user@server -p pass -i ens192 'ether \\
             host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
 
 Script steps:
@@ -47,10 +47,12 @@ Others:
         * DCS-7280CR2A-30
         * DCS-7280SR2-48YC6
         * DCS-7020TR-48
-    - capturing a high bitrate port isn't good idea given the additional
-    data transfer over the network (plus, on Arista switch, the traffic is
-    mirrored to Cpu which might be overflowed). This is why the capture is
-    limited to 10000 pkts by default.
+    - capturing a high bitrate port isn't a good idea given the additional
+    load transfer over the network. This is why the capture is limited
+    to 10000 pkts by default. Additionally, a monitor session in a Arista
+    switch consists in mirroring the traffic to the Cpu through a 10Mbps
+    link. As a result, some packets may be lost, even when a filter is
+    given to tcpdump.
     - note that 'StrictHostKeyChecking=no' option is used for ssh, at
     you own risks
 " 1>&2
