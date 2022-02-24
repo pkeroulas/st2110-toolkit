@@ -172,14 +172,19 @@ echo "Port: $iface"
 echo "lldp:"
 $ssh_cmd "show lldp neighb | grep $iface"
 echo "stats:"
+port_stat=$($ssh_cmd "show interfaces $iface")
+echo "$port_stat"
+if echo $port_stat | grep -q -v "is up"; then
+    echo "The port $iface is wrong or down, exit."
+    exit 1
+fi
+
+echo "------------------------"
 echo "Create a monitor session."
 $ssh_cmd "enable
 conf
 monitor session $session source $iface
-monitor session $session destination Cpu
-show interfaces $iface"
-
-echo "------------------------"
+monitor session $session destination Cpu"
 # need a short break for Cpu iface allocation
 sessions=$($ssh_cmd "enable
 conf
@@ -202,6 +207,7 @@ $ssh_cmd "enable
 conf
 no monitor session $session
 show monitor session
+bash killall tcpdump
 "
 
 echo "Exit."
