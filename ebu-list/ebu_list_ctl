@@ -183,10 +183,10 @@ status()
     ptp_ip=$(ip addr show $PTP_IFACE_0 | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
     ptp_filter="src host $ptp_ip and dst host 224.0.1.129"
     show_header "PTP"
-    get_status "ptp4l" "ps aux" "[p]tp4l"
-    get_status "phc2sys   0" "ps aux" "[p]hc2sys -s $PTP_IFACE_0 -c CLOCK_REALTIME"
+    get_status "ptp4l" "ps aux" "[p]tp4l" $PTP_IFACE_0
+    get_status "phc2sys   0" "ps aux" "[p]hc2sys -s $PTP_IFACE_0 -c CLOCK_REALTIME" CLOCK_REALTIME
     if [ ! -z $PTP_IFACE_1 ]; then
-        get_status "phc2sys   1" "ps aux" "[p]hc2sys -s $PTP_IFACE_0 -c $PTP_IFACE_1"
+        get_status "phc2sys   1" "ps aux" "[p]hc2sys -s $PTP_IFACE_0 -c $PTP_IFACE_1" $PTP_IFACE_1
     fi
     get_status "Lock" "journalctl -n10" "phc2sys.* s2 freq "
     get_status "PTP traffic" "timeout 2 tcpdump -i $PTP_IFACE_0 -c2 $ptp_filter" "2 packets captured"
