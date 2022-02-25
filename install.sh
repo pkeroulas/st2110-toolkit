@@ -32,6 +32,7 @@ source $THIS_DIR/capture/install.sh
 source $THIS_DIR/ebu-list/install.sh
 source $THIS_DIR/nmos/install.sh
 source $THIS_DIR/transcoder/install.sh
+source $THIS_DIR/ptp/install.sh
 
 install_common_tools()
 {
@@ -121,6 +122,9 @@ case "$1" in
         install_dev_tools
         install_config
         ;;
+    ptp)
+        install_ptp
+        ;;
     transcoder)
         install_transcoder
         ;;
@@ -134,7 +138,7 @@ case "$1" in
         install_nmos
         ;;
     *)
-        echo "Usage: $0 <common|transcoder|capture|ebulist|nmos>"
+        echo "Usage: $0 <common|ptp|transcoder|capture|ebulist|nmos>"
         ;;
 esac
 set +x
