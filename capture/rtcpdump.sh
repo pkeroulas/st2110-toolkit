@@ -22,6 +22,8 @@ Params:
 Examples:
     - PTP on Arista switch port:
         $0 -r user@server -p pass -i Et10/1 'dst port 319 or dst port 320'
+    - IGMP with password file provided and verbose mode:
+        $0 -r user@server -p ~/passwordfile.txt -i Et10/1 -v igmp
     - LLDP:
         $0 -r user@server -p pass -i Et10/1 'ether proto 0x88CC'
     - HTTP between a Arista sw (on the management interface) and a specific host:
@@ -58,12 +60,23 @@ Others:
 " 1>&2
 }
 
+function title() {
+    printf  "\e[1;34m====================================================\e[m\n" "$1"
+    printf  "\e[1;34m%s\e[m\n" "$1"
+}
+
+function warning() {
+    printf  "\e[1;33m%s\e[m\n" "$1"
+}
+
+function error() {
+    printf  "\e[1;31m%s\e[m\n" "$1"
+}
 ##################################################################
 # CONST
 
 pkt_count=10000
-session=scripted
-
+session=rtcpdump
 ##################################################################
 # PARSE ARGS
 
@@ -89,7 +102,7 @@ while getopts ":r:p:i:c:v" o; do
             set -x
             ;;
         *)
-            echo  "unsupported option ${o}"
+            error  "unsupported option ${o}"
             usage
             exit 1
             ;;
@@ -99,7 +112,7 @@ done
 shift $((OPTIND-1))
 
 if [ -z "$remote" -o -z "$iface" ]; then
-    echo "Missing argument"
+    error "Missing argument"
     usage
     exit 1
 fi
@@ -109,6 +122,8 @@ ssh_cmd="ssh -T -o StrictHostKeyChecking=no $remote "
 
 ##################################################################
 # CHECKS
+
+title "RTCPDUMP"
 
 if mount | grep -q  "type 9p"; then
     echo "Host: WSL"
@@ -121,12 +136,12 @@ else
 fi
 
 if [ ! -f  "$wireshark" ]; then
-    echo "$wireshark not found"
+    error "$wireshark not found"
     exit 1
 fi
 
 if ! which ssh >/dev/null; then
-    echo "ssh client not found"
+    error "ssh client not found"
     exit 1
 fi
 
@@ -139,7 +154,7 @@ if which sshpass >/dev/null; then
         ssh_cmd="sshpass $ssh_cmd"
     fi
 else
-    echo "
+    warning "
 sshpass not installed. It is going to be painful to enter the ssh
 password at multiple times. Do you still want to proceed? [y/n]"
     read no
@@ -151,36 +166,34 @@ fi
 ##################################################################
 # GO
 
-# Regular Linux remote: easy
-if $ssh_cmd "ls" > /dev/null; then
+if $ssh_cmd "ls" > /dev/null; then # Regular Linux remote: easy
     echo "Remote: Linux host"
-    echo "------------------------"
     echo "Interfaces."
     ifaces=$($ssh_cmd "ls /sys/class/net")
     if echo $ifaces | grep  -v -q $iface; then
         echo $iface not found
         exit 1
     fi
-    echo "Capture......."
+    title "Capture $cpu_iface."
+    warning ">>>>>>>>>>> Press CTRL+C to interrupt. <<<<<<<<<<<<<"
     $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | "$wireshark" -k -i -
     exit 0
 fi
 
 echo "Remote: Arista switch"
-echo "------------------------"
-echo "Port: $iface"
+
+title "Interface: $iface"
 echo "lldp:"
 $ssh_cmd "show lldp neighb | grep $iface"
 echo "stats:"
 port_stat=$($ssh_cmd "show interfaces $iface")
 echo "$port_stat"
 if echo $port_stat | grep -q -v "is up"; then
-    echo "The port $iface is wrong or down, exit."
+    error "Port $iface is wrong or down, exit."
     exit 1
 fi
 
-echo "------------------------"
-echo "Create a monitor session."
+title "Create a monitor session: \"$session\""
 $ssh_cmd "enable
 conf
 monitor session $session source $iface
@@ -189,25 +202,23 @@ monitor session $session destination Cpu"
 sessions=$($ssh_cmd "enable
 conf
 show monitor session")
-echo "Monitor session."
-echo "$sessions"
+echo "$sessions" | grep -v -e '^$' | grep -v "\-\-\-\-\-\-\-"
 cpu_iface=$(echo "$sessions" | grep $session -A 10 | grep Cpu | sed 's/.*(\(.*\))/\1/')
 
-trap 'echo Interruption.' 2 # catch SIGINT (Ctrl-C) to exit Arista bash properly
+title "Capture $cpu_iface by Cpu."
+warning ">>>>>>>>>>> Press CTRL+C to interrupt. <<<<<<<<<<<<<"
 
-echo "------------------------"
-echo "Capture on Cpu($cpu_iface) ......."
+trap 'echo Interrupted.' SIGINT # catch Ctrl-C to exit Arista bash properly
+
 $ssh_cmd "enable
 conf
 bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | "$wireshark" -k -i -
 
-echo "------------------------"
-echo "Cleanup."
+title "Cleanup."
 $ssh_cmd "enable
 conf
 no monitor session $session
 show monitor session
 bash killall tcpdump
-"
-
+" | grep -v -e '^$'
 echo "Exit."
