@@ -4,7 +4,7 @@
 export LANG=en_US.utf8 \
     SMCROUTE_VERSION=2.4.3
 
-source $THIS_DIR/capture/dpdk
+source $TOP_DIR/capture/dpdk
 
 install_smcroute()
 {

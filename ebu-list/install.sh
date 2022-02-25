@@ -19,7 +19,7 @@ install_list()
     usermod -a -G docker $ST2110_USER
 
     LIST_DIR=/home/$ST2110_USER/pi-list
-    install -m 755 $THIS_DIR/ebu-list/ebu_list_ctl /usr/sbin/
+    install -m 755 $TOP_DIR/ebu-list/ebu_list_ctl /usr/sbin/
     #TODO docker not active yet
     su $ST2110_USER -c "ebu_list_ctl install"
 }

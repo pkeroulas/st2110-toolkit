@@ -114,7 +114,7 @@ install_ffnvcodec()
 install_streaming_server()
 {
     $PACKAGE_MANAGER install nginx libnginx-mod-rtmp
-    install -m 644 $THIS_DIR/config/nginx.conf /etc/nginx.conf
+    install -m 644 $TOP_DIR/config/nginx.conf /etc/nginx.conf
 }
 
 install_libsrt()
@@ -128,7 +128,7 @@ install_libsrt()
 
 install_ffmpeg()
 {
-    cd $THIS_DIR
+    cd $TOP_DIR
     dir=$(pwd)
 
     ldconfig -v

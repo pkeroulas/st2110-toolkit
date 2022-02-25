@@ -3,7 +3,7 @@ export PTP_VERSION=3.1
 install_ptp()
 {
     # build+patch linuxptp instead of installing pre-built package
-    cd $THIS_DIR
+    cd $TOP_DIR
     dir=$(pwd)
     echo "Installing PTP"
     DIR=$(mktemp -d)
@@ -18,5 +18,5 @@ install_ptp()
     make distclean
     rm -rf $DIR
 
-    install -m 644 $THIS_DIR/ptp/ptp4l.conf     /etc/linuxptp/ptp4l.conf
+    install -m 644 $TOP_DIR/ptp/ptp4l.conf     /etc/linuxptp/ptp4l.conf
 }
