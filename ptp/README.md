@@ -1,23 +1,43 @@
-# PTP utilities
+# linuxptp utilities
 
 A good synchronization is mandatory to make a capture device precise.
 Mellanox NIC capabilities include hardware timestamping of Tx and Rx
 packets to allow both a reliable synchronization to PTP grand master
-and accurate timestamp in captures.
+and accurate timestamp in captures. The following doc relies on
+`linuxptp` which includes 3 utilities:
 
 ## ptp4l
 
-There are tones of online documentation to setup `ptp4l` to sync
-NIC clock to a master clock and then, use `pch2sys` to sync
-system/OS time to NIC clock. Verify that offset are no more than a few
-tens of ns.
+`ptp4l` handle PTP traffic to synchronizes the local NIC clock to a
+remote master clock:
+
+```
+$ ptp4l -f /etc/linuxptp/ptp4l.conf -s -i <iface>
+$ journalctl -f | grep 'ptp4\|phc2'
+[...] ptp4l: [601999.078] rms   20 max   32 freq  -3106 +/-  28 delay   159 +/-   2
+[...] ptp4l: [602000.090] rms   18 max   28 freq  -3107 +/-  24 delay   157 +/-   6
+```
+
+Note that all the time values are in nanosec.
+
+## phc2sys
+
+Then `phc2sys` controls system/OS clock to be synced with NIC clock.
 
 ```
 $ journalctl -f | grep 'ptp4\|phc2'
-Jan 21 10:07:28 server1-PowerEdge-R540 phc2sys: [601998.702] phc offset        -9 s2 freq   -1108 delay   1100
-Jan 21 10:07:28 server1-PowerEdge-R540 ptp4l: [601999.078] rms   20 max   32 freq  -3106 +/-  28 delay   159 +/-   2
-Jan 21 10:07:29 server1-PowerEdge-R540 phc2sys: [601999.702] phc offset        25 s2 freq   -1077 delay   1094
-Jan 21 10:07:29 server1-PowerEdge-R540 ptp4l: [602000.090] rms   18 max   28 freq  -3107 +/-  24 delay   157 +/-   6
+$ phc2sys -s <iface> -c CLOCK_REALTIME -w -n <ptp_domain>
+[...] phc2sys: [601999.702] phc offset        25 s2 freq   -1077 delay   1094
+[...] phc2sys: [601998.702] phc offset        -9 s2 freq   -1108 delay   1100
+```
+
+## pmc
+
+Show PTP sync status and metrics:
+
+```
+pmc -d <ptp_domain> -u -b 2 'GET CURRENT_DATA_SET'
+pmc -d <ptp_domain> -u -b 2 'GET PARENT_DATA_SET'
 ```
 
 ## Hardware Clock
