@@ -31,6 +31,8 @@ Examples:
     - DHCP/bootp on a Linux host for a given MAC:
         $0 -r user@server -p pass -i ens192 'ether \\
             host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
+    - VLAN-tagged packets
+        $0 -r user@server -p pass -i ens192 '\-e \(vlan 100\)'
 
 Script steps:
     - login to remote through ssh
