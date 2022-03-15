@@ -1,7 +1,5 @@
 # ST-2110 software toolkit
 
-Author: [Patrick Keroulas](mailto:patrick.keroulas@radio-canada.ca)
-
 This toolkit provides scripts and config to test, monitor and transcode SMPTE ST 2110 streams.
 Features:
 
@@ -26,15 +24,23 @@ Tested distros:
 Install everything (tools, FFmpeg and all the dependencies) using the install scrip:
 
 ```sh
-$ ./install.sh <common|transcoder|capture|ebulist|nmos>
+$ ./install.sh
+Usage: ./install.sh <section>
+sections are:
+    * common:       compile tools, network utilities, config
+    * ptp:          linuxptp
+    * transcoder:   ffmpeg, x264, mp3 and other codecs
+    * capture:      dpdk-based capture engine
+    * ebulist:      EBU-LIST pcap analyzer
+    * nmos:         Sony nmos-cpp (deprecated)
 ```
 
 ## Configuration
 
 Both capture and transcoder scripts have default parameters but they can
-be overriden by a config filecan to be installed as `/etc/st2110.conf`.
-See the sample in `./config/`. This config also provisions EBU-list
-server config.
+be overriden by a config file to be installed as `/etc/st2110.conf`.
+See the [sample](./config/st2110.conf). This config also provisions an
+EBU-LIST server in live mode, i.e. connected to a ST 2110 network.
 
 ## Capture
 
@@ -76,9 +82,6 @@ Dependencies:
     check_clock.c
 * rework`./capture/nic_setup.sh`
 * nmos-poller: display ffmpeg status
-* ffmpeg: a static route to multicast must be added, why? would it work
-  with a route to source IP only? is it possible to tell ffmpeg which
-  interface to use
 
 ## [Troubleshoot](./doc/troubleshoot.md)
 

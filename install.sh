@@ -115,7 +115,8 @@ install_config()
     update-rc.d ptp enable
 }
 
-set -x
+#set -x
+
 case "$1" in
     common)
         install_common_tools
@@ -138,7 +139,15 @@ case "$1" in
         install_nmos
         ;;
     *)
-        echo "Usage: $0 <common|ptp|transcoder|capture|ebulist|nmos>"
+        echo "Usage: $0 <section>
+sections are:
+    * common:       compile tools, network utilities, config
+    * ptp:          linuxptp
+    * transcoder:   ffmpeg, x264, mp3 and other codecs
+    * capture:      dpdk-based capture engine for Mellanox ConnectX-5
+    * ebulist:      EBU-LIST pcap analyzer
+    * nmos:         Sony nmos-cpp (deprecated)
+"
         ;;
 esac
 set +x
