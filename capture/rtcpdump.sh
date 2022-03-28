@@ -17,13 +17,14 @@ Params:
     or a part of a quad-port '10/2'
     -c limit of captured packets (default $pkt_count as safety for network)
     -v verbose
-    filter_expression is passed to remote tcpdump
+    -a Arista ACL filter mode <filter_expression> must be the ACL rule (Rx only)
+    filter_expression is passed to remote tcpdump or ACL
 
 Examples:
     - PTP on Arista switch port:
         $0 -r user@server -p pass -i Et10/1 'dst port 319 or dst port 320'
-    - IGMP with password file provided and verbose mode:
-        $0 -r user@server -p ~/passwordfile.txt -i Et10/1 -v igmp
+    - IGMP using ACL mode, with password file provided and verbose mode:
+        $0 -r user@server -p ~/passwordfile.txt -i Et10/1 -v -a 'permit igmp any any'
     - LLDP:
         $0 -r user@server -p pass -i Et10/1 'ether proto 0x88CC'
     - HTTP between a Arista sw (on the management interface) and a specific host:
@@ -78,11 +79,13 @@ function error() {
 # CONST
 
 pkt_count=10000
-session=rtcpdump
+session=RTCPDUMP
+filter_mode=tcpdump
+
 ##################################################################
 # PARSE ARGS
 
-while getopts ":r:p:i:c:v" o; do
+while getopts ":r:p:i:c:va" o; do
     case "${o}" in
         r)
             remote=${OPTARG}
@@ -99,6 +102,9 @@ while getopts ":r:p:i:c:v" o; do
             ;;
         c)
             pkt_count=${OPTARG}
+            ;;
+        a)
+            filter_mode=acl
             ;;
         v)
             set -x
@@ -195,14 +201,29 @@ if echo $port_stat | grep -q -v "is up"; then
     exit 1
 fi
 
-title "Create a monitor session: \"$session\""
+acl_monitor_option=""
+if [ $filter_mode = "acl" ]; then
+    title "Create a IP access list: $filter"
+    $ssh_cmd "enable
+conf
+ip access-list $session
+$filter
+"
+    # need a short break for Cpu iface allocation
+    $ssh_cmd "enable
+show ip access-list $session
+"
+    filter=""
+    acl_monitor_option="rx ip access-group $session"
+fi
+
+title "Create a monitor session:"
 $ssh_cmd "enable
 conf
-monitor session $session source $iface
+monitor session $session source $iface $acl_monitor_option
 monitor session $session destination Cpu"
 # need a short break for Cpu iface allocation
 sessions=$($ssh_cmd "enable
-conf
 show monitor session")
 echo "$sessions" | grep -v -e '^$' | grep -v "\-\-\-\-\-\-\-"
 cpu_iface=$(echo "$sessions" | grep $session -A 10 | grep Cpu | sed 's/.*(\(.*\))/\1/')
@@ -219,8 +240,9 @@ bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | "$wireshark" -k 
 title "Cleanup."
 $ssh_cmd "enable
 conf
+no ip access-list $session
 no monitor session $session
 show monitor session
-bash killall tcpdump
+bash pidof tcpdump > /dev/null && killall tcpdump
 " | grep -v -e '^$'
 echo "Exit."
