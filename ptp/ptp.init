@@ -38,7 +38,7 @@ start_ptp_sync()
     master=$1
     slave=$2
 
-    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID.$slave --exec /usr/local/sbin/phc2sys -- -s $master -c $slave -w -n $PTP_DOMAIN
+    start-stop-daemon --start --background -m --oknodo --pidfile $PTP_PHC2SYS_PID.$slave --exec /usr/local/sbin/phc2sys -- -u 16 -s $master -c $slave -w -n $PTP_DOMAIN
 }
 
 start_ptp()
