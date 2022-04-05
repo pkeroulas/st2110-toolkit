@@ -36,8 +36,16 @@ $ phc2sys -s <iface> -c CLOCK_REALTIME -w -n <ptp_domain>
 Show PTP sync status and metrics:
 
 ```
-pmc -d <ptp_domain> -u -b 2 'GET CURRENT_DATA_SET'
-pmc -d <ptp_domain> -u -b 2 'GET PARENT_DATA_SET'
+sudo pmc -d <ptp_domain> -u -b 2 'GET CURRENT_DATA_SET'
+sudo pmc -d <ptp_domain> -u -b 2 'GET PARENT_DATA_SET'
+```
+
+Root priviledge is under [discussion](https://www.mail-archive.com/linuxptp-devel@lists.sourceforge.net/msg05540.html)
+for 3.1.2. Tested on commit @4d9f44. It works proveded `uds_file_mode 0666`
+and a non-default interface (`-i`):
+
+```
+pmc -i /tmp/pmc -d 88 -u -b 2 'GET CURRENT_DATA_SET'
 ```
 
 ## Hardware Clock
