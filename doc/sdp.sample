@@ -19,3 +19,11 @@ a=rtpmap:100 smpte291/90000
 a=fmtp:100 VPID_Code=133
 a=mediaclk:direct=0 rate=90000
 a=ts-refclk:ptp=IEEE1588-2008:00-02-c5-ff-fe-21-60-5c:127
+
+m=video 20000 RTP/AVP 96
+c=IN IP4 225.164.5.190/64
+a=source-filter: incl IN IP4 225.164.5.190 172.30.64.176
+a=rtpmap:96 raw/90000
+a=fmtp:96 sampling=YCbCr-4:2:2; width=1920; height=1080; exactframerate=30000/1001; depth=10; TCS=SDR; colorimetry=BT709; PM=2110GPM; SSN=ST2110-20:2017; TP=2110TPN; interlace;
+a=mediaclk:direct=0
+a=ts-refclk:ptp=IEEE1588-2008:00-02-c5-ff-fe-21-60-5c:127
