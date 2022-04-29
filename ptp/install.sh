@@ -18,5 +18,10 @@ install_ptp()
     make distclean
     rm -rf $DIR
 
+    mkdir /etc/linuxptp
     install -m 644 $TOP_DIR/ptp/ptp4l.conf     /etc/linuxptp/ptp4l.conf
+
+    install -m 755 $TOP_DIR/ptp/ptp.init /etc/init.d/ptp
+    update-rc.d ptp defaults
+    systemctl enable ptp
 }

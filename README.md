@@ -17,7 +17,7 @@ Sponsored by:
 Tested distros:
 * Centos 7
 * Dockerized Centos 7
-* Ubuntu 18.04
+* Ubuntu > 18.04
 
 ## Install
 

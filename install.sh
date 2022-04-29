@@ -5,6 +5,11 @@
 
 #set -euo pipefail
 
+if [ ! $UID -eq 0  ]; then
+    echo "Not root, exit."
+    exit 1
+fi
+
 TOP_DIR=$(dirname $(readlink -f $0))
 
 ST2110_CONF_FILE=/etc/st2110.conf
@@ -98,8 +103,14 @@ install_config()
     if [ ! -f  $ST2110_CONF_FILE ]; then
         echo "Don't overwrite config, it is painful"
         install -m 644 $TOP_DIR/config/st2110.conf $ST2110_CONF_FILE
-    else
-        source $ST2110_CONF_FILE
+    fi
+    source $ST2110_CONF_FILE
+
+    if [ ! -d /home/$ST2110_USER ]; then
+        echo "Please verify that /home/$ST2110_USER doesn't exist."
+        echo "Or change ST2110_USER=$ST2110_USER in $ST2110_CONF_FILE"
+        echo "And try again."
+        exit -1
     fi
 
     install -m 666 $TOP_DIR/config/st2110.bashrc /home/$ST2110_USER/
@@ -109,10 +120,7 @@ install_config()
 
     install -m 755 $TOP_DIR/config/st2110.init /etc/init.d/st2110
     update-rc.d st2110 defaults
-    update-rc.d st2110 enable
-    install -m 755 $TOP_DIR/ptp/ptp.init /etc/init.d/ptp
-    update-rc.d ptp defaults
-    update-rc.d ptp enable
+    systemctl enable st2110
 }
 
 #set -x
