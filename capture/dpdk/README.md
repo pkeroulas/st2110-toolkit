@@ -51,7 +51,7 @@ Dependency packages:
 | `libpcap-dev` | 1.9 |
 
 Out of the box, *DPDK hardly makes the jobs for as a proper ST 2110 capture engine because of the inaccuracy of the incoming packets*.
-[Timestamp](#hardware-timestamps) section brings more details. To overcome that limitation, You need to clone [my fork](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1)
+[Timestamp](#hardware-timestamps) section brings more details. To overcome that limitation, You need to clone [my fork](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1) based on version version v20.05.
 
 ```sh
 git clone https://github.com/pkeroulas/dpdk.git

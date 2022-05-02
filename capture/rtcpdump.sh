@@ -32,8 +32,8 @@ Examples:
     - DHCP/bootp on a Linux host for a given MAC:
         $0 -r user@server -p pass -i ens192 'ether \\
             host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
-    - VLAN-tagged packets
-        $0 -r user@server -p pass -i ens192 '\-e \(vlan 100\)'
+    - VLAN-tagged http packets
+        $0 -r user@server -p pass -i ens192  '-e \(vlan 1434 and port 80\)'
 
 Script steps:
     - login to remote through ssh
@@ -52,6 +52,7 @@ Others:
         * DCS-7280CR2A-30
         * DCS-7280SR2-48YC6
         * DCS-7020TR-48
+        * CCS-720XP-48Y6
     - capturing a high bitrate port isn't a good idea given the additional
     load transfer over the network. This is why the capture is limited
     to 10000 pkts by default. Additionally, a monitor session in a Arista
@@ -222,11 +223,16 @@ $ssh_cmd "enable
 conf
 monitor session $session source $iface $acl_monitor_option
 monitor session $session destination Cpu"
-# need a short break for Cpu iface allocation
+sleep 1 # need a short break for Cpu iface allocation
 sessions=$($ssh_cmd "enable
 show monitor session")
 echo "$sessions" | grep -v -e '^$' | grep -v "\-\-\-\-\-\-\-"
-cpu_iface=$(echo "$sessions" | grep $session -A 10 | grep Cpu | sed 's/.*(\(.*\))/\1/')
+cpu_iface=$(echo "$sessions" | grep $session -A 14 | grep Cpu | sed 's/.*(\(.*\))/\1/')
+
+if [ -z $cpu_iface ]; then
+    echo "Couldn't find cpu interface. Exit."
+    exit -1
+fi
 
 title "Capture $cpu_iface by Cpu."
 warning ">>>>>>>>>>> Press CTRL+C to interrupt. <<<<<<<<<<<<<"
