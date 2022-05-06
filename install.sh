@@ -11,17 +11,16 @@ if [ ! $UID -eq 0  ]; then
 fi
 
 TOP_DIR=$(dirname $(readlink -f $0))
-
 ST2110_CONF_FILE=/etc/st2110.conf
+OS=$(cat "/etc/os-release" | sed -n 's/^ID=\(.*\)/\1/p')
+echo "OS: $OS detected"
 
-if [ -f /etc/lsb-release ]; then
-    OS=debian
+if [ $OS = "debian" -o $OS = "ubuntu" ]; then
     PACKAGE_MANAGER=apt
-elif [ -f /etc/redhat-release ]; then
-    OS=redhat
+elif [ $OS = '"centos"' ]; then
     PACKAGE_MANAGER=yum
 else
-    echo "Couldn't detect OS."
+    echo "OS not supported."
     exit 1
 fi
 
