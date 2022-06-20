@@ -1,0 +1,63 @@
+#!/bin/sh -e
+### BEGIN INIT INFO
+# Provides:          nmos
+# Required-Start:    $st2110
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Start nmos-cpp-node
+### END INIT INFO
+# This header allows systemd to create a service.
+
+# To enable the initscript on SYSV init system:
+#  Copy to /etc/init.d/nmos with root ownership
+#  $ update-rc.d nmos defaults
+#  $ systemctl enable nmos
+#  $ systemctl start nmos
+set -x
+log_nmos()
+{
+    logger -t nmos "$@"
+}
+
+ST2110_CONF_FILE=/etc/st2110.conf
+if [ -f $ST2110_CONF_FILE ]; then
+    . $ST2110_CONF_FILE
+fi
+
+NMOS_PATH=/home/$ST2110_USER
+NMOS_DAEMON=$NMOS_PATH/my-nmos-node
+NMOS_CONFIG=$NMOS_PATH/nmos.json
+NMOS_NODE_PID=/var/run/nmos.pid
+
+start_nmos()
+{
+    log_nmos "Start nmos-node"
+    start-stop-daemon --start --background --chuid $ST2110_USER -m --oknodo --pidfile $NMOS_NODE_PID --exec $NMOS_DAEMON -- $NMOS_CONFIG
+}
+
+stop_nmos()
+{
+    log_nmos "Stop nmos-node"
+    start-stop-daemon --stop --pidfile $NMOS_NODE_PID --oknodo
+}
+
+usage()
+{
+    echo "Usage: $0 {start|stop}"
+}
+
+case "$1" in
+    start)
+        start_nmos
+        ;;
+    stop)
+        stop_nmos
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
+
+exit 0
