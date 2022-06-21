@@ -192,6 +192,20 @@ status()
     get_status "PTP traffic" "timeout 2 tcpdump -i $PTP_IFACE_0 -c2 $ptp_filter" "2 packets captured"
 
     echo "-----------------------------------------------"
+    show_header "NMOS"
+    NMOS_CONF=/home/$ST2110_USER/nmos.json
+    node_port=$(cat $NMOS_CONF | sed -n 's/.*http_port": \(.*\),/\1/p')
+    node_url=http://$MGMT_IP:$node_port/x-nmos
+    get_status "Daemon" "ps aux" "[m]y-nmos-node"
+    get_status "Config" "file $NMOS_CONF" "JSON data"
+    node_id=$(curl $node_url/node/v1.3/self/ 2>&1 | sed -n 's/.*id":"\(.*\)","inter.*/\1/p')
+    get_status "Node API" "curl $node_url/node/" "v1\.3" "$node_id"
+    get_status "Connection API" "curl $node_url/connection/" "v1\.1"
+    registry_address=$(cat $NMOS_CONF | sed -n 's/.*registry_address": "\(.*\)",/\1/p')
+    registry_port=$(cat $NMOS_CONF | sed -n 's/.*registration_port": \(.*\),/\1/p')
+    get_status "Registration"  "curl http://$registry_address:$registry_port/x-nmos/query/v1.2/nodes" "$node_id" "$registry_address:$registry_port"
+
+    echo "-----------------------------------------------"
     show_header "Docker"
     get_status "Daemon" "ps aux" "[d]ockerd"
     get_status "Network" "ping -c 1 -W 1 172.17.0.1" "1 received"
