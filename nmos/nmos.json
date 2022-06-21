@@ -1,0 +1,19 @@
+{
+    "label": "ST2110 device",
+    "description": "ST2110 device",
+    "host_addresses": ["0.0.0.0"],
+    "host_address": "0.0.0.0",
+    "http_port": 8100,
+    "registry_address": "0.0.0.0",
+    "registration_port": 8000,
+    "registry_version": "v1.3",
+    "system_address": "0.0.0.0",
+    "system_port": 8000,
+    "system_version": "v1.0",
+    "logging_level": 8,
+    "how_many": 2,
+    "smpte2022_7": true,
+    "channel_count": 6,
+    "seed_id": "ff69f8b6-afbd-2566-95d5-40a36ba03bef",
+    "don't worry": "about trailing commas"
+}

@@ -1,7 +1,7 @@
 # !!! Don't execute this script directly !!!
 # It is imported in $TOP/install.sh
 
-export CMAKE_VERSION=3.11.2 \
+export CMAKE_VERSION=3.21.1 \
     BOOST_VERSION=1.67.0 \
     MDNS_VERSION=878.30.4 \
     REST_VERSION=2.10.11
@@ -18,6 +18,12 @@ install_cmake()
     make
     make install
     rm -rf $DIR
+}
+
+install_conan()
+{
+    echo "Installing conan"
+    pip install conan==v1.45
 }
 
 install_boost()
@@ -91,8 +97,22 @@ install_cppnode()
     install -m 755 ./nmos-cpp-node ./nmos-cpp-registry ./nmos-cpp-test $PREFIX/bin
 }
 
+install_cppnode_example()
+{
+    echo "Installing node example based on nmos-cpp lib"
+    mkdir dev
+    cd dev
+    git clone https://github.com:pkeroulas/nmos-cpp-examples
+    mkdir ./nmos-cpp-examples/build
+    cd ./nmos-cpp-examples/build
+    cmake .. -DCMAKE_BUILD_TYPE:STRING="Release"
+    make
+    ln -s ~/dev/nmos-cpp-examples/build/my-nmos-node/my-nmos-node ~/my-nmos-node
+    cp ./nmos.json ~/my-nmos-node
+}
+
 install_nmos_init(){
-    install -m 755 ./nmos.init.reg /etc/init.d/nmos
+    install -m 755 ./nmos.init /etc/init.d/nmos
     update-rc.d nmos defaults
     systemctl enable nmos
     systemctl start nmos
@@ -101,10 +121,8 @@ install_nmos_init(){
 install_nmos() {
     set -x
     install_cmake
-    install_boost
-    install_mdns
-    install_cpprest
-    install_cppnode
+    install_conan
+    install_cppnode_example
     install_nmos_init
     set +x
 }
