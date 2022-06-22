@@ -10,6 +10,8 @@ Usage:
         stop     stop docker containers and server
         status   check the status of all the st 2110 services
         log      get the logs of the server+containers
+        freerun_start start a continuous analysis based on ./ebu-list/freerun.sh
+        freerun_stop stop continuous analysis
         install  install EBU-LIST for the first time
         upgrade  upgrade to next stable version fron public Github
         dev      upgrade to the next release from private repo
@@ -37,6 +39,7 @@ if [ -z $LIST_PATH -o -z $ST2110_USER ]; then
     exit 1
 fi
 
+TOOLKIT_PATH=$(dirname $(readlink -f $0))
 ORIG_PATH=$(pwd)
 MGMT_IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
 
@@ -147,6 +150,26 @@ stop()
     echo "You may need to 'sudo service docker restart' before starting EBU-LIST again (if Mongo DB doesn't respond)."
 }
 
+freerun_start()
+{
+    pid=$(ps aux | grep "[ ]live-capture " | tr -s ' ' | cut -d' ' -f2)
+    if [  ! -z $pid ]; then
+        echo "Analysis is already running."
+        exit 1
+    fi
+    cd $TOOLKIT_PATH
+    ./freerun.sh
+}
+
+freerun_stop()
+{
+    pid=$(ps aux | grep "[ ]live-capture " | tr -s ' ' | cut -d' ' -f2)
+    if [  ! -z $pid ]; then
+        kill -9 $pid;
+        echo "Freerun analysis stopped."
+    fi
+}
+
 port_status()
 {
     id=$1
@@ -227,6 +250,7 @@ status()
     get_status "GUI response" "curl -m 0.5 http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/null" "EBU LIST"
     get_status "Pre processor" "ps aux" "[s]tream_pre_processor"
     get_status "Capture probe" "ps aux" "[n]ode .*dpdk.yml"
+    get_status "Analysising" "ps aux" "[n]ode .* live-capture"
 }
 
 log()
@@ -320,6 +344,12 @@ case "$1" in
         ;;
     log)
         log
+        ;;
+    freerun_start)
+        freerun_start
+        ;;
+    freerun_stop)
+        freerun_stop
         ;;
     upgrade)
         upgrade origin master
