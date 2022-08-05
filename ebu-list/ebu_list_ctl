@@ -226,7 +226,7 @@ status()
     get_status "Connection API" "curl $node_url/connection/" "v1\.1"
     registry_address=$(cat $NMOS_CONF | sed -n 's/.*registry_address": "\(.*\)",/\1/p')
     registry_port=$(cat $NMOS_CONF | sed -n 's/.*registration_port": \(.*\),/\1/p')
-    get_status "Registration"  "curl http://$registry_address:$registry_port/x-nmos/query/v1.2/nodes" "$node_id" "$registry_address:$registry_port"
+    #get_status "Registration"  "curl http://$registry_address:9211/x-nmos/query/v1.3/nodes?paging.limit=100" "$node_id" "$registry_address:$registry_port"
 
     echo "-----------------------------------------------"
     show_header "Docker"

@@ -2,23 +2,26 @@
 
 usage(){
     echo "
-This script starts 'tcpdump' on a remote host and shows packets on
-local wireshark in realtime. The remote can either be a regular Linux host
-or a Arista switch.
+'rtcpdump' starts 'tcpdump' on a remote host (Linux or Arista switch),
+opens 'wireshark' locally and pipe them together to display the distant
+network packets in a GUI, in realtime.
+
+This solution makes the troubleshoot of (lightweigth) network protocols
+faster and more confortable, without being physically connected to the
+spotted network segment.
 
 Usage:
-    $0 -r <user>@<remote_ip> -p <password> -i <remote_interface> \\
-        [-c <packet_count>] [-v] ['filter_expression']
+    $0 -r <user>@<remote_ip> -p <password|password_file> -i <remote_interface> [-c <packet_count>] [-v] ['filter_expression']
 
 Params:
     -r ssh path; can be an alias in your local ssh config
     -p password used if you have sshpass installed, can be a password file
     -i remote interface name. On a switch, it can either be simple '10'
-    or a part of a quad-port '10/2'
+       or a part of a quad-port '10/2'
     -c limit of captured packets (default $pkt_count as safety for network)
     -v verbose
     -a Arista ACL filter mode <filter_expression> must be the ACL rule (Rx only)
-    filter_expression is passed to remote tcpdump or ACL
+       filter_expression is passed to remote tcpdump or ACL
 
 Examples:
     - PTP on Arista switch port:
@@ -30,8 +33,7 @@ Examples:
     - HTTP between a Arista sw (on the management interface) and a specific host:
         $0 -r user@server -p pass -i Ma1 'port 80 and host XXX.XXX.XXX.XXX'
     - DHCP/bootp on a Linux host for a given MAC:
-        $0 -r user@server -p pass -i ens192 'ether \\
-            host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
+        $0 -r user@server -p pass -i ens192 'ether host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
     - VLAN-tagged http packets
         $0 -r user@server -p pass -i ens192  '-e \(vlan 1434 and port 80\)'
 
@@ -42,7 +44,7 @@ Script steps:
     cpu interface
     - launch tcpdump in remote bash and output to stdout (raw)
     - launch local wireshark and read from stdin
-    - clean up monitor session on wireshark exited
+    - clean up monitor session on wireshark exit
 
 Others:
     - tested workstation:
@@ -54,13 +56,13 @@ Others:
         * DCS-7020TR-48
         * CCS-720XP-48Y6
     - capturing a high bitrate port isn't a good idea given the additional
-    load transfer over the network. This is why the capture is limited
-    to 10000 pkts by default. Additionally, a monitor session in a Arista
-    switch consists in mirroring the traffic to the Cpu through a 10Mbps
-    link. As a result, some packets may be lost, even when a filter is
-    given to tcpdump.
+      load transfer over the network. This is why the capture is limited
+      to 10000 pkts by default. Additionally, a monitor session in a Arista
+      switch consists in mirroring the traffic to the Cpu through a 10Mbps
+      link. As a result, some packets may be lost, even when a filter is
+      given to tcpdump.
     - note that 'StrictHostKeyChecking=no' option is used for ssh, at
-    you own risks
+      you own risks
 " 1>&2
 }
 
@@ -173,9 +175,9 @@ password at multiple times. Do you still want to proceed? [y/n]"
 fi
 
 ##################################################################
-# GO
+# Remote detection = regular Linux (easy)
 
-if $ssh_cmd "ls" > /dev/null; then # Regular Linux remote: easy
+if $ssh_cmd "ls" > /dev/null; then
     echo "Remote: Linux host"
     echo "Interfaces."
     ifaces=$($ssh_cmd "ls /sys/class/net")
@@ -188,6 +190,9 @@ if $ssh_cmd "ls" > /dev/null; then # Regular Linux remote: easy
     $ssh_cmd "tcpdump -i $iface -c $pkt_count -U -s0 -w - $filter" | "$wireshark" -k -i -
     exit 0
 fi
+
+##################################################################
+# Remote detection = Arista
 
 echo "Remote: Arista switch"
 
