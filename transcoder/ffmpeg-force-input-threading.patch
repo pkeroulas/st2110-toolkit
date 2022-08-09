@@ -1,14 +1,14 @@
-From 33bcd2ddaa766c976188c88d52c6850237b4f717 Mon Sep 17 00:00:00 2001
+From e4fe70eb4beb0cef616da790df00e47a94c7f1a7 Mon Sep 17 00:00:00 2001
 From: Patrick Keroulas <patrick.keroulas@gmail.com>
 Date: Fri, 16 Nov 2018 16:57:38 -0500
-Subject: [PATCH] ffmpeg: force input threading
+Subject: ffmpeg: force input threading
 
 ---
  fftools/ffmpeg.c | 9 +++++++--
  1 file changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/fftools/ffmpeg.c b/fftools/ffmpeg.c
-index d909fa58a7..4ec6912478 100644
+index e7384f052a..a00709979d 100644
 --- a/fftools/ffmpeg.c
 +++ b/fftools/ffmpeg.c
 @@ -23,6 +23,8 @@
@@ -20,7 +20,7 @@ index d909fa58a7..4ec6912478 100644
  #include "config.h"
  #include <ctype.h>
  #include <string.h>
-@@ -4016,8 +4018,9 @@ static int init_input_thread(int i)
+@@ -3717,8 +3719,9 @@ static int init_input_thread(int i)
      int ret;
      InputFile *f = input_files[i];
  
@@ -31,7 +31,7 @@ index d909fa58a7..4ec6912478 100644
      if (!f->thread_queue_size)
          return 0;
  
-@@ -4034,6 +4037,7 @@ static int init_input_thread(int i)
+@@ -3735,6 +3738,7 @@ static int init_input_thread(int i)
          av_thread_message_queue_free(&f->in_thread_queue);
          return AVERROR(ret);
      }
@@ -39,7 +39,7 @@ index d909fa58a7..4ec6912478 100644
  
      return 0;
  }
-@@ -4080,7 +4084,8 @@ static int get_input_packet(InputFile *f, AVPacket **pkt)
+@@ -3781,7 +3785,8 @@ static int get_input_packet(InputFile *f, AVPacket **pkt)
      }
  
  #if HAVE_THREADS

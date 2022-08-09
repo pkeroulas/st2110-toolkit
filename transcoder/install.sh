@@ -5,6 +5,7 @@ export FDKAAC_VERSION=0.1.4 \
     YASM_VERSION=1.3.0 \
     NASM_VERSION=2.13.02 \
     MP3_VERSION=3.99.5 \
+    FFMPEG_VERSION=5.1 \
     MAKEFLAGS="-j$[$(nproc) + 1]"
 
 if [ -z $PACKAGE_MANAGER ]; then
@@ -137,7 +138,7 @@ install_ffmpeg()
     cd $DIR/
     git clone https://git.ffmpeg.org/ffmpeg.git
     cd ffmpeg
-    git checkout master
+    git checkout -b $FFMPEG_VERSION origin/release/$FFMPEG_VERSION
 
     patch -p1 < $dir/transcoder/ffmpeg-force-input-threading.patch
     #patch -p1 < $dir/transcoder/ffmpeg-avformat-rtp-compute-smpte2110-timestamps.patch
