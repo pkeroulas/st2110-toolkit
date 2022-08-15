@@ -198,7 +198,11 @@ echo "Remote: Arista switch"
 
 title "Interface: $iface"
 echo "lldp:"
-$ssh_cmd "show lldp neighb | grep $iface"
+if ! $ssh_cmd "show lldp neighbors $iface"; then
+    echo "Issue with ssh connection? Exit."
+    exit 1
+fi
+
 echo "stats:"
 port_stat=$($ssh_cmd "show interfaces $iface")
 echo "$port_stat"
