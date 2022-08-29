@@ -13,7 +13,6 @@ spotted network segment.
 Usage:
     $0 -r <user>@<remote_ip> -p <password|password_file> -i <remote_interface> [-c <packet_count>] [-v] ['filter_expression']
 
-Params:
     -r ssh path; can be an alias in your local ssh config
     -p password used if you have sshpass installed, can be a password file
     -i remote interface name. On a switch, it can either be simple '10'
@@ -37,7 +36,7 @@ Examples:
     - VLAN-tagged http packets
         $0 -r user@server -p pass -i ens192  '-e \(vlan 1434 and port 80\)'
 
-Script steps:
+Script execution steps:
     - login to remote through ssh
     - detect if remote is normal linux host or Arista switch
     - if Arista, init a monitor session that mirrors targeted port to
@@ -46,15 +45,14 @@ Script steps:
     - launch local wireshark and read from stdin
     - clean up monitor session on wireshark exit
 
-Others:
-    - tested workstation:
-        * Linux workstation
-        * Windows workstation with WSL installed
-    - tested remote: Arista switches (EOS-4.24.2.1F):
-        * DCS-7280CR2A-30
-        * DCS-7280SR2-48YC6
-        * DCS-7020TR-48
-        * CCS-720XP-48Y6
+Tested:
+    - workstations: Linux, Windows (WSL installed)
+    - Arista switches (EOS-4.24.2.1F): DCS-7280CR2A-30,
+      DCS-7280SR2-48YC6, DCS-7280TR-48C6, DCS-7280CR3K-32D4,
+      DCS-7020TR-48, CCS-720XP-48Y6. Others like CCS-720XP-48ZC2 are not
+      supported since 'Monitor session' is limited
+
+Limitations:
     - capturing a high bitrate port isn't a good idea given the additional
       load transfer over the network. This is why the capture is limited
       to 10000 pkts by default. Additionally, a monitor session in a Arista
