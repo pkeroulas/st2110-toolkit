@@ -1,12 +1,6 @@
-# Don't use OpenFabric OFED driver but, instead, install default
-# rdma-core and libibverbs to get the appropriate symbols
-# in /usr/include/infiniband/
-
 install_dpdk()
 {
     install -m 755 ./dpdk-capture.sh /usr/sbin/
-
-    apt install -y libnuma-dev libpcap-dev screen rdma-core libibverbs-dev
 
     echo "Installing dpdk"
     DIR=$(mktemp -d)

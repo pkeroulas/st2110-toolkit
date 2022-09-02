@@ -70,7 +70,7 @@ stop_list()
 
 start_mellanox()
 {
-    log_st2110 "Start Mellanox NIC"
+    log_st2110 "Start Mellanox MST"
     mst start
     MLNX_DEV=$(mst status -v | tr -s ' ' | grep $MEDIA_IFACE | cut -d ' ' -f2)
     if [ "$MLNX_DEV" = "NA" ]; then
@@ -144,12 +144,12 @@ case "$1" in
         setup_iface $MEDIA_IFACE_1
         # TODO: announce hostname through lldpd
 
-        #start_mellanox
+        start_mellanox
         start_list
         start_probe
         ;;
     stop)
-        #stop_mellanox
+        stop_mellanox
         stop_list
         stop_probe
         ;;

@@ -6,6 +6,11 @@ export LANG=en_US.utf8 \
 
 source $TOP_DIR/capture/dpdk/install.sh
 
+install_mellanox()
+{
+    apt install -y rdma-core libibverbs-dev mft
+}
+
 install_smcroute()
 {
     echo "Installing smcroute"
@@ -28,6 +33,7 @@ install_smcroute()
 
 install_capture()
 {
+    install_mellanox
     install_dpdk
     install_smcroute
 }
