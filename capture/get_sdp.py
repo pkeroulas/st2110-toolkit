@@ -8,7 +8,7 @@ import re
 def usage():
     print("""
 get_sdp.py - helper script to fetch SDP file from Embrionix sender and
-\tand select multiple flows.
+\tselect multiple flows and pack then in a single SDP (illegal in ST 2110).
 
 Usage:
 \tget_sdp.py <sender_ip> [flow indexes]

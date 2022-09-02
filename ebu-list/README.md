@@ -35,9 +35,9 @@ TODO: photos
 
 ### OS
 
-#### Boot Ubuntu 18.04 from USB stick.
+#### Boot Ubuntu 20.04 from USB stick.
 
-* [Create a bootable USB stick with Ubuntu 18.04 inside](https://tutorials.ubuntu.com/tutorial/tutorial-create-a-usb-stick-on-ubuntu#0)
+* [Create a bootable USB stick with Ubuntu 20.04 inside](https://tutorials.ubuntu.com/tutorial/tutorial-create-a-usb-stick-on-ubuntu#0)
 * plug the USB on the station and power up
 * press F2 to enter the BIOS setup.
 * select UEFI USB stick as a primary boot device
@@ -53,7 +53,6 @@ TODO: photos
 * no disk encryption nor LVM required
 * select target disk for OS, i.e. the largest NVMe
 * user: ebulist
-* computer's name: ebulist-light-<dpt>-<id> (example: ebulist-light-maint-0)
 * restart
 
 #### OS init setup
@@ -133,36 +132,10 @@ cd /home/ebulist/st2110-toolkit
 vi /etc/st2110.conf
 source ./install.sh
 ```
-### Mellanox network controller
+### Nvidia-Mellanox network controller
 
-ST-2110-ready NIC is mandatory to perform accurate analysis. Connectx-5 is selected to benefit from VMA library for hardware-accelerated capture. Verify the NIC is detected:
-
-```sh
-lspci -v | grep Mellanox
-...
-```
-
-Mellanox drivers has to be manually downloaded [here.](https://www.mellanox.com/page/products_dyn?product_family=26&mtag=linux_sw_drivers)
-
-* Select: "Download > LatestVersion > Ubuntu > Ubuntu 18.04 > x86_64 > ISO"
-* Accept End User License Agreement
-* Copy in the home directory
-* Start the installation which takes a while:
-
-```sh
-install_mellanox ../MLNX_OFED_LINUX-4.7-1.0.0.1-ubuntu18.04-x86_64.iso
-```
-
-If dkms fails to build, see comment `install_mellanox` function in
-`intall.sh` script.
-
-Note the serial number, needed later:
-
-```sh
-sudo mlxfwmanager | grep GUID
-```
-
-If something goes wrong, you may find additional [installation documentation.](https://docs.mellanox.com/display/MLNXOFEDv461000/Downloading+Mellanox+OFED).
+These [instructions](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/README.md)
+show how to setup a performant stream capture engine based on Nvidia/Mellanox NIC + DPDK.
 
 ## EBU-LIST install
 

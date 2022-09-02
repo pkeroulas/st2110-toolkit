@@ -8,7 +8,7 @@ The proposed solution supports:
 - IP/port filtering
 - Throughput up to 13Gbps
 
-And it is tested on a [mini PC running Ubuntu >=18.04, equipped with a Mellanox ConnectX-5 card @ 100Gbps](https://github.com/pkeroulas/st2110-toolkit/tree/master/ebu-list) and a FPGA-based source.
+And it is tested on a [mini PC running Ubuntu >=20.04, equipped with a Mellanox ConnectX-5 card @ 100Gbps](https://github.com/pkeroulas/st2110-toolkit/tree/master/ebu-list) and a FPGA-based source.
 
 - [Getting started](#Getting-started)
     - [DPDK](#DPDK)

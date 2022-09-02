@@ -1,68 +1,24 @@
 # Capture
 
-Note that following instructions rely on tcpdump capture which is
-limited in terms of performance and timestamps accuracy. For best
-performance consult [DPDK page](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/README.md).
 
-## NIC
+## Nvidia/Mellanox software
 
-The first thing to do on system startup is to setup the network
-interface controller (NIC).
+[OpenFabric OFED driver](https://docs.nvidia.com/networking/display/MLNXOFEDv461000/Release+Notes)
+is no more supported but everything needed for a good RDMA-accelerated packet capture is now
+included in Ubuntu packages: `rdma-core`, `libibverbs` and `mft`.
 
-```sh
-$ sudo ./nic_setup.sh eth0
-[...]
-```
+## DPDK-based capture engine
 
-## Stream description: SDP file
+[DPDK page](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/dpdk/README.md).
 
-ST2110 senders, like Embrionix encap, should provide an SDP file to
-describe every produced essences, i.e. RTP streams.
 
-A python script grabs SDP from Embrionix encapsulator given its unicast
-address. The result is a SDP file which contains the selected flows
-provided by the source. See [flow description.](../doc/embrionix.md) for
-more details.
+## Various tools
 
-```sh
-$ ./get_sdp.py <sender_IP> <flows>
-$ ./get_sdp.py 192.168.1.176 0 2 18
-[...]
-------------------------------------------------------------------------
-SDP written to emb_encap_176.sdp
-```
+The following scripts were just helpers when epxerimenting with SDP, NIC setup, multicast joining and basic capture.
 
-[Embrinonix SDP example.](../doc/sdp.sample)
-
-When using some applications like ffmpeg, a wrong interface to perform
-the IGMP join to multicast group. Setup the IP routing table fixes.
-Firewall rules may also be needed to unblock the traffic from the NIC to
-the userspace socket interface. This is all done by this script:
-
-```sh
-$ ./network_setup.sh sdp.file
-[...]
-```
-
-## Execute
-
-If you already have an SDP file, it can be used as an input for the
-capture script which parses every RTP streams.
-
-```sh
-$ sudo ./capture.sh help
-[...]
-$ sudo ./capture.sh sdp file.sdp
-```
-
-Or manually select any multicast group:
-
-```sh
-$ sudo ./capture.sh manual 239.0.0.15 2
-```
-
-Additional params (capture duration, truncate) can be set in the conf
-file, i.e. `/etc/st2110.conf`. See sample `./config/st2110.conf` for
-details.
+* `nic_setup.sh`
+* `./get_sdp.py`
+* `./network_setup.sh`
+* `./capture.sh`
 
 ## [Troubleshoot](../doc/troubleshoot.md)

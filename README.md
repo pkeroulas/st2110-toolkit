@@ -1,12 +1,11 @@
-# ST-2110 software toolkit
+# ST 2110 software toolkit
 
 This toolkit provides scripts and config to test, monitor and transcode SMPTE ST 2110 streams.
 Features:
 
-* setup network (routes, firewall) and Mellanox NIC (Rx buffer size, checksum, timestamping)
-* capture streams described by SDP file fetched from Embrionix encapsulator
-* transcode st2110-to-h264 from live feeds described by same SDP
-* integration resources for [EBU-LIST](https://tech.ebu.ch/list)
+* capture ST 2110 streams
+* transcode ST 2110 to h264 given a SDP (Session Description Protocol)
+* integration recipe to create a live version of [EBU-LIST](https://tech.ebu.ch/list)
 * misc pcap tools
 * analyse stream content like PTP clock
 
@@ -17,7 +16,7 @@ Sponsored by:
 Tested distros:
 * Centos 7
 * Dockerized Centos 7
-* Ubuntu > 18.04
+* Ubuntu > 20.04
 
 ## Install
 
@@ -44,7 +43,8 @@ EBU-LIST server in live mode, i.e. connected to a ST 2110 network.
 
 ## Capture
 
-[Instructions](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/README.md) includes network interface configuration.
+These [instructions](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/README.md)
+show how to setup a performant stream capture engine based on Nvidia/Mellanox NIC + DPDK.
 
 ## Transcode
 
