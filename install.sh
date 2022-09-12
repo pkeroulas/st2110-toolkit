@@ -3,7 +3,7 @@
 # Compile & Install everything for FFMPEG transcoding
 # and tcpdump capturing and EBU-LIST
 
-#set -euo pipefail
+set -euo pipefail
 
 if [ ! $UID -eq 0  ]; then
     echo "Not root, exit."
@@ -74,7 +74,7 @@ install_common_tools()
     fi
 
     # rigth capabilities in order to use tcpdump, ip, iptables without sudo
-    groupadd pcap
+    groupadd -f pcap
     for p in tcpdump ip iptables; do
         bin=$(readlink -f $(which $p))
         chgrp pcap $bin
@@ -100,15 +100,21 @@ install_dev_tools()
 install_config()
 {
     if [ ! -f  $ST2110_CONF_FILE ]; then
-        echo "Don't overwrite config, it is painful"
         install -m 644 $TOP_DIR/config/st2110.conf $ST2110_CONF_FILE
+        echo "************************************************"
+        echo "Default config installed: $ST2110_CONF_FILE"
+        echo "If necessary, change ST2110_USER inside and create user on this system."
+        echo "Then run again."
+        echo "************************************************"
     fi
     source $ST2110_CONF_FILE
 
     if [ ! -d /home/$ST2110_USER ]; then
-        echo "Please verify that /home/$ST2110_USER doesn't exist."
-        echo "Or change ST2110_USER=$ST2110_USER in $ST2110_CONF_FILE"
-        echo "And try again."
+        echo "************************************************"
+        echo "/home/$ST2110_USER doesn't exist. Verify ST2110_USER in $ST2110_CONF_FILE"
+        echo "and add the appropriate user on this system if necessary."
+        echo "Then run again."
+        echo "************************************************"
         exit -1
     fi
 
