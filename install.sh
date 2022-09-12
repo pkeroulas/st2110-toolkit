@@ -54,6 +54,7 @@ install_common_tools()
         net-tools \
         patch \
         perl \
+        sshpass \
         tar \
         tcpdump \
         tmux \
