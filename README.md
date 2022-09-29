@@ -1,5 +1,7 @@
 # ST 2110 software toolkit
 
+Auteur: PK
+
 This toolkit provides scripts and config to test, monitor and transcode SMPTE ST 2110 streams.
 Features:
 
