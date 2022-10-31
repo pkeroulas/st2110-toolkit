@@ -132,11 +132,10 @@ ssh_cmd="ssh -T -o StrictHostKeyChecking=no $remote "
 
 title "RTCPDUMP"
 
-if mount | grep -q  "type 9p"; then
+if mount | grep -q  "^C:\\\ on"; then
     echo "Host: WSL"
-    # FIXME: wireshark complains about IOR.txt wrong permission but the
-    # capture works fine
     wireshark="/mnt/c/Progra~1/Wireshark/Wireshark.exe"
+    # wireshark may complain about IOR.txt wrong permission but the capture works fine
 else
     echo "Host: Linux"
     wireshark=$(which wireshark)
