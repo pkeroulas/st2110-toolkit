@@ -274,8 +274,8 @@ install()
     # dev mode means build application from source
     if [ $LIST_DEV = "true" ]; then
         cd ~
-        git clone https://github.com/ebu/pi-list.git $LIST_DIR
-        cd $LIST_DATA
+        git clone https://github.com/ebu/pi-list.git $LIST_PATH
+        cd $LIST_PATH
         git submodule update --init --recursive
         sudo ./scripts/setup_build_env.sh
         echo "Get token to access online translation file."
