@@ -3,7 +3,7 @@
 usage(){
     echo "
 'rtcpdump' starts 'tcpdump' on a remote host (Linux or Arista switch),
-opens 'wireshark' locally and pipe them together to display the distant
+opens 'wireshark' locally and pipes them together to display the distant
 network packets in a GUI, in realtime.
 
 This solution makes the troubleshoot of (lightweigth) network protocols
@@ -11,7 +11,8 @@ faster and more confortable, without being physically connected to the
 spotted network segment.
 
 Usage:
-    $0 -r <user>@<remote_ip> -p <password|password_file> -i <remote_interface> [-c <packet_count>] [-v] ['filter_expression']
+    $0 -r <user>@<remote_ip> -p <password|password_file> -i <remote_interface>
+        [-c <packet_count>] [-v] [-d rx|tx|both] [-a] ['filter_expression']
 
     -r ssh path; can be an alias in your local ssh config
     -p password used if you have sshpass installed, can be a password file
@@ -19,7 +20,8 @@ Usage:
        or a part of a quad-port '10/2'
     -c limit of captured packets (default $pkt_count as safety for network)
     -v verbose
-    -a Arista ACL filter mode <filter_expression> must be the ACL rule (Rx only)
+    -d direction 'rx|tx': keep ingress traffic only or egress. Default is both
+    -a Arista ACL filter mode <filter_expression> must be the ACL rule (rx only)
        filter_expression is passed to remote tcpdump or ACL
 
 Examples:
@@ -80,11 +82,12 @@ function error() {
 pkt_count=10000
 session=RTCPDUMP
 filter_mode=tcpdump
+direction="both"
 
 ##################################################################
 # PARSE ARGS
 
-while getopts ":r:p:i:c:va" o; do
+while getopts ":r:p:i:c:d:va" o; do
     case "${o}" in
         r)
             remote=${OPTARG}
@@ -101,6 +104,9 @@ while getopts ":r:p:i:c:va" o; do
             ;;
         c)
             pkt_count=${OPTARG}
+            ;;
+        d)
+            direction=${OPTARG}
             ;;
         a)
             filter_mode=acl
@@ -119,7 +125,13 @@ done
 shift $((OPTIND-1))
 
 if [ -z "$remote" -o -z "$iface" ]; then
-    error "Missing argument"
+    error "Missing argument -r or -i"
+    usage
+    exit 1
+fi
+
+if [ ! "$direction" = "rx" -a ! "$direction" = "tx" -a ! "$direction" = "both" ]; then
+    error "Wrong value for -d param"
     usage
     exit 1
 fi
@@ -219,13 +231,14 @@ $filter
 show ip access-list $session
 "
     filter=""
-    acl_monitor_option="rx ip access-group $session"
+    direction="rx"
+    acl_monitor_option="ip access-group $session"
 fi
 
 title "Create a monitor session:"
 $ssh_cmd "enable
 conf
-monitor session $session source $iface $acl_monitor_option
+monitor session $session source $iface $direction $acl_monitor_option
 monitor session $session destination Cpu"
 sleep 1 # need a short break for Cpu iface allocation
 sessions=$($ssh_cmd "enable
@@ -239,13 +252,15 @@ if [ -z $cpu_iface ]; then
 fi
 
 title "Capture $cpu_iface by Cpu."
-warning ">>>>>>>>>>> Press CTRL+C to interrupt. <<<<<<<<<<<<<"
+tcpdump_cmd="tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter"
+echo $tcpdump_cmd
 
+warning ">>>>>>>>>>> Press CTRL+C to interrupt. <<<<<<<<<<<<<"
 trap 'echo Interrupted.' SIGINT # catch Ctrl-C to exit Arista bash properly
 
 $ssh_cmd "enable
 conf
-bash tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter" | "$wireshark" -k -i -
+bash $tcpdump_cmd" | "$wireshark" -k -i -
 
 title "Cleanup."
 $ssh_cmd "enable
