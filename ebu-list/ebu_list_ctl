@@ -10,6 +10,7 @@ Usage:
         stop     stop docker containers and server
         status   check the status of all the st 2110 services
         log      get the logs of the server+containers
+        sniff    list incomming udp traffic
         freerun_start start a continuous analysis based on ./ebu-list/freerun.sh
         freerun_stop stop continuous analysis
         install  install EBU-LIST for the first time
@@ -185,6 +186,16 @@ port_status()
     get_status "Interface $id" "ip addr show $iface" "$iface: .* UP" "$iface $media_ip"
     get_status "Gateway   $id" "ping -c 1 -W 1 -I $iface $media_gw_ip" "1 received" "$media_gw_port $media_gw_ip"
     get_status "Switch    $id" "ping -c 1 -W 1 $switch_ip" "1 received" "$switch_name $switch_ip"
+
+    #sudo mget_temp -d /dev/mst/mt4121_pciconf0.1
+}
+
+sniff_port()
+{
+    if [ -z $1 ]; then return 1; fi
+    iface=$1
+    echo "UDP traffic on $iface:"
+    timeout 1 tcpdump -c 10000  -q -i $iface -nn -vvv udp 2>/dev/null | sed -n 's/.* > \(.*\): .*/   \1/p' | sort | uniq
 }
 
 status()
@@ -250,7 +261,7 @@ status()
     get_status "GUI response" "curl -m 0.5 http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/null" "EBU LIST"
     get_status "Pre processor" "ps aux" "[s]tream_pre_processor"
     get_status "Capture probe" "ps aux" "[n]ode .*dpdk.yml"
-    get_status "Analysising" "ps aux" "[n]ode .* live-capture"
+    get_status "Analysing" "ps aux" "[n]ode .* live-capture"
 }
 
 log()
@@ -344,6 +355,10 @@ case "$1" in
         ;;
     log)
         log
+        ;;
+    sniff)
+        sniff_port $MEDIA_IFACE_0
+        sniff_port $MEDIA_IFACE_1
         ;;
     freerun_start)
         freerun_start
