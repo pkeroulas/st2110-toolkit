@@ -12,9 +12,10 @@ spotted network segment.
 
 Usage:
     $0 -r <user>@<remote_ip> -p <password|password_file> -i <remote_interface>
-        [-c <packet_count>] [-v] [-d rx|tx|both] [-a] ['filter_expression']
+        [-P user@proxy] [-c <packet_count>] [-v] [-d rx|tx|both] [-a] ['filter_expression']
 
     -r ssh path; can be an alias in your local ssh config
+    -P ssh proxy proxy; can also be an alias
     -p password used if you have sshpass installed, can be a password file
     -i remote interface name. On a switch, it can either be simple '10'
        or a part of a quad-port '10/2'
@@ -83,11 +84,12 @@ pkt_count=10000
 session=RTCPDUMP
 filter_mode=tcpdump
 direction="both"
+proxy=''
 
 ##################################################################
 # PARSE ARGS
 
-while getopts ":r:p:i:c:d:va" o; do
+while getopts ":r:p:P:i:c:d:va" o; do
     case "${o}" in
         r)
             remote=${OPTARG}
@@ -101,6 +103,9 @@ while getopts ":r:p:i:c:d:va" o; do
             else
                 password=${OPTARG}
             fi
+            ;;
+        P)
+            proxy="-o ProxyJump=${OPTARG}"
             ;;
         c)
             pkt_count=${OPTARG}
@@ -137,7 +142,7 @@ if [ ! "$direction" = "rx" -a ! "$direction" = "tx" -a ! "$direction" = "both" ]
 fi
 
 filter=$@
-ssh_cmd="ssh -T -o StrictHostKeyChecking=no $remote "
+ssh_cmd="ssh -T -o StrictHostKeyChecking=no $proxy $remote "
 
 ##################################################################
 # CHECKS
@@ -162,6 +167,9 @@ if ! which ssh >/dev/null; then
     error "ssh client not found"
     exit 1
 fi
+
+echo "ssh cmd:"
+echo $ssh_cmd
 
 if which sshpass >/dev/null; then
     if [ ! -z "$passfile" ]; then
