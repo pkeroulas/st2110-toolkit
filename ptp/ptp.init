@@ -15,8 +15,6 @@
 #  $ systemctl enable ptp
 #  $ systemctl start ptp
 
-set -x
-
 log_ptp()
 {
     logger -t ptp "$@"
@@ -28,7 +26,7 @@ if [ -f $ST2110_CONF_FILE ]; then
 fi
 
 PTP_CONFIG=/etc/linuxptp/ptp4l.conf
-PTP_DOMAIN=$(sed -n 's/domainNumber\t\+\([0-9]*\)/\1/p' $PTP_CONFIG)
+PTP_DOMAIN=$(sed -n 's/^domainNumber\t\+\([0-9]*\)/\1/p' $PTP_CONFIG)
 PTP_PTP4L_PID=/var/run/ptp4l.pid
 PTP_PHC2SYS_PID=/var/run/phc2sys.pid
 
