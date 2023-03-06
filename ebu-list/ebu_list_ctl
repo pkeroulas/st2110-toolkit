@@ -43,6 +43,7 @@ fi
 TOOLKIT_PATH=$(dirname $(readlink -f $0))
 ORIG_PATH=$(pwd)
 MGMT_IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
+TMP_FILE=/tmp/ebulist.tmp
 
 # In prod, nginx is used as proxy to expose port 80 only
 if [ $LIST_DEV = "true" ]; then
@@ -195,7 +196,8 @@ sniff_port()
     if [ -z $1 ]; then return 1; fi
     iface=$1
     echo "UDP traffic on $iface:"
-    timeout 1 tcpdump -c 10000  -q -i $iface -nn -vvv udp 2>/dev/null | sed -n 's/.* > \(.*\): .*/   \1/p' | sort | uniq
+    timeout 2 tcpdump -c 10000  -q -i $iface -nn -vvv udp 2>/dev/null > $TMP_FILE
+    cat $TMP_FILE | sed -n 's/.* > \(.*\): .*/   \1/p' | sort | uniq
 }
 
 status()
