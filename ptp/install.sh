@@ -24,4 +24,7 @@ install_ptp()
     install -m 755 $TOP_DIR/ptp/ptp.init /etc/init.d/ptp
     update-rc.d ptp defaults
     systemctl enable ptp
+
+    systemctl stop systemd-timesyncd.service
+    systemctl disable systemd-timesyncd.service
 }
