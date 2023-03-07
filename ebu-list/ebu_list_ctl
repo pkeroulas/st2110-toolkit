@@ -16,6 +16,7 @@ Usage:
         install  install EBU-LIST for the first time
         upgrade  upgrade to next stable version fron public Github
         dev      upgrade to the next release from private repo
+        nmos     probe local nmos RX node
 " >&2
 }
 
@@ -43,10 +44,14 @@ if [ -z $LIST_PATH -o -z $ST2110_USER ]; then
     exit 1
 fi
 
-TOOLKIT_PATH=$(dirname $(readlink -f $0))
+TOOLKIT_PATH=$(dirname $(readlink -f $0))/..
 ORIG_PATH=$(pwd)
 MGMT_IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p')
 TMP_FILE=/tmp/ebulist.tmp
+
+NMOS_CONF=/home/$ST2110_USER/nmos.json
+NMOS_NODE_PORT=$(cat $NMOS_CONF | sed -n 's/.*http_port": \(.*\),/\1/p')
+NMOS_NODE_URL=http://$MGMT_IP:$NMOS_NODE_PORT/x-nmos
 
 # In prod, nginx is used as proxy to expose port 80 only
 if [ $LIST_DEV = "true" ]; then
@@ -162,7 +167,7 @@ freerun_start()
         echo "Analysis is already running."
         exit 1
     fi
-    cd $TOOLKIT_PATH
+    cd $TOOLKIT_PATH/ebulist/
     ./freerun.sh
 }
 
@@ -232,14 +237,11 @@ status()
 
     echo "-----------------------------------------------"
     show_header "NMOS"
-    NMOS_CONF=/home/$ST2110_USER/nmos.json
-    node_port=$(cat $NMOS_CONF | sed -n 's/.*http_port": \(.*\),/\1/p')
-    node_url=http://$MGMT_IP:$node_port/x-nmos
     get_status "Daemon" "ps aux" "[m]y-nmos-node"
     get_status "Config" "file $NMOS_CONF" "JSON data"
-    node_id=$(curl $node_url/node/v1.3/self/ 2>&1 | sed -n 's/.*id":"\(.*\)","inter.*/\1/p')
-    get_status "Node API" "curl $node_url/node/" "v1\.3" "$node_id"
-    get_status "Connection API" "curl $node_url/connection/" "v1\.1"
+    node_id=$(curl $NMOS_NODE_URL/node/v1.3/self/ 2>&1 | sed -n 's/.*id":"\(.*\)","inter.*/\1/p')
+    get_status "Node API" "curl $NMOS_NODE_URL/node/" "v1\.3" "$node_id"
+    get_status "Connection API" "curl $NMOS_NODE_URL/connection/" "v1\.1"
     registry_address=$(cat $NMOS_CONF | sed -n 's/.*registry_address": "\(.*\)",/\1/p')
     registry_port=$(cat $NMOS_CONF | sed -n 's/.*registration_port": \(.*\),/\1/p')
     #get_status "Registration"  "curl http://$registry_address:9211/x-nmos/query/v1.3/nodes?paging.limit=100" "$node_id" "$registry_address:$registry_port"
@@ -348,6 +350,12 @@ upgrade()
     fi
 }
 
+
+nmos_probe()
+{
+    $TOOLKIT_PATH/nmos/get_sdp.sh r "$MGMT_IP:$NMOS_NODE_PORT"
+}
+
 case "$1" in
     start)
         start
@@ -380,6 +388,9 @@ case "$1" in
         ;;
     install)
         install
+        ;;
+    nmos)
+        nmos_probe
         ;;
     *)
         usage

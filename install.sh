@@ -49,6 +49,7 @@ install_common_tools()
         ethtool \
         gcc \
         git \
+        jq \
         libtool \
         make \
         net-tools \

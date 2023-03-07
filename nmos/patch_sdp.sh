@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -lt 4 ]; then
-    echo "Usage: $0 <receiver IP> <receiver ID> <SDP file> <on|off>"
+    echo "Usage: $0 <receiver IP[:port]> <receiver ID> <SDP file> <on|off>"
     exit 1
 fi
 

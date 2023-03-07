@@ -217,6 +217,7 @@ Usage:
         install  install EBU-LIST for the first time
         upgrade  upgrade to next stable version fron public Github
         dev      upgrade to the next release from private repo
+        nmos     probe local nmos RX node
 
 $ ebu_list_ctl status
 -----------------------------------------------
