@@ -17,7 +17,7 @@ echo "OS: $OS detected"
 
 if [ $OS = "debian" -o $OS = "ubuntu" ]; then
     PACKAGE_MANAGER=apt
-elif [ $OS = '"centos"' ]; then
+elif [ $OS = "centos" -o $OS = "redhat" ]; then
     PACKAGE_MANAGER=yum
 else
     echo "OS not supported."
@@ -60,7 +60,7 @@ install_common_tools()
         tmux \
         wget \
 
-    if [ $OS = "redhat" ]; then
+    if [ $PACKAGE_MANAGER = "yum" ]; then
         $PACKAGE_MANAGER -y update && $PACKAGE_MANAGER install -y \
             nc \
             gcc-c++ \
@@ -85,7 +85,7 @@ install_common_tools()
 
 install_dev_tools()
 {
-    if [ $OS = "redhat" ]; then
+    if [ $PACKAGE_MANAGER = "yum" ]; then
         wget dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm
         rpm -ihv epel-release-7-11.noarch.rpm
     fi

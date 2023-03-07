@@ -1,5 +1,3 @@
-# !!! Don't execute this script directly !!!
-# It is imported in $TOP/install.sh
 
 export FDKAAC_VERSION=0.1.4 \
     YASM_VERSION=1.3.0 \
@@ -9,8 +7,10 @@ export FDKAAC_VERSION=0.1.4 \
     MAKEFLAGS="-j$[$(nproc) + 1]"
 
 if [ -z $PACKAGE_MANAGER ]; then
-    echo  "$PACKAGE_MANAGER undefined. Set to default 'apt'"
-    PACKAGE_MANAGER=apt
+    echo  "!!! Don't execute this script directly !!!
+Usage:
+    <top_directory>/install.sh transcoder"
+    exit 1
 fi
 if [ -z $PREFIX ]; then
     echo  "$PREFIX undefined. Set to default '/usr/local'"
@@ -39,7 +39,7 @@ install_yasm()
 install_nasm()
 {
     echo "Installing NASM"
-    if [ $OS = "redhat" ]; then
+    if [ $PACKAGE_MANAGER = "yum" ]; then
         DIR=$(mktemp -d)
         cd $DIR/
         nasm_rpm=nasm-$NASM_VERSION-0.fc24.x86_64.rpm
@@ -120,7 +120,7 @@ install_streaming_server()
 
 install_libsrt()
 {
-    if [ $OS = debian ]; then
+    if [ $PACKAGE_MANAGER = "apt" ]; then
         $PACKAGE_MANAGER install libsrt-dev libsrt1
     else
         $PACKAGE_MANAGER install srt-devel srt-libs
