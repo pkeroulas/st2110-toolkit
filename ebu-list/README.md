@@ -206,11 +206,14 @@ $ ebu_list_ctl
 /usr/sbin/ebu_list_ctl is a wrapper script that manages EBU-LIST
 and related sub-services (DB, backend, UI, etc.)
 Usage:
-    /usr/sbin/ebu_list_ctl {start|stop|status|log|install|upgrade|dev}
+    /usr/sbin/ebu_list_ctl [-v] {start|stop|status|log|install|upgrade|dev}
         start    start docker containers and server
         stop     stop docker containers and server
         status   check the status of all the st 2110 services
         log      get the logs of the server+containers
+        sniff    list incomming udp traffic
+        freerun_start start a continuous analysis based on ./ebu-list/freerun.sh
+        freerun_stop stop continuous analysis
         install  install EBU-LIST for the first time
         upgrade  upgrade to next stable version fron public Github
         dev      upgrade to the next release from private repo
@@ -219,25 +222,29 @@ $ ebu_list_ctl status
 -----------------------------------------------
                 EBU-LIST Status
 -----------------------------------------------
-Media interfaces
-Name                 ebulist-light-maint-2
-Managment iface      UP    eno2                      192.168.2.108
+Hostname             XXXXXXXXXXXXXXX
+Mgt interface        UP    eno1                      XXXXXXXXXXX
 -----------------------------------------------
 Media interfaces
-NIC driver           UP
-Interface 0          UP    enp1s0f0                  192.168.105.93
-Gateway   0          UP    ifname                    Ethernet24
-Switch    0          UP    XXXXXXXXXXXXXXXXXXXXXXXX. 192.168.253.8
-Interface 1          UP    enp1s0f1                  192.168.107.241
-Gateway   1          UP    ifname                    Ethernet54/1
-Switch    1          UP    XXXXXXXXXXXXXXXXXXXXXXXX. 192.168.253.8
+Interface 0          UP    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Gateway   0          UP    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Switch    0          UP    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Interface 1          UP    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Gateway   1          UP    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Switch    1          UP    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 -----------------------------------------------
 PTP
-ptp4l                UP
-phc2sys   0          UP
-phc2sys   1          UP
+ptp4l                UP    ens3f1
+phc2sys   0          UP    CLOCK_REALTIME
+phc2sys   1          UP    ens3f0
 Lock                 UP
-Ptp traffic          UP
+PTP traffic          UP
+-----------------------------------------------
+NMOS
+Daemon               UP
+Config               UP
+Node API             UP    1145b427-a793-513d-b430-0
+Connection API       UP
 -----------------------------------------------
 Docker
 Daemon               UP
@@ -247,12 +254,14 @@ Service Influx DB    UP
 Service Rabbit MQ    UP
 -----------------------------------------------
 LIST
-Profile              prod
-container            UP
-API response         UP
+Profile              dev
+API running          UP
+API version          UP    2.2.2."36b39758"
+GUI running          UP
 GUI response         UP
-probe 0              DOWN
-probe 1              DOWN
+Pre processor        UP
+Capture probe        UP
+Analysing            DOWN
 ```
 
 #### Upgrade

@@ -24,7 +24,10 @@ log_ebu_list()
     logger -t "st2110-ebulist" "$@"
 }
 
-if [ $1 = "-v" ]; then
+if [ -z $1 ]; then
+    usage
+    exit 1
+elif [ $1 = "-v" ]; then
     DEBUG=true
     set -x
     shift
