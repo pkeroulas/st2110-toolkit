@@ -153,7 +153,7 @@ install_ffmpeg()
         --enable-postproc --enable-libsrt \
         --enable-libx264 --enable-libfdk-aac --enable-libmp3lame \
         --disable-ffplay --disable-ffprobe \
-        $ffmpeg_gpu_options \
+        ${ffmpeg_gpu_options-} \
         --enable-small --disable-stripping --disable-debug
 
     make
