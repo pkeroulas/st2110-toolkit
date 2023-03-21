@@ -34,7 +34,7 @@ dpdk_log "Parse args: ------------------------------------------ "
 #  $ tcpdump -i interfaceName --time-stamp-precision=nano \
 #   -j adapter_unsynced\--snapshot-length=N -v -w pcap -G 2 -W 1 \
 #   dst 192.168.1.1 or dst 192.168.1.2
-while getopts ":i:w:G:W:v:V" o; do
+while getopts ":i:w:G:W:vV" o; do
     case "${o}" in
         i | interface)
             if [ ! -z "$iface" ]; then
