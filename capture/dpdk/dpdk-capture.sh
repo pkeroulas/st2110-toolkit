@@ -6,9 +6,15 @@ usage(){
     requests (requires sudo) when a filter expression is given.
 Usage:
     $0 -i interface0 [-i interface1] -w file.pcap [-G <secondes>] [-v|V] [ filter expr ]
+        -i  Network interface(s), be aware that dpdk captures everything, ptp included.
+        -w  Output pcap file
+        -G  Capture duration
+        -v  Verbose
+        -V  Very verbose
+        filter expression tcpdump-like expression, but only for multicast to be subscribed by IGMP
 
 Exples:
-    $0 -i enp1s0f0 -w /tmp/single.pcap -G 1 dst 225.192.10.1
+    $0 -i enp1s0f0 -w /tmp/single.pcap -G 1 dst 225.192.10.1 or dst 225.192.10.2
     $0 -V -i enp1s0f0 -i enp1s0f1 -w /tmp/dual.pcap -G 1 # dual port means that local ptp slave won't see ptp traffic
     " >&2
 }
@@ -24,7 +30,7 @@ dpdk_log(){
 }
 
 if ps aux | grep -q [p]dump; then
-   dpdk_log "already in use, exit"
+   dpdk_log "dpdk-pdump is already in use, exit."
    exit 2
 fi
 
