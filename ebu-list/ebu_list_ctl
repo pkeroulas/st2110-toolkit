@@ -242,6 +242,7 @@ status()
     node_id=$(curl $NMOS_NODE_URL/node/v1.3/self/ 2>&1 | sed -n 's/.*id":"\(.*\)","inter.*/\1/p')
     get_status "Node API" "curl $NMOS_NODE_URL/node/" "v1\.3" "$node_id"
     get_status "Connection API" "curl $NMOS_NODE_URL/connection/" "v1\.1"
+    get_status "Receivers" "curl $NMOS_NODE_URL/connection/v1.1/single/receivers" '\[".*"\,".*"\]'
     registry_address=$(cat $NMOS_CONF | sed -n 's/.*registry_address": "\(.*\)",/\1/p')
     registry_port=$(cat $NMOS_CONF | sed -n 's/.*registration_port": \(.*\),/\1/p')
     #get_status "Registration"  "curl http://$registry_address:9211/x-nmos/query/v1.3/nodes?paging.limit=100" "$node_id" "$registry_address:$registry_port"
