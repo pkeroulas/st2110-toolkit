@@ -1,26 +1,29 @@
 # ST 2110 software toolkit
 
-This toolkit provides scripts and config to test, monitor and transcode SMPTE ST 2110 streams.
+This toolkit aims at capturing, analysing and transcoding SMPTE ST 2110 streams.
+
 Features:
 
-* capture ST 2110 streams
-* transcode ST 2110 to h264 given a SDP (Session Description Protocol)
-* integration recipe to create a live version of [EBU-LIST](https://tech.ebu.ch/list)
-* misc pcap tools
-* analyse stream content like PTP clock
+* capture RTP packets with high precision timestamps
+* transcode ST 2110 essences to h264
+* provide various pcap tools
+* provide a recipe to create a live version of [EBU-LIST](https://tech.ebu.ch/list)
+* troubleshoot the network by capturing traffic on remote hosts
 
 Sponsored by:
 
 ![logo](https://site-cbc.radio-canada.ca/site/annual-reports/2014-2015/_images/about/services/cbc-radio-canada.png)
 
 Tested distros:
+
 * Centos 7
 * Dockerized Centos 7
 * Ubuntu > 20.04
 
 ## Install
 
-Install everything (tools, FFmpeg and all the dependencies) using the install scrip:
+The repo contains multiple install sub-scripts, use the one in TOP
+DIRECTORY ONLY.
 
 ```sh
 $ ./install.sh
@@ -30,8 +33,9 @@ sections are:
     * ptp:          linuxptp
     * transcoder:   ffmpeg, x264, mp3 and other codecs
     * capture:      dpdk-based capture engine
-    * ebulist:      EBU-LIST pcap analyzer
-    * nmos:         Sony nmos-cpp (deprecated)
+    * ebulist:      EBU-LIST pcap analyzer, NOT tested for a while
+    * nmos:         Sony nmos-cpp node and scripts for SDP
+Regardless of your setup, please install 'common' section first.
 ```
 
 ## Configuration
@@ -43,43 +47,48 @@ EBU-LIST server in live mode, i.e. connected to a ST 2110 network.
 
 ## Capture
 
-These [instructions](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/README.md)
+These [instructions](./capture/README.md)
 show how to setup a performant stream capture engine based on Nvidia/Mellanox NIC + DPDK.
+
+[rtcdump](./capture/rtcpdump.sh) is standalone remote capture tool for
+generic network issue.
 
 ## Transcode
 
 It is required to go through the capture process before in order to
-validate all the underlying layers that fowards a stream to an application.
-Then one can use our FFmpeg-based transcoder following this [instructions.](https://github.com/pkeroulas/st2110-toolkit/blob/master/transcoder/README.md)
+validate all the underlying layers forwards a stream to an application.
+Then one can use our FFmpeg-based transcoder following these
+[instructions.](./transcoder/README.md)
 
 ## EBU-LIST
 
-[Integration guide](https://github.com/pkeroulas/st2110-toolkit/blob/master/ebu-list/README.md) for a complete capture and analysis system.
+Follow the [integration guide](./ebu-list/README.md) for a complete capture and analysis solution.
 
 ## NMOS
 
-[README](https://github.com/pkeroulas/st2110-toolkit/blob/master/nmos/README.md) shows a POC for a NMOSisfied transcoder.
+[README](./nmos/README.md) shows a POC for a NMOSisfied transcoder. And
+various scripts are propose to get SDP file from source and patch them
+to destination.
 
 ## Pcap tools
 
-[Pcap script folder](https://github.com/pkeroulas/st2110-toolkit/blob/master/pcap) contains helper scripts which operate on PCAP files:
+[Pcap folder](./pcap) contains helper scripts which operate on PCAP files:
 
 * ancillary editor: insert different types of failure in SMPTE ST 291-1 payload
-* pkt drop detector: count packets and drops for every (src/dst) IP pair found in a given pcap file
+* RTP pkt drop detector: count packets and drops for every (src/dst) IP pair found in a given pcap file
 * video yuv extractor: convert RFC4175 payload into raw YUV file
 
 Dependencies:
 
-* python 3
+* python3 and pip
 * [scapy](https://scapy.net/)
 * [bitstruct](https://pypi.org/project/bitstruct/)
 
-## Todos
+## TODO
 
-* deal with transcoder Dockerfile
-*nanoseconds ebu-list: fix ptp lock test
-    "The rms value reported by ptp4l once the slave has locked with the GM shows the root mean square of the time offset between the PHC and the GM clock. If ptp4l consistently reports rms lower than 100 ns, the PHC is synchronized."
-    check_clock.c
+* test the RFC4175 encoder in `ffmpeg`
+* build a docker image for transcoder
+* test recent version of `linux-ptp` to validate that `pmc` no longer needs root permission
 * rework`./capture/nic_setup.sh`
 * nmos-poller: display ffmpeg status
 
