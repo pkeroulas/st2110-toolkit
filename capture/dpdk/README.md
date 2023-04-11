@@ -230,6 +230,18 @@ Could write a 1080i@30fps stream (1.3Gbps) for 60 sec (10GB) on RAID 0 without a
 ./dpdk-capture.sh -i enp1s0f0 -i enp1s0f1 -w /tmp/2_HD.pcap -G 1 dst 225.192.10.1 or dst 225.192.10.2
 ```
 
+### Optimization
+
+For 64-bit applications, it is recommended to use [1 GB hugepages](https://doc.dpdk.org/guides/linux_gsg/sys_reqs.html#linux-gsg-hugepages)
+Todo so, add `default_hugepagesz=1G hugepagesz=1G hugepages=1` in
+`/etc/default/grub` and update grub config to insert these new params in
+the kernel command line. Reboot, then verify:
+
+```
+mount | grep huge
+hugetlbfs on /dev/hugepages type hugetlbfs (rw,relatime,pagesize=1024M)
+```
+
 ### TODO
 
 * upstream changes following Mellanox recommendation:
@@ -245,7 +257,6 @@ clock queue without involving rdma_core or kernel.
 ``
 
 * run without sudo (blocked by [smcroute](https://github.com/troglobit/smcroute/pull/112))
-* For 64-bit applications, it is recommended to use [1 GB hugepages](https://doc.dpdk.org/guides/linux_gsg/sys_reqs.html#linux-gsg-hugepages)
 * clang for bBPF compiling, maybe not necessary as we only join multicast we're interested in.
 * explore `testpmd` options for optimization:
 ```

@@ -93,7 +93,7 @@ fi
 
 filter=$@
 IPs=$(echo $filter | sed 's/dst//g; s/or//g' | tr -s ' ' '\n')
-pcap=$(dirname $output)/output
+pcap=/tmp/dpdk/output
 
 dpdk_log "
 iface: $iface
@@ -227,11 +227,12 @@ done
 
 if [ $dual_port -eq 1 ]; then
     mergecap -w $output -F nsecpcap $pcap-0.pcap $pcap-1.pcap
-    echo $(ls $pcap-[01].pcap) merged into $pcap.pcap
-    rm -f $pcap-0.pcap $pcap-1.pcap
+    echo $(ls $pcap-[01].pcap) merged into $output
+    #rm -f $pcap-0.pcap $pcap-1.pcap
 else
     port=$(echo $iface | sed 's/.*\(.\)/\1/')
     mv $pcap-$port.pcap $output
+    echo "PCAP: $output"
 fi
 
 chmod 666 $output
