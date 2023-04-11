@@ -7,15 +7,13 @@ install_dpdk()
     cd $DIR/
     git clone https://github.com/pkeroulas/dpdk.git
     cd dpdk
-    git checkout -b clock_info origin/pdump_mlx5_hw_ts/clock_info/v1
+    git checkout -b clock_info origin/pdump_mlx5_hw_ts/clock_info/v2
 
-    make defconfig
-    sed -i 's/MLX5_PMD=.*/MLX5_PMD=y/' ./build/.config
-    sed -i 's/MLX5_DEBUG=.*/MLX5_DEBUG=y/' ./build/.config
-    sed -i 's/PMD_PCAP=.*/PMD_PCAP=y/' ./build/.config
+    meson setup build
+    cd build
+    ninja
+    ninja install
 
-    MAKE_PAUSE=n make -j6
-    make install
     rm $DIR
 
     for p in testpmd dpdk-pdump smcroutectl; do

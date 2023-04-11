@@ -36,7 +36,7 @@ And it is tested on a [mini PC running Ubuntu >=20.04, equipped with a Mellanox 
 [DPDK](https://doc.dpdk.org/guides/index.html) is a set of high-efficient libraries that bypasses the kernel network stack and lets the packets be processed directly in the userspace. This allows to maximize the through for [traffic capture](https://doc.dpdk.org/guides/howto/packet_capture_framework.html). It supports a large set of NICs as opposed to Mellanox [libvma](https://github.com/Mellanox/libvma).
 
 The architecture relies on a Poll Mode Driver instead of hardware interrupts, it is more CPU-intensive but it is faster.
-It's all in userspace so easier for tweaking. It comes with application examples like `testpmd` and `dpdk-pdump` for traffic capture.
+It's all in userspace so easier for tweaking. It comes with application examples like `dpdk-testpmd` and `dpdk-pdump` for traffic capture.
 
 ![arch](./dpdk-capture-diagram.jpg)
 
@@ -46,33 +46,28 @@ Dependency packages:
 
 | *Package* | *Debian Version* |
 |---|---|
-| `rdma-core` | 18 |
-| `libiverbs` | 18 |
+| `rdma-core` | 28 |
+| `libibverbs` | 28 |
 | `libpcap-dev` | 1.9 |
 
 Those expose the appropriate symbols in `/usr/include/infiniband/` for `dpdk`.
 
 Out of the box, *DPDK hardly makes the jobs for as a proper ST 2110 capture engine because of the inaccuracy of the incoming packets*.
-[Timestamp](#hardware-timestamps) section brings more details. To overcome that limitation, You need to clone [my fork](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1) based on version version v20.05.
+[Timestamp](#hardware-timestamps) section brings more details. To overcome that limitation, You need to clone [my fork](https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v2) based on version version v22.11.
 
 ```sh
 git clone https://github.com/pkeroulas/dpdk.git
 cd dpdk
-git checkout -b hw_ts origin/pdump_mlx5_hw_ts/clock_info/v1
-make defconfig
+git checkout -b hw_ts origin/pdump_mlx5_hw_ts/clock_info/v2
 ```
 
-Apply following config in `./build/.config`:
+Compile:
 
 ```sh
-CONFIG_RTE_LIBRTE_MLX5_PMD=y # Mellanox ConnectX-5 ethernet driver
-CONFIG_RTE_LIBRTE_PMD_PCAP=y # write pcap files
-CONFIG_RTE_LIBRTE_BPF_ELF=y  # Berkley Packet Filter support
-```
-
-```sh
-make
-sudo make install
+meson setup build
+cd build
+ninja
+ninja install
 ```
 
 ### Mellanox NIC setup
@@ -87,16 +82,16 @@ dpdk-devbind --status | grep "ConnectX"
 
 ### Execution
 
-Primary process, read from eth driver and manage `pdump` server:
+The primary process reads from eth driver and manages `pdump` server:
 
 ```sh
-./build/app/testpmd -w 0000:01:00.0 -w 0000:01:00.1 -n4 --
+dpdk-testpmd -l 0-3 -n 4 -- --enable-rx-timestamp --forward-mode=rxonly
 ```
 
-Secondary process manages the `pdump` client and write to pcap file.
+The secondary process manages the `pdump` client and write to pcap file.
 
 ```sh
-./build/app/dpdk-pdump -- --pdump 'port=0,queue=*,rx-dev=/tmp/test.pcap'
+dpdk-pdump -- --pdump 'port=0,queue=*,rx-dev=/tmp/test.pcap'
 ```
 
 ## Features
@@ -114,7 +109,7 @@ If not patch, the resulting pcap file does't satisfy the accuracy required by EB
 | **Idea**      | a device constant attribute that can be queried on startup | Use the converter implemented by Mellanox libiverbs `infiniband/mlxdv5.h` |
 | **Branch**    | https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/v6 | https://github.com/pkeroulas/dpdk/tree/pdump_mlx5_hw_ts/clock_info/v1     |
 | **Pros**      | it is easy to implement, more acceptable for upstream contribution | **it just works**, with same precision as libvma |
-| **Cons**      | **accuracy as bad as SW timestamping** | clock info needs to be updated thanks to a timer + this **[doesn't make a consensus in dpdk community](https://www.mail-archive.com/dev@dpdk.org/msg171599.html)**. See TODO section to go ahead  |
+| **Cons**      | **accuracy as bad as SW timestamping** | clock info needs to be updated thanks to a timer (274877ns) + this **[doesn't make a consensus in dpdk community](https://www.mail-archive.com/dev@dpdk.org/msg171599.html)**. See TODO section to go ahead  |
 
 ### Filter
 

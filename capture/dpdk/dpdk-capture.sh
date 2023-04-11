@@ -2,7 +2,7 @@
 
 usage(){
     echo "$0 interprets tcpdump-like parameters and passes them to
-    dpdk utilties, i.e. testpmd and dpdk-pdump. It also sends IGMP
+    dpdk utilties, i.e. dpdk-testpmd and dpdk-pdump. It also sends IGMP
     requests (requires sudo) when a filter expression is given.
 Usage:
     $0 -i interface0 [-i interface1] -w file.pcap [-G <secondes>] [-v|V] [ filter expr ]
@@ -156,7 +156,7 @@ else
     dpdk_log "Start PMD"
     # create a detached session to run PMD server
     screen -dmS testpmd -L -Logfile $testpmd_log \
-        testpmd $pci -l 0-3 -n 4 -- --enable-rx-timestamp --forward-mode=rxonly
+        dpdk-testpmd -l 0-3 -n 4 -- --enable-rx-timestamp --forward-mode=rxonly --portmask=0x3
 
     sleep 3
 fi
@@ -169,6 +169,8 @@ fi
 
 #pkt_rx_start=$(ethtool -S $i | grep rx_packets: | sed  's/.*: \(.*\)/\1/')
 #pkt_drop_start=$(ethtool -S $i | grep rx_out_of_buffer: | sed  's/.*: \(.*\)/\1/')
+
+#dpdk-dumpcap -a duration:$duration -w pcap-$port.pcap -i 0 -i 1 # doesn't work better
 
 dpdk_log "Start pdump"
 if [ $dual_port -eq 1 ]; then
