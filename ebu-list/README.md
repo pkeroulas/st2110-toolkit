@@ -1,5 +1,31 @@
 # EBU-LIST server integration guide
 
+<!-- toc -->
+
+- [Overview](#overview)
+- [Suggested Hardware + OS](#suggested-hardware--os)
+  * [Part list](#part-list)
+  * [OS](#os)
+    + [Boot Ubuntu 20.04 from USB stick.](#boot-ubuntu-2004-from-usb-stick)
+    + [OS install](#os-install)
+    + [OS init setup](#os-init-setup)
+  * [RAID 0 array for user data](#raid-0-array-for-user-data)
+  * [Install ST 2110 dependencies](#install-st-2110-dependencies)
+  * [Nvidia-Mellanox network controller](#nvidia-mellanox-network-controller)
+- [EBU-LIST install](#ebu-list-install)
+  * [Configuration](#configuration)
+    + [Master config](#master-config)
+    + [PTP](#ptp)
+    + [Capture Engine](#capture-engine)
+  * [Controls](#controls)
+    + [Upgrade](#upgrade)
+  * [Throughput](#throughput)
+- [TODO:](#todo)
+
+<!-- tocstop -->
+
+## Overview
+
 This is the integration guide for [EBU LIST](https://tech.ebu.ch/list).
 Although the project documentation allows to setup an offline analyzer,
 this guide gives instructions to build a standalone, high performance
@@ -114,7 +140,7 @@ And persitent mounting, add this in `/etc/fstab`:
 /dev/md0 /media/raid0   ext4    defaults 0      1
 ```
 
-### Install ST 2110 depencies
+### Install ST 2110 dependencies
 
 As `ebulist` user:
 
@@ -246,6 +272,7 @@ Daemon               UP
 Config               UP
 Node API             UP    1145b427-a793-513d-b430-0
 Connection API       UP
+Receivers            UP
 -----------------------------------------------
 Docker
 Daemon               UP

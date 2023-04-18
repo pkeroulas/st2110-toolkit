@@ -5,8 +5,27 @@
 
 set -euo pipefail
 
+usage(){
+    echo "Usage: $0 <section>
+sections are:
+    * common:       compile tools, network utilities, config
+    * ptp:          linuxptp
+    * transcoder:   ffmpeg, x264, mp3 and other codecs
+    * capture:      dpdk-based capture engine for Mellanox ConnectX-5
+    * ebulist:      EBU-LIST pcap analyzer, NOT tested for a while
+    * nmos:         Sony nmos-cpp node and scripts for SDP patching
+
+Regardless of your setup, please install 'common' section first.
+"
+}
+
 if [ ! $UID -eq 0  ]; then
     echo "Not root, exit."
+    exit 1
+fi
+if [ $# -eq 0 ]; then
+    echo "Missing args."
+    usage
     exit 1
 fi
 
@@ -154,15 +173,7 @@ case "$1" in
         install_nmos
         ;;
     *)
-        echo "Usage: $0 <section>
-sections are:
-    * common:       compile tools, network utilities, config
-    * ptp:          linuxptp
-    * transcoder:   ffmpeg, x264, mp3 and other codecs
-    * capture:      dpdk-based capture engine for Mellanox ConnectX-5
-    * ebulist:      EBU-LIST pcap analyzer
-    * nmos:         Sony nmos-cpp (deprecated)
-"
+        usage
         ;;
 esac
 set +x
