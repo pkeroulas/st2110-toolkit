@@ -34,7 +34,8 @@ sections are:
     * transcoder:   ffmpeg, x264, mp3 and other codecs
     * capture:      dpdk-based capture engine
     * ebulist:      EBU-LIST pcap analyzer, NOT tested for a while
-    * nmos:         Sony nmos-cpp node and scripts for SDP
+    * nmos:         Sony nmos-cpp node and scripts for SDP patching
+
 Regardless of your setup, please install 'common' section first.
 ```
 

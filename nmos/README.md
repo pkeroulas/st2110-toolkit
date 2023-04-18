@@ -8,6 +8,18 @@ build a pure software receiver controlled by IS-05.
 * implementation for NMOS virtual node is [Sony nmos-cpp](https://github.com/sony/nmos-cpp). Provided Dockerfile generates a Centos-based image dedicated to this node.
 * the media application is our present FFmpeg transcoder
 
+As sudo, from top directory:
+
+```sh
+./install.sh nmos
+```
+
+Config file is `/home/$USER/nmos.json`. Control the service with systemctl:
+
+```
+sudo systemctl status|start|stop nmos
+```
+
 ## Scripts
 
 * nmos_node.py: NMOS node class implementation with API calls

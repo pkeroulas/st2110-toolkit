@@ -6,6 +6,21 @@ packets to allow both a reliable synchronization to PTP grand master
 and accurate timestamp in captures. The following doc relies on
 `linuxptp` which includes 3 utilities:
 
+## Setup
+
+PTP client for tight sync and accurate packet timestamping. Install
+still as root user form top directory:
+
+```sh
+./install.sh ptp
+```
+
+Config file is `/etc/ptp/ptp4l.conf`. Control the service with systemctl:
+
+```
+sudo systemctl status|start|stop  ptp
+```
+
 ## ptp4l
 
 `ptp4l` handle PTP traffic to synchronizes the local NIC clock to a

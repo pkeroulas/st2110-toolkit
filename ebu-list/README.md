@@ -10,16 +10,15 @@
     + [OS install](#os-install)
     + [OS init setup](#os-init-setup)
   * [RAID 0 array for user data](#raid-0-array-for-user-data)
-  * [Install ST 2110 dependencies](#install-st-2110-dependencies)
-  * [Nvidia-Mellanox network controller](#nvidia-mellanox-network-controller)
-- [EBU-LIST install](#ebu-list-install)
-  * [Configuration](#configuration)
-    + [Master config](#master-config)
-    + [PTP](#ptp)
-    + [Capture Engine](#capture-engine)
+- [Install ST 2110 dependencies](#install-st-2110-dependencies)
+  * [PTP](#ptp)
+  * [NMOS](#nmos)
+  * [Capture Engine (DPDK + Nvidia/Mellanox ConnectX-5](#capture-engine-dpdk--nvidiamellanox-connectx-5)
+- [EBU-LIST](#ebu-list)
+  * [Setup](#setup)
   * [Controls](#controls)
-    + [Upgrade](#upgrade)
-  * [Throughput](#throughput)
+  * [Upgrade](#upgrade)
+- [Storage](#storage)
 - [TODO:](#todo)
 
 <!-- tocstop -->
@@ -140,7 +139,7 @@ And persitent mounting, add this in `/etc/fstab`:
 /dev/md0 /media/raid0   ext4    defaults 0      1
 ```
 
-### Install ST 2110 dependencies
+## Install ST 2110 dependencies
 
 As `ebulist` user:
 
@@ -155,53 +154,33 @@ As `root` user:
 sudo -i
 cd /home/ebulist/st2110-toolkit
 ./install.sh common
-vi /etc/st2110.conf
-source ./install.sh
-```
-### Nvidia-Mellanox network controller
-
-These [instructions](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/README.md)
-show how to setup a performant stream capture engine based on Nvidia/Mellanox NIC + DPDK.
-
-## EBU-LIST install
-
-Install all the dependencies, still as `root`:
-
-```sh
-install_list
 ```
 
-At this point, all the services should be enabled but not configured.
-
-### Configuration
-
-#### Master config
-
-Edit master config (/etc/st2110.conf), especially the 'Mandatory' part
+Edit master config (`/etc/st2110.conf`), especially the 'Mandatory' part
 which contains physical port names, path, etc. This config is loaded by
 every script of this toolkit, including EBU-LIST startup script and it
 is loaded on ssh login as well.
 
-#### PTP
-
-Verify that `linuxptp` package is already installed.
-
-```sh
-dpkg --list | grep linuxptp
+```
+vi /etc/st2110.conf
 ```
 
-Config file is `/etc/ptp/ptp4l.conf`.
+### PTP
 
-#### Capture Engine
+[Setup instructions.](../ptp/README.md)
 
-Regarding the capturing method, in EBU-LIST source tree, see
-'list/apps/capture_probe/config.yml' to select one of the 2 solution:
+### NMOS
 
-* regular `tcpdump` run with generic NIC (limited precision
-  regarding packet timestamping, not suitable for UHD video)
-* alternative capture method for better time precision
+[Setup instructions.](../nmos/README.md)
 
-dpdk-based captured:
+
+### Capture Engine (DPDK + Nvidia/Mellanox ConnectX-5
+
+These [instructions](https://github.com/pkeroulas/st2110-toolkit/blob/master/capture/README.md)
+show how to setup a performant stream capture engine based on Nvidia/Mellanox NIC + DPDK.
+
+To integrate dpdk-based capture engine with EBU-LIST, you need to
+install the capture agent (nodejs) from EBU-LIST repo itself.
 
 ```sh
 apt install node npm
@@ -214,18 +193,27 @@ cd list/
 sudo node server.js config.yml
 ```
 
-### Controls
+## EBU-LIST
 
-Master init script needs root priviledge to start the NIC and PTP and start
-a user session to run EBU-LIST
+### Setup
+
+Check the `LIST_*` vars in master config, especially `LIST_DEV` which
+determines if EBU-LIST run from sources (`true`) or from docker image
+(`false`).
 
 ```sh
-$ sudo /etc/init.d/st2110
-Usage: /etc/init.d/st2110 {start|stop|log}
-        log <list|ptp|system>
+./install.sh ebulist
 ```
 
-EBU-LIST is controlled by a dedicated script:
+### Controls
+
+Control the service with systemctl:
+
+```sh
+sudo systemctl status|start|stop st2110
+```
+
+EBU-LIST itself is controlled by a dedicated script:
 
 ```sh
 $ ebu_list_ctl
@@ -292,7 +280,7 @@ Capture probe        UP
 Analysing            DOWN
 ```
 
-#### Upgrade
+### Upgrade
 
 ```sh
 sudo service docker stop
@@ -301,7 +289,7 @@ sudo service docker start
 ebu_list_ctl status
 ```
 
-### Throughput
+## Storage
 
 Use M.2 nvme SDD as a buffer for pcap file capture.
 
