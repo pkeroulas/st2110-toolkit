@@ -32,16 +32,19 @@ if [ -z $1 ]; then
 fi
 
 IP=$1
-base_url="http:/$IP/x-nmos/connection/v1.1/single/$direction/"
+connection_base_url="http:/$IP/x-nmos/connection/v1.1/single/$direction/"
+node_base_url="http:/$IP/x-nmos/node/v1.2/$direction/"
 
-echo "Get NMOS SDP @ $base_url"
-list=$(curl $base_url 2>/dev/null | jq | sed -n 's/^  "\(.*\)".*/\1/p')
+echo "Get NMOS SDP @ $connection_base_url"
+curl $connection_base_url 2>/dev/null
+list=$(curl $connection_base_url 2>/dev/null | jq | sed -n 's/^  "\(.*\)".*/\1/p') # remove 
 
 for id in $list; do
-    url=${base_url}${id}active
+    url=${connection_base_url}${id}active
     echo "---------------------------------"
-    echo $id
     echo $url
+    id_no_slash=$(echo $id | sed 's;\/;;') # remove '/'
+    curl $node_base_url 2>/dev/null | jq ".[] | select( .id == \"$id_no_slash\").caps.media_types"
     sdp=$(curl $url 2>/dev/null )
 
     if [ ! -n $WRITE ]; then
