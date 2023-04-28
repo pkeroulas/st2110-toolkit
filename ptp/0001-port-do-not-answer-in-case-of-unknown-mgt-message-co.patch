@@ -6,7 +6,7 @@ index fa49663..73c2ca1 100644
  		port_management_send_error(p, ingress, msg, TLV_NOT_SUPPORTED);
  		break;
  	default:
--		port_management_send_error(p, ingress, msg, TLV_NO_SUCH_ID);
+-		port_management_send_error(p, ingress, msg, TLV_NO_SUCH_ID); // now MID_... in master
  		return -1;
  	}
  	return 1;
