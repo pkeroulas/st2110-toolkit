@@ -78,6 +78,7 @@ to destination.
 * ancillary editor: insert different types of failure in SMPTE ST 291-1 payload
 * RTP pkt drop detector: count packets and drops for every (src/dst) IP pair found in a given pcap file
 * video yuv extractor: convert RFC4175 payload into raw YUV file
+* audio extractor: convert AES 67 payload into raw file
 
 Dependencies:
 
