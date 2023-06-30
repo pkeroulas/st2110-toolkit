@@ -1,9 +1,15 @@
 #!/bin/bash
+#
+# DEPRECATED
+#
+# This script wraps around tcpdump with multicast group join/leave
+# Not suitable for ST 2110 streams.
 
 # default param
 CAPTURE_DURATION=10 # in sec
 ST2110_CONF_FILE=/etc/st2110.conf
 MEDIA_IFACE=eth0
+CAPTURE_TRUNCATE=no
 
 # const
 CAPTURE=tmp.pcap
