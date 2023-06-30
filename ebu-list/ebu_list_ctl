@@ -236,6 +236,10 @@ status()
     get_status "PTP traffic" "timeout 2 tcpdump -i $PTP_IFACE_0 -c2 $ptp_filter" "2 packets captured"
 
     echo "-----------------------------------------------"
+    show_header "Smcroute"
+    get_status "Daemon" "ps aux" "[s]mcrouted"
+
+    echo "-----------------------------------------------"
     show_header "NMOS"
     get_status "Daemon" "ps aux" "[m]y-nmos-node"
     get_status "Config" "file $NMOS_CONF" "JSON data"
