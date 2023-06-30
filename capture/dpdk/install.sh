@@ -1,6 +1,8 @@
 install_dpdk()
 {
-    install -m 755 ./dpdk-capture.sh /usr/sbin/
+    ln -sf $TOP_DIR/capture/dpdk/dpdk-capture.sh /usr/sbin/dpdk-capture.sh
+
+    apt install -y libnuma-dev libelf-dev libpcap-dev
 
     echo "Installing dpdk"
     DIR=$(mktemp -d)
@@ -14,9 +16,9 @@ install_dpdk()
     sed -i 's/MLX5_DEBUG=.*/MLX5_DEBUG=y/' ./build/.config
     sed -i 's/PMD_PCAP=.*/PMD_PCAP=y/' ./build/.config
 
-    MAKE_PAUSE=n make -j6
+    MAKE_PAUSE=n make -j2
     make install
-    rm $DIR
+    rm -rf $DIR
 
     for p in testpmd dpdk-pdump smcroutectl; do
         bin=$(readlink -f $(which $p))

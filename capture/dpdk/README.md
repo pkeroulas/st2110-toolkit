@@ -48,6 +48,8 @@ Dependency packages:
 |---|---|
 | `rdma-core` | 18 |
 | `libiverbs` | 18 |
+| `libnuma-dev` | 2.0 |
+| `libelf-dev` | 0.176 |
 | `libpcap-dev` | 1.9 |
 
 Those expose the appropriate symbols in `/usr/include/infiniband/` for `dpdk`.
