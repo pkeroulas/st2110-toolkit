@@ -8,7 +8,19 @@ source $TOP_DIR/capture/dpdk/install.sh
 
 install_mellanox()
 {
-    apt install -y rdma-core libibverbs-dev mft
+    echo "Installing Mellanox libs"
+
+    apt install -y rdma-core libibverbs-dev
+
+    # MFT: https://network.nvidia.com/products/adapter-software/firmware-tools/
+    # apt install -y dkms
+    # DIR=$(mktemp -d)
+    # cd $DIR/
+    # wget http://www.mellanox.com/downloads/MFT/mft-4.5.0-31-x86_64-rpm.tgz
+    # tar xzvf mft-4.5.0-31-x86_64-rpm.tgz
+    # cd mft-4.5.0-31-x86_64-rpm
+    # ./install.sh
+    # rm -rf $DIR
 }
 
 install_smcroute()
