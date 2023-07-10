@@ -5,7 +5,7 @@ usage()
     echo "$0 is a wrapper script that manages EBU-LIST
 and related sub-services (DB, backend, UI, etc.)
 Usage:
-    $0 [-v] {start|stop|status|log|install|upgrade|dev}
+    $0 [-v] {start|stop|status|log}
         start    start docker containers and server
         stop     stop docker containers and server
         status   check the status of all the st 2110 services
@@ -13,9 +13,6 @@ Usage:
         sniff    list incomming udp traffic
         freerun_start start a continuous analysis based on ./ebu-list/freerun.sh
         freerun_stop stop continuous analysis
-        install  install EBU-LIST for the first time
-        upgrade  upgrade to next stable version fron public Github
-        dev      upgrade to the next release from private repo
         nmos     probe local nmos RX node
 " >&2
 }
@@ -140,7 +137,7 @@ start()
         $LIST_PATH/build/bin/stream_pre_processor amqp://localhost:5672 2>&1 > /tmp/list-pre-processor.log &
     else
         log_ebu_list "Start containers: mongo, influxdb, rabbitmq and EBU-LIST"
-        cd $LIST_PATH
+        cd $LIST_PATH/docs/
         export EBU_LIST_WEB_APP_DOMAIN=http://$MGMT_IP:80
         export EBU_LIST_HOST_DATA_FOLDER=$LIST_DATA_FOLDER
         docker-compose up -d
@@ -154,7 +151,7 @@ stop()
         killall stream_pre_processor
         cd $LIST_PATH/apps/external/
     else
-        cd $LIST_PATH
+        cd $LIST_PATH/docs/
     fi
     docker-compose stop # 'down' may break the DBs
     echo "You may need to 'sudo service docker restart' before starting EBU-LIST again (if Mongo DB doesn't respond)."
@@ -280,81 +277,16 @@ log()
 {
     tail -f -n200 /tmp/list*.log &
 
-    cd $LIST_PATH
     if [ $LIST_DEV == "true" ]; then
-        cd ./apps/external/
+        cd $LIST_PATH/apps/external/
+    else
+        cd $LIST_PATH/docs/
     fi
 
     docker-compose logs -f --tail=500
     # ctrl-C
     killall tail
 }
-
-install()
-{
-    set -eux
-
-    # dev mode means build application from source
-    if [ $LIST_DEV = "true" ]; then
-        cd ~
-        git clone https://github.com/ebu/pi-list.git $LIST_PATH
-        cd $LIST_PATH
-        git submodule update --init --recursive
-        sudo ./scripts/setup_build_env.sh
-        echo "Get token to access online translation file."
-        cd ./apps/gui/data/ && node translationsGenerator.js -t
-        cd -
-        ./scripts/deploy/deploy.sh
-    # whereas non dev mode means install from public docker image
-    else
-        mkdir -p $LIST_PATH
-        cd $LIST_PATH
-        curl -O https://raw.githubusercontent.com/ebu/pi-list/master/docs/docker-compose.yml
-        docker-compose pull
-        # for live:
-        #cd $LIST_PATH/js/common_server/
-        #npm install
-        #cd $LIST_PATH/apps/capture_probe/
-        #npm install
-    fi
-
-    set +eux
-}
-
-upgrade()
-{
-    stop
-    cd $LIST_PATH
-
-    if [ $LIST_DEV = "true" ]; then
-        repo=$1
-        branch=$2
-
-        git status
-        echo "Local changes will be deleted:"
-        echo "Do you really want to upgrade EBU-LIST from repo $repo/$branch? [y/n]"
-        read y
-        if [ $y != "y" ]; then
-            echo "Abort."
-            exit
-        fi
-
-        set -eux
-
-        git reset --hard
-        git checkout $branch
-        git pull $repo $branch
-        git submodule update --init --recursive
-
-        ./scripts/deploy/deploy.sh
-
-        set +eux
-    else
-        curl -O https://raw.githubusercontent.com/ebu/pi-list/master/docs/docker-compose.yml
-        docker-compose pull
-    fi
-}
-
 
 nmos_probe()
 {
@@ -383,16 +315,6 @@ case "$1" in
         ;;
     freerun_stop)
         freerun_stop
-        ;;
-    upgrade)
-        upgrade origin master
-        ;;
-    dev)
-        # upgrade <remote> <branch>
-        upgrade devops release
-        ;;
-    install)
-        install
         ;;
     nmos)
         nmos_probe
