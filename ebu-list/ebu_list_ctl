@@ -72,11 +72,14 @@ show_header()
 
 show_status()
 {
-    if [ "$2" = 'UP' ]; then
+    if [ "$2" = 'UP' -o "$2" = 'CLEAN' ]; then
         color=32 #green
         len=5
     elif [ "$2" = 'DOWN' ]; then
         color=31 #red
+        len=5
+    elif [ "$2" = 'DIRTY' ]; then
+        color=33 #yellowish
         len=5
     else
         color=34 #blue
@@ -205,6 +208,19 @@ sniff_port()
     cat $TMP_FILE | sed -n 's/.* > \(.*\): .*/   \1/p' | sort | uniq
 }
 
+show_source_version()
+{
+    cd $1
+    if [[ $(git diff --stat) != '' ]]; then
+        status='DIRTY'
+    else
+        status='CLEAN'
+    fi
+
+    version=$(git log --pretty=format:"%cd : %s" | head -n1)
+    show_status "Source version" "$status" "$version"
+}
+
 status()
 {
 
@@ -225,9 +241,9 @@ status()
     ptp_filter="src host $ptp_ip and dst host 224.0.1.129"
     show_header "PTP"
     get_status "ptp4l" "ps aux" "[p]tp4l" $PTP_IFACE_0
-    get_status "phc2sys   0" "ps aux" "[p]hc2sys .* -s $PTP_IFACE_0 -c CLOCK_REALTIME" CLOCK_REALTIME
+    get_status "phc2sys   0" "ps aux" "[p]hc2sys .*-s $PTP_IFACE_0 -c CLOCK_REALTIME" CLOCK_REALTIME
     if [ ! -z $PTP_IFACE_1 ]; then
-        get_status "phc2sys   1" "ps aux" "[p]hc2sys .* -s $PTP_IFACE_0 -c $PTP_IFACE_1" $PTP_IFACE_1
+        get_status "phc2sys   1" "ps aux" "[p]hc2sys .*-s $PTP_IFACE_0 -c $PTP_IFACE_1" $PTP_IFACE_1
     fi
     get_status "Lock" "journalctl -n200" "phc2sys.* freq "
     get_status "PTP traffic" "timeout 2 tcpdump -i $PTP_IFACE_0 -c2 $ptp_filter" "2 packets captured"
@@ -257,11 +273,16 @@ status()
     get_status "Service Rabbit MQ" "docker ps" "rabbitmq"
 
     echo "-----------------------------------------------"
+    show_header "ST-2110 toolkit"
+    show_source_version $TOOLKIT_PATH
+
+    echo "-----------------------------------------------"
     show_header "LIST"
     show_status "Profile" "$PROFILE"
     if [ $PROFILE = "prod" ]; then
         get_status "container" "docker ps" "list"
     fi
+    show_source_version $LIST_PATH
     get_status "API running" "ps aux" "[n]ode .*server.js .*config.yml"
     version=$(curl -m 0.5 http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/null)
     v=$(echo $version | sed 's/{\"major\":\(.*\),\"minor\":\(.*\),\"patch\":\(.*\)\,\"hash\":\(.*\)}/\1\.\2\.\3\.\4/')
