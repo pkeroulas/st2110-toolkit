@@ -52,6 +52,11 @@ raw_file.close()
 
 print('Done')
 print('Output: ' + raw_filename )
+print('Processed packets: ' + str(pkt_counter))
 print("Suggestions:\n\
-- convert to wav, using audio param from SDP file:\n\
-    ffmpeg -hide_banner -y -f s24be -ar 48k -ac 16 -i output.raw output.wav")
+- convert to wav, using audio params from SDP file:\n\
+exple: 24-bit, 2 ch, sample rate: 48k
+    $ ffmpeg -hide_banner -y -f s24be -ar 48k -ac 2 -i output.raw output.wav\n\
+- then, playback\n\
+    $ vlc output.wav"\
+)
