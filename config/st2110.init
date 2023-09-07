@@ -68,24 +68,6 @@ stop_list()
     su $ST2110_USER -c "ebu_list_ctl stop"
 }
 
-start_mellanox()
-{
-    log_st2110 "Start Mellanox MST"
-    mst start
-    MLNX_DEV=$(mst status -v | tr -s ' ' | grep $MEDIA_IFACE | cut -d ' ' -f2)
-    if [ "$MLNX_DEV" = "NA" ]; then
-        log_st2110 "Couldn't detect MST device: $MLNX_DEV"
-        exit 1
-    fi
-    mcra $MLNX_DEV 0xd8068 3
-}
-
-stop_mellanox()
-{
-    log_st2110 "Stop Mellanox"
-    mst stop
-}
-
 start_probe()
 {
     log_st2110 "Start dpdk probe"
@@ -144,12 +126,10 @@ case "$1" in
         setup_iface $MEDIA_IFACE_1
         # TODO: announce hostname through lldpd
 
-        start_mellanox
         start_list
         start_probe
         ;;
     stop)
-        stop_mellanox
         stop_list
         stop_probe
         ;;

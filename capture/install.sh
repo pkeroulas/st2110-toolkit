@@ -12,7 +12,12 @@ install_mellanox()
 
     apt install -y rdma-core libibverbs-dev
 
-    # MFT: https://network.nvidia.com/products/adapter-software/firmware-tools/
+    # MFT: Mellanox Firmware Tools
+    # https://network.nvidia.com/products/adapter-software/firmware-tools/
+    # It includes mst utility but it turns out it is not necessaery for
+    # capture
+    #
+    # install:
     # apt install -y dkms
     # DIR=$(mktemp -d)
     # cd $DIR/
