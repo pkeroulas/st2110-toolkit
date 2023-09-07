@@ -274,15 +274,17 @@ status()
 
     echo "-----------------------------------------------"
     show_header "ST-2110 toolkit"
+    show_status "Folder" "$TOOLKIT_PATH"
     show_source_version $TOOLKIT_PATH
 
     echo "-----------------------------------------------"
     show_header "LIST"
+    show_status "Folder" "$LIST_PATH"
+    show_source_version $LIST_PATH
     show_status "Profile" "$PROFILE"
     if [ $PROFILE = "prod" ]; then
         get_status "container" "docker ps" "list"
     fi
-    show_source_version $LIST_PATH
     get_status "API running" "ps aux" "[n]ode .*server.js .*config.yml"
     version=$(curl -m 0.5 http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/null)
     v=$(echo $version | sed 's/{\"major\":\(.*\),\"minor\":\(.*\),\"patch\":\(.*\)\,\"hash\":\(.*\)}/\1\.\2\.\3\.\4/')
