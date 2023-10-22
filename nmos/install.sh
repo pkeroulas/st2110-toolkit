@@ -11,7 +11,7 @@ install_cmake()
     echo "Installing CMake"
     DIR=$(mktemp -d)
     cd $DIR/
-    wget --no-check-certificate https://cmake.org/files/v3.11/cmake-$CMAKE_VERSION.tar.gz
+    wget --no-check-certificate https://cmake.org/files/v3.21/cmake-$CMAKE_VERSION.tar.gz
     tar xvf cmake-$CMAKE_VERSION.tar.gz
     cd $DIR/cmake-$CMAKE_VERSION
     ./bootstrap
