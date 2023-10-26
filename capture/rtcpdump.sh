@@ -50,8 +50,8 @@ Script execution steps:
 
 Tested:
     - Localhost: Linux, Windows (WSL2 installed)
-    - Arista switches (EOS-4.24.2.1F): DCS-7060SX2-48YC6, DCS-7280CR2A-30, DCS-7280SR2-48YC6, DCS-7280TR-48C6, DCS-7280CR3K-32D4, DCS-7020TR-48, CCS-720XP-48Y6.
-      Others like CCS-720XP-48ZC2, DCS-7050SX-64 are not supported since 'Monitor session' is limited.
+    - Arista switches (EOS-4.29.3M): DCS-7060SX2-48YC6, DCS-7280CR2A-30, DCS-7280SR2-48YC6, DCS-7280TR-48C6, DCS-7280CR3K-32D4, DCS-7020TR-48.
+      Others like CCS-720XP-48ZC2, CCS-720XP-48Y6, DCS-7050SX-64 are not supported since 'Monitor session' is limited.
 
 Limitations:
     - capturing a high bitrate port isn't a good idea given the additional
