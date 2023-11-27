@@ -74,11 +74,13 @@ install_common_tools()
         net-tools \
         patch \
         perl \
+        python-is-python3 \
         sshpass \
         tar \
         tcpdump \
         tmux \
         wget \
+        wireshark-common
 
     if [ $PACKAGE_MANAGER = "yum" ]; then
         $PACKAGE_MANAGER -y update && $PACKAGE_MANAGER install -y \
