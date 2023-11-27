@@ -303,7 +303,7 @@ log()
         cd $LIST_PATH/docs/
     fi
 
-    docker-compose logs -f --tail=500
+    docker-compose logs -f --tail=500 listserver
     # ctrl-C
     killall tail
 }
