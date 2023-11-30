@@ -20,16 +20,16 @@ Usage:
     -i remote interface name. On a switch, it can either be simple '10'
        or a part of a quad-port '10/2'
     -c limit of captured packets (default $pkt_count as safety for network)
-    -C direct on CPU, no port mirroring required
+    -C capture cpu-targeted protocols (PTP, IGMP, ARP...) directly on a CPU iface, no port mirroring
     -v verbose
     -d direction 'rx|tx': keep ingress traffic only or egress. Default is both
     -a Arista ACL filter mode <filter_expression> must be followed by an ACL rule (rx only)
-    filter_expression is a tcpdump-like expression (ACL-like if '-a ...') with
-        additional aliases supported see example below.
+    filter_expression: tcpdump-like expression (ACL-like if '-a ...') with additional aliases
+    supported see example below.
 
 Examples:
     - PTP on Arista switch port, directly on the CPU:
-        $0 -r user@server -p pass -C -i Et10/1
+        $0 -r user@server -p pass -C -i Et10/1 ptp
     - IGMP using ACL mode, with password file provided and verbose mode:
         $0 -r user@server -p ~/passwordfile.txt -i Et10/1 -v -a 'permit igmp any any'
     - LLDP:
@@ -52,19 +52,19 @@ Script execution steps:
 
 Tested:
     - Localhost: Linux, Windows (WSL2 installed)
-    - Arista switches (EOS-4.29.3M): DCS-7060SX2-48YC6, DCS-7280CR2A-30, DCS-7280SR2-48YC6, DCS-7280TR-48C6, DCS-7280CR3K-32D4, DCS-7020TR-48.
-      Others like CCS-720XP-48ZC2, CCS-720XP-48Y6, DCS-7050SX-64 are not supported since 'Monitor session' is limited.
-      Traffic-recirculation feature may reorder packets while combining rx and tx traffics which results in an unrielablecapture.
+    - Arista switches (EOS-4.29.3M): DCS-7060SX2-48YC6, DCS-7280CR2A-30 DCS-7280SR2-48YC6,
+    DCS-7280TR-48C6, DCS-7280CR3K-32D4, DCS-7020TR-48. Others like CCS-720XP-48ZC2, CCS-720XP-48Y6,
+    DCS-7050SX-64 are not supported since 'Monitor session' is limited. Traffic-recirculation
+    feature may reorder packets while combining rx and tx traffics which results in an
+    unrielablecapture.
 
 Limitations:
-    - capturing a high bitrate port isn't a good idea given the additional
-      load transfer over the network. This is why the capture is limited
-      to 10000 pkts by default. Additionally, a monitor session in a Arista
-      switch consists in mirroring the traffic to the Cpu through a 10Mbps
-      link. As a result, some packets may be lost, even when a filter is
-      given to tcpdump.
-    - note that 'StrictHostKeyChecking=no' option is used for ssh, at
-      you own risks
+    - capturing a high bitrate port isn't a good idea given the additional load transfer over the
+    network. This is why the capture is limited to 10000 pkts by default. Additionally, a monitor
+    session on an Arista switch consists in mirroring the traffic to the Cpu through a 10Mbps link.
+    As a result, some packets may be lost, even when a filter is given to tcpdump. Consider using
+    the '-C' or '-a' flags
+    - note that 'StrictHostKeyChecking=no' option is used for ssh, at you own risks
 " 1>&2
 }
 
@@ -88,7 +88,7 @@ session=RTCPDUMP
 filter_mode=tcpdump
 direction="both"
 proxy=''
-direct_sw_cpu=false # port mirroring required by default
+port_mirroring=true
 
 ##################################################################
 # PARSE ARGS
@@ -115,7 +115,7 @@ while getopts ":r:p:P:i:c:Cd:va" o; do
             pkt_count=${OPTARG}
             ;;
         C)
-            direct_sw_cpu=true
+            port_mirroring=false
             ;;
         d)
             direction=${OPTARG}
@@ -255,11 +255,7 @@ show ip access-list $session
     acl_monitor_option="ip access-group $session"
 fi
 
-if $direct_sw_cpu; then
-    title "Direct CPU"
-    cpu_iface=$(echo $iface | sed 's/\//_/;s/h//' | tr 'A-Z' 'a-z') # Eth10/1 => et10_1
-    filter=""
-else
+if $port_mirroring; then
     title "Create a monitor session:"
     $ssh_cmd "enable
     conf
@@ -275,9 +271,12 @@ else
         echo "Couldn't find cpu interface. Exit."
         exit -1
     fi
+else
+    # convert iface name from EOS to Linux (Et...10/1 => et10_1)
+    cpu_iface=$(echo $iface | tr '[:upper:]' '[:lower:]' | sed 's/et[a-z]*\([0-9].*\)/et\1/;s/\//_/')
 fi
 
-title "Capture $cpu_iface by Cpu."
+title "Capture on CPU interface: $cpu_iface"
 tcpdump_cmd="tcpdump -i $cpu_iface -c $pkt_count -U -s0 -w - $filter"
 echo $tcpdump_cmd
 
@@ -289,16 +288,16 @@ conf
 bash $tcpdump_cmd" | "$wireshark" -k -i -
 
 title "Cleanup."
-if $direct_sw_cpu; then
-    $ssh_cmd "bash pidof tcpdump > /dev/null && killall tcpdump
-" | grep -v -e '^$'
-else
+if $port_mirroring; then
     $ssh_cmd "enable
     conf
     no ip access-list $session
     no monitor session $session
     show monitor session
 bash pidof tcpdump > /dev/null && killall tcpdump
+" | grep -v -e '^$'
+else
+    $ssh_cmd "bash pidof tcpdump > /dev/null && killall tcpdump
 " | grep -v -e '^$'
 fi
 
