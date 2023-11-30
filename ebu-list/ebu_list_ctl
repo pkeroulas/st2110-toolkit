@@ -47,7 +47,7 @@ MGMT_IP=$(ip addr show $MGMT_IFACE | tr -s ' ' | sed -n 's/ inet \(.*\)\/.*/\1/p
 TMP_FILE=/tmp/ebulist.tmp
 
 NMOS_CONF=/home/$ST2110_USER/nmos.json
-NMOS_NODE_PORT=$(cat $NMOS_CONF | sed -n 's/.*http_port": \(.*\),/\1/p')
+NMOS_NODE_PORT=$(sed -n 's/.*http_port": \(.*\),/\1/p' $NMOS_CONF)
 NMOS_NODE_URL=http://$MGMT_IP:$NMOS_NODE_PORT/x-nmos
 
 # In prod, nginx is used as proxy to expose port 80 only
@@ -157,7 +157,7 @@ stop()
         cd $LIST_PATH/docs/
     fi
     docker-compose stop # 'down' may break the DBs
-    echo "You may need to 'sudo service docker restart' before starting EBU-LIST again (if Mongo DB doesn't respond)."
+    echo "You may need to 'sudo sudo systemctl restart docker.service' before starting EBU-LIST again (if Mongo DB doesn't respond)."
 }
 
 freerun_start()
@@ -248,6 +248,7 @@ status()
     echo "-----------------------------------------------"
     show_header "Smcroute"
     get_status "Daemon" "ps aux" "[s]mcrouted"
+    # TODO: additional test may be required here
 
     echo "-----------------------------------------------"
     show_header "NMOS"
