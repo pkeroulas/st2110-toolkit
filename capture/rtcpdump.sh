@@ -20,6 +20,7 @@ Usage:
     -i remote interface name. On a switch, it can either be simple '10'
        or a part of a quad-port '10/2'
     -c limit of captured packets (default $pkt_count as safety for network)
+    -C direct on CPU, no port mirroring required
     -v verbose
     -d direction 'rx|tx': keep ingress traffic only or egress. Default is both
     -a Arista ACL filter mode <filter_expression> must be followed by an ACL rule (rx only)
@@ -27,8 +28,8 @@ Usage:
         additional aliases supported see example below.
 
 Examples:
-    - PTP on Arista switch port:
-        $0 -r user@server -p pass -i Et10/1 ptp
+    - PTP on Arista switch port, directly on the CPU:
+        $0 -r user@server -p pass -C -i Et10/1
     - IGMP using ACL mode, with password file provided and verbose mode:
         $0 -r user@server -p ~/passwordfile.txt -i Et10/1 -v -a 'permit igmp any any'
     - LLDP:
@@ -53,8 +54,7 @@ Tested:
     - Localhost: Linux, Windows (WSL2 installed)
     - Arista switches (EOS-4.29.3M): DCS-7060SX2-48YC6, DCS-7280CR2A-30, DCS-7280SR2-48YC6, DCS-7280TR-48C6, DCS-7280CR3K-32D4, DCS-7020TR-48.
       Others like CCS-720XP-48ZC2, CCS-720XP-48Y6, DCS-7050SX-64 are not supported since 'Monitor session' is limited.
-      Traffic-recirculation feature may reorder packets while combining rx and tx traffics which results in an unrielable
-      capture.
+      Traffic-recirculation feature may reorder packets while combining rx and tx traffics which results in an unrielablecapture.
 
 Limitations:
     - capturing a high bitrate port isn't a good idea given the additional
@@ -88,11 +88,12 @@ session=RTCPDUMP
 filter_mode=tcpdump
 direction="both"
 proxy=''
+direct_sw_cpu=false # port mirroring required by default
 
 ##################################################################
 # PARSE ARGS
 
-while getopts ":r:p:P:i:c:d:va" o; do
+while getopts ":r:p:P:i:c:Cd:va" o; do
     case "${o}" in
         r)
             remote=${OPTARG}
@@ -112,6 +113,9 @@ while getopts ":r:p:P:i:c:d:va" o; do
             ;;
         c)
             pkt_count=${OPTARG}
+            ;;
+        C)
+            direct_sw_cpu=true
             ;;
         d)
             direction=${OPTARG}
@@ -251,20 +255,26 @@ show ip access-list $session
     acl_monitor_option="ip access-group $session"
 fi
 
-title "Create a monitor session:"
-$ssh_cmd "enable
-conf
-monitor session $session source $iface $direction $acl_monitor_option
-monitor session $session destination Cpu"
-sleep 1 # need a short break for Cpu iface allocation
-sessions=$($ssh_cmd "enable
-show monitor session")
-echo "$sessions" | grep -v -e '^$' | grep -v "\-\-\-\-\-\-\-"
-cpu_iface=$(echo "$sessions" | grep $session -A 14 | grep Cpu | sed 's/.*(\(.*\))/\1/')
+if $direct_sw_cpu; then
+    title "Direct CPU"
+    cpu_iface=$(echo $iface | sed 's/\//_/;s/h//' | tr 'A-Z' 'a-z') # Eth10/1 => et10_1
+    filter=""
+else
+    title "Create a monitor session:"
+    $ssh_cmd "enable
+    conf
+    monitor session $session source $iface $direction $acl_monitor_option
+    monitor session $session destination Cpu"
+    sleep 1 # need a short break for Cpu iface allocation
+    sessions=$($ssh_cmd "enable
+    show monitor session")
+    echo "$sessions" | grep -v -e '^$' | grep -v "\-\-\-\-\-\-\-"
+    cpu_iface=$(echo "$sessions" | grep $session -A 14 | grep Cpu | sed 's/.*(\(.*\))/\1/')
 
-if [ -z $cpu_iface ]; then
-    echo "Couldn't find cpu interface. Exit."
-    exit -1
+    if [ -z $cpu_iface ]; then
+        echo "Couldn't find cpu interface. Exit."
+        exit -1
+    fi
 fi
 
 title "Capture $cpu_iface by Cpu."
@@ -279,11 +289,17 @@ conf
 bash $tcpdump_cmd" | "$wireshark" -k -i -
 
 title "Cleanup."
-$ssh_cmd "enable
-conf
-no ip access-list $session
-no monitor session $session
-show monitor session
+if $direct_sw_cpu; then
+    $ssh_cmd "bash pidof tcpdump > /dev/null && killall tcpdump
+" | grep -v -e '^$'
+else
+    $ssh_cmd "enable
+    conf
+    no ip access-list $session
+    no monitor session $session
+    show monitor session
 bash pidof tcpdump > /dev/null && killall tcpdump
 " | grep -v -e '^$'
+fi
+
 echo "Exit."
