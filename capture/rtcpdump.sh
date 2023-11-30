@@ -22,12 +22,13 @@ Usage:
     -c limit of captured packets (default $pkt_count as safety for network)
     -v verbose
     -d direction 'rx|tx': keep ingress traffic only or egress. Default is both
-    -a Arista ACL filter mode <filter_expression> must be the ACL rule (rx only)
-       filter_expression is passed to remote tcpdump or ACL
+    -a Arista ACL filter mode <filter_expression> must be followed by an ACL rule (rx only)
+    filter_expression is a tcpdump-like expression (ACL-like if '-a ...') with
+        additional aliases supported see example below.
 
 Examples:
     - PTP on Arista switch port:
-        $0 -r user@server -p pass -i Et10/1 'dst port 319 or dst port 320'
+        $0 -r user@server -p pass -i Et10/1 ptp
     - IGMP using ACL mode, with password file provided and verbose mode:
         $0 -r user@server -p ~/passwordfile.txt -i Et10/1 -v -a 'permit igmp any any'
     - LLDP:
@@ -35,7 +36,7 @@ Examples:
     - HTTP between a Arista sw (on the management interface) and a specific host:
         $0 -r user@server -p pass -i Ma1 'port 80 and host XXX.XXX.XXX.XXX'
     - DHCP/bootp on a Linux host for a given MAC:
-        $0 -r user@server -p pass -i ens192 'ether host XX:XX:XX:XX:XX:XX and \(port 67 or port 68\)'
+        $0 -r user@server -p pass -i ens192 'dhcp and ether host XX:XX:XX:XX:XX:XX'
     - VLAN-tagged http packets
         $0 -r user@server -p pass -i ens192  '\-e \(vlan 1434 and port 80\)'
 
@@ -52,6 +53,8 @@ Tested:
     - Localhost: Linux, Windows (WSL2 installed)
     - Arista switches (EOS-4.29.3M): DCS-7060SX2-48YC6, DCS-7280CR2A-30, DCS-7280SR2-48YC6, DCS-7280TR-48C6, DCS-7280CR3K-32D4, DCS-7020TR-48.
       Others like CCS-720XP-48ZC2, CCS-720XP-48Y6, DCS-7050SX-64 are not supported since 'Monitor session' is limited.
+      Traffic-recirculation feature may reorder packets while combining rx and tx traffics which results in an unrielable
+      capture.
 
 Limitations:
     - capturing a high bitrate port isn't a good idea given the additional
@@ -141,7 +144,12 @@ if [ ! "$direction" = "rx" -a ! "$direction" = "tx" -a ! "$direction" = "both" ]
     exit 1
 fi
 
+# filter: convert aliases to tcpdump-compatible expression
 filter=$@
+filter=$(echo $filter | sed "s/ptp/\\\(dst port 319 or dst port 320\\\)/")
+filter=$(echo $filter | sed "s/dhcp/\\\(port 67 or port 68\\\)/")
+filter=$(echo $filter | sed "s/http/\\\(port 80 or port 443\\\)/")
+
 ssh_cmd="ssh -T -o StrictHostKeyChecking=no $proxy $remote "
 
 ##################################################################
