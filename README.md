@@ -10,6 +10,14 @@ Features:
 * provide a recipe to create a live version of [EBU-LIST](https://tech.ebu.ch/list)
 * troubleshoot the network by capturing traffic on remote hosts
 
+```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```
+
 Sponsored by:
 
 ![logo](https://site-cbc.radio-canada.ca/site/annual-reports/2014-2015/_images/about/services/cbc-radio-canada.png)

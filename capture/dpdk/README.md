@@ -8,6 +8,14 @@ The proposed solution supports:
 - IP/port filtering
 - Throughput up to 13Gbps
 
+```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```
+
 And it is tested on a [mini PC running Ubuntu >=20.04, equipped with a Mellanox ConnectX-5 card @ 100Gbps](https://github.com/pkeroulas/st2110-toolkit/tree/master/ebu-list) and a FPGA-based source.
 
 - [Getting started](#Getting-started)
