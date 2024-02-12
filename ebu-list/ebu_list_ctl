@@ -300,11 +300,12 @@ log()
 
     if [ $LIST_DEV == "true" ]; then
         cd $LIST_PATH/apps/external/
+        docker-compose logs -f --tail=500
     else
         cd $LIST_PATH/docs/
+        docker-compose logs -f --tail=500 listserver
     fi
 
-    docker-compose logs -f --tail=500 listserver
     # ctrl-C
     killall tail
 }
