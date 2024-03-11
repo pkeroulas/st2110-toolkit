@@ -281,12 +281,14 @@ status()
     show_source_version $LIST_PATH
     show_status "Profile" "$PROFILE"
     if [ $PROFILE = "prod" ]; then
-        get_status "container" "docker ps" "list"
+        image=$(docker ps --format '{{.Image}}' | grep list)
+        image_tag=$(echo "$image" | sed 's/ebutech\/pi-list://')
+        get_status "Container" "echo $image" "list" "$image_tag"
     fi
     get_status "API running" "ps aux" "[n]ode .*server.js .*config.yml"
     version=$(curl -m 0.5 http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>/dev/null)
-    v=$(echo $version | sed 's/{\"major\":\(.*\),\"minor\":\(.*\),\"patch\":\(.*\)\,\"hash\":\(.*\)}/\1\.\2\.\3\.\4/')
-    get_status "API version" "echo $version" "major.*minor.*patch" $v
+    v=$(echo $version | sed 's/{\"major\":\(.*\),\"minor\":\(.*\),\"patch\":\(.*\)\,\"hash\":\(.*\)}/\1\.\2\.\3@\4/')
+    get_status "API version" "echo $version" "major.*minor.*patch" "$v"
     get_status "GUI running" "ps aux" "[n]ode .*gui"
     get_status "GUI response" "curl -m 0.5 http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/null" "EBU LIST"
     get_status "Pre processor" "ps aux" "[s]tream_pre_processor"
