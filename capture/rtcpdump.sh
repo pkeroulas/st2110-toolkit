@@ -53,10 +53,10 @@ Script execution steps:
 Tested:
     - Localhost: Linux, Windows (WSL2 installed)
     - Arista switches (EOS-4.29.3M): DCS-7060SX2-48YC6, DCS-7280CR2A-30 DCS-7280SR2-48YC6,
-    DCS-7280TR-48C6, DCS-7280CR3K-32D4, DCS-7020TR-48. Others like CCS-720XP-48ZC2, CCS-720XP-48Y6,
-    DCS-7050SX-64 are not supported since 'Monitor session' is limited. Traffic-recirculation
-    feature may reorder packets while combining rx and tx traffics which results in an
-    unrielablecapture.
+    DCS-7280TR-48C6, DCS-7280CR3K-32D4, DCS-7020TR-48
+    - Not supported: Arista sw like CCS-720XP-48ZC2, CCS-720XP-48Y6, DCS-7050SX-64 are not
+    supported since 'Monitor session' is limited. Traffic-recirculation feature may reorder
+    packets when combining rx and tx which results in an unrielable capture.
 
 Limitations:
     - capturing a high bitrate port isn't a good idea given the additional load transfer over the
@@ -185,12 +185,13 @@ echo $ssh_cmd
 
 if which sshpass >/dev/null; then
     if [ ! -z "$passfile" ]; then
-        ssh_cmd="sshpass -f $passfile $ssh_cmd"
+        pass="-f $passfile"
     elif [ ! -z "$password" ]; then
-        ssh_cmd="sshpass -p $password $ssh_cmd"
+        pass="-p $password"
     else #from stdin
-        ssh_cmd="sshpass $ssh_cmd"
+        pass=""
     fi
+    ssh_cmd="sshpass $pass $ssh_cmd"
 else
     warning "
 sshpass not installed. It is going to be painful to enter the ssh
@@ -223,10 +224,19 @@ fi
 
 echo "Remote: Arista switch"
 
+title "Connection: ssh "
+if ! $ssh_cmd "enable"; then
+    echo "Can't connect to target with this cmd."
+    echo "\"$ssh_cmd\""
+    echo "Exit."
+    exit 1
+fi
+echo OK
+
 title "Interface: $iface"
 echo "lldp:"
 if ! $ssh_cmd "show lldp neighbors $iface"; then
-    echo "Issue with ssh connection? Exit."
+    echo "Wrong interface ($iface)? Exit."
     exit 1
 fi
 
