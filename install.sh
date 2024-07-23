@@ -31,7 +31,7 @@ fi
 
 TOP_DIR=$(dirname $(readlink -f $0))
 ST2110_CONF_FILE=/etc/st2110.conf
-OS=$(cat "/etc/os-release" | sed -n 's/^ID=\(.*\)/\1/p')
+OS=$(cat "/etc/os-release" | sed -n 's/^ID=\(.*\)/\1/p' | tr -d '"')
 echo "OS: $OS detected"
 
 if [ $OS = "debian" -o $OS = "ubuntu" ]; then
