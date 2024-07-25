@@ -121,9 +121,12 @@ install_streaming_server()
 install_libsrt()
 {
     if [ $PACKAGE_MANAGER = "apt" ]; then
-        $PACKAGE_MANAGER install libsrt-dev libsrt1
+        $PACKAGE_MANAGER install -y libsrt-dev libsrt1
     else
-        $PACKAGE_MANAGER install srt-devel srt-libs
+        $PACKAGE_MANAGER install -y srt-devel srt-libs
+        # FIXME Centos 7 has srt v1.2.3 whereas ffmpeg 5 requires 1.3
+        # need to compile srt
+        # https://github.com/Haivision/srt/blob/master/docs/build/build-linux.md
     fi
 }
 
