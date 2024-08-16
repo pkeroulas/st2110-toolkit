@@ -293,7 +293,7 @@ status()
     get_status "GUI response" "curl -m 0.5 http://$MGMT_IP:$LIST_GUI_PORT 2>/dev/null" "EBU LIST"
     get_status "Pre processor" "ps aux" "[s]tream_pre_processor"
     get_status "Capture probe" "ps aux" "[n]ode .*dpdk.yml"
-    get_status "Analysing" "ps aux" "[n]ode .* live-capture"
+    #get_status "Analysing" "ps aux" "[n]ode .* live-capture"
 }
 
 log()
