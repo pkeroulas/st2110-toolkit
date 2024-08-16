@@ -127,6 +127,11 @@ start()
             npm start 2>&1 > /tmp/list-gui.log &
         fi
 
+        while ! netstat -lpte | grep -q 27017; do
+            log_ebu_list "Waiting for Mongo"
+            sleep 1
+        done
+
         log_ebu_list "Start the server"
         cd $LIST_PATH/apps/listwebserver
         sed "s,\(folder:\).*,\1 $LIST_DATA_FOLDER,;
