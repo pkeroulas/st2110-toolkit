@@ -41,5 +41,12 @@ install_list()
     fi
 
     chown -R $ST2110_USER:$ST2110_USER $LIST_PATH
-}
 
+    cp $TOP_DIR/ebu-list/ebulist.service /lib/systemd/system
+    install -m 755 $TOP_DIR/ebu-list/ebulist-probe.init /etc/init.d/ebulist-probe
+    cp $TOP_DIR/ebu-list/ebulist-probe.service /lib/systemd/system
+
+    systemctl daemon-reload
+    systemctl enable ebulist
+    systemctl enable ebulist-probe
+}

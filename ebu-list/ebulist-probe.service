@@ -1,0 +1,14 @@
+[Unit]
+Description=EBU LIST Network Probe
+After=ebulist.service
+Requires=ebulist.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=/etc/st2110.conf
+ExecStart=/etc/init.d/ebulist-probe start
+ExecStop=/etc/init.d/ebulist-probe stop    
+
+[Install]
+WantedBy=multi-user.target

@@ -205,6 +205,15 @@ determines if EBU-LIST run from sources (`true`) or from docker image
 ./install.sh ebulist
 ```
 
+### Boot sequence:
+
+1. Network and FileSystem up
+2. st2110.service
+3. ptp.service
+4. docker.service
+5. ebulist.service
+6. ebulist-probe.service
+
 ### Controls
 
 Control the service with systemctl:
@@ -277,7 +286,6 @@ GUI running          UP
 GUI response         UP
 Pre processor        UP
 Capture probe        UP
-Analysing            DOWN
 ```
 
 ### Upgrade

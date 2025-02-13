@@ -1,0 +1,86 @@
+#!/bin/sh -e
+### BEGIN INIT INFO
+# Provides:          st2110
+# Required-Start:    $time $network $local_fs $syslog
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Start EBU-LIST Network Probe
+### END INIT INFO
+# This header allows systemd to create a service.
+
+log_st2110()
+{
+    logger -t st2110 "$@"
+}
+
+ST2110_CONF_FILE=/etc/st2110.conf
+if [ -f $ST2110_CONF_FILE ]; then
+    . $ST2110_CONF_FILE
+fi
+
+start_probe()
+{
+    log_st2110 "Start dpdk probe"
+    smcrouted
+
+    ifaces="$MEDIA_IFACE_0"
+    if [ ! -z $MEDIA_IFACE_1 ]; then
+        ifaces="$ifaces,$MEDIA_IFACE_1"
+    fi
+
+    echo 1000000000 > /proc/sys/kernel/shmmax
+    echo 800 > /proc/sys/vm/nr_hugepages
+
+    cd $LIST_PATH/apps/capture_probe/
+    cat > ./config-dpdk.yml << EOF
+probe:
+    id: $(uuidgen)
+    label: "LIST capture probe ${ifaces}: $(cat /etc/hostname)"
+rabbitmq:
+    hostname: localhost
+    port: 5672
+capture:
+    engine: dpdk
+    interfaces: ${ifaces}
+    destination: ${LIST_DATA_FOLDER}/pcap
+EOF
+
+    while ! netstat -lptn | grep -q ":5672"; do
+        log_st2110 "wait mqtt port to be open"
+        sleep 1
+    done
+
+    node ./server.js ./config-dpdk.yml 2>&1 > /tmp/list-dpdk.log &
+}
+
+stop_probe() {
+    log_st2110 "Stop dpdk probe"
+    smcroutectl kill
+    pid=$(ps aux | grep "[n]ode.*dpdk.*yml" | tr -s ' ' | cut -d ' ' -f2)
+    if [ ! -z $pid ]; then kill -9 $pid; fi
+}
+
+log_system(){
+    journalctl -xef -n 1000 | grep 2110
+}
+
+usage()
+{
+    echo "Usage: $0 {start|stop}"
+}
+
+case "$1" in
+    start)
+        start_probe
+        ;;
+    stop)
+        stop_probe
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
+
+exit 0

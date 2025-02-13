@@ -1,11 +1,11 @@
 #!/bin/sh -e
 ### BEGIN INIT INFO
 # Provides:          st2110
-# Required-Start:    $time $network $local_fs $syslog $docker
+# Required-Start:    $time $network $local_fs $syslog
 # Required-Stop:
 # Default-Start:     2 3 4 5
 # Default-Stop:
-# Short-Description: Start st2110-related services: EBU-LIST
+# Short-Description: Start st2110-related services: setup media interfaces and mcast subscription daemon
 ### END INIT INFO
 # This header allows systemd to create a service.
 
@@ -25,90 +25,9 @@ if [ -f $ST2110_CONF_FILE ]; then
     . $ST2110_CONF_FILE
 fi
 
-setup_iface()
-{
-    if [ -z $1 ]; then return; fi
-    iface=$1
-
-    if [ ! -d /sys/class/net/$iface ]; then
-        log_st2110 "$iface doesn't exist, exit."
-    fi
-
-    if [ $(cat /sys/class/net/$iface/operstate) != "up" ]; then
-        log_st2110 "$iface is not up, exit."
-    fi
-
-    # doesn't look to work with  MT27800 Family [ConnectX-5]
-    #ethtool --set-priv-flags $iface sniffer on
-    ethtool -G $iface rx 100 # trigger a change so to avoid exiting
-    ethtool -G $iface rx 8192
-
-    # HW timestamp any incoming pkt
-    hwstamp_ctl -i $iface -r 1
-}
-
-start_list()
-{
-    # LIST is a st2110 stream analyser which can run on a network
-    # capturing host. https://github.com/ebu/pi-list
-    # TODO: verify that LIST is installed before
-    log_st2110 "Start EBU LIST server."
-
-    su $ST2110_USER -c "ebu_list_ctl start"
-}
-
 log_list()
 {
     su $ST2110_USER -c "ebu_list_ctl log"
-}
-
-stop_list()
-{
-    log_st2110 "Stop EBU LIST server."
-    su $ST2110_USER -c "ebu_list_ctl stop"
-}
-
-start_probe()
-{
-    log_st2110 "Start dpdk probe"
-    smcrouted
-
-    ifaces="$MEDIA_IFACE_0"
-    if [ ! -z $MEDIA_IFACE_1 ]; then
-        ifaces="$ifaces,$MEDIA_IFACE_1"
-    fi
-
-    echo 1000000000 > /proc/sys/kernel/shmmax
-    echo 800 > /proc/sys/vm/nr_hugepages
-
-    cd $LIST_PATH/apps/capture_probe/
-    cat > ./config-dpdk.yml << EOF
-probe:
-    id: $(uuidgen)
-    label: "LIST capture probe ${ifaces}: $(cat /etc/hostname)"
-rabbitmq:
-    hostname: localhost
-    port: 5672
-capture:
-    engine: dpdk
-    interfaces: ${ifaces}
-    destination: ${LIST_DATA_FOLDER}/pcap
-EOF
-
-    while ! netstat -lptn | grep -q ":5672"; do
-        log_st2110 "wait mqtt port to be open"
-        sleep 1
-    done
-
-    node ./server.js ./config-dpdk.yml 2>&1 > /tmp/list-dpdk.log &
-}
-
-stop_probe()
-{
-    log_st2110 "Stop dpdk probe"
-    smcroutectl kill
-    pid=$(ps aux | grep "[n]ode.*dpdk.*yml" | tr -s ' ' | cut -d ' ' -f2)
-    if [ ! -z $pid ]; then kill -9 $pid; fi
 }
 
 log_system(){
@@ -125,13 +44,10 @@ case "$1" in
         setup_iface $MEDIA_IFACE_0
         setup_iface $MEDIA_IFACE_1
         # TODO: announce hostname through lldpd
-
-        start_list
-        start_probe
+        smcrouted
         ;;
     stop)
-        stop_list
-        stop_probe
+        smcroutectl kill
         ;;
     conf) # hidden
         bash -c "cd /home/$ST2110_USER/st2110-toolkit; source ./install.sh; install_config"

@@ -1,0 +1,15 @@
+[Unit]
+Description=EBU LIST
+After=docker.service st2110.service ptp.service
+Requires=docker.servicest2110.service ptp.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=/etc/st2110.conf
+ExecStart=/bin/su $ST2110_USER -c "ebu_list_ctl start"
+ExecStop=/bin/su $ST2110_USER -c "ebu_list_ctl stop"
+    
+
+[Install]
+WantedBy=multi-user.target

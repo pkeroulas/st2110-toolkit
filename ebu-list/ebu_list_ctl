@@ -107,7 +107,7 @@ start()
     done
 
     if get_status "API response" "curl -v http://$MGMT_IP:$LIST_API_PORT/api/meta/version 2>&1" "401 Unauthorized" | grep -q UP; then
-        echo "EBU-LIST is already up"
+        log_ebu_list "EBU-LIST is already up"
         return
     fi
 
@@ -131,6 +131,7 @@ start()
             log_ebu_list "Waiting for Mongo"
             sleep 1
         done
+        sleep 1
 
         log_ebu_list "Start the server"
         cd $LIST_PATH/apps/listwebserver
