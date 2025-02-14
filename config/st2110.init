@@ -30,6 +30,27 @@ log_list()
     su $ST2110_USER -c "ebu_list_ctl log"
 }
 
+setup_iface()
+{
+    if [ -z $1 ]; then return; fi
+    iface=$1
+    if [ ! -d /sys/class/net/$iface ]; then
+        log_st2110 "$iface doesn't exist, exit."
+    fi
+
+    if [ $(cat /sys/class/net/$iface/operstate) != "up" ]; then
+        log_st2110 "$iface is not up, exit."
+    fi
+
+    # doesn't look to work with  MT27800 Family [ConnectX-5]
+    #ethtool --set-priv-flags $iface sniffer on
+    ethtool -G $iface rx 100 # trigger a change so to avoid exiting
+    ethtool -G $iface rx 8192
+
+    # HW timestamp any incoming pkt
+    hwstamp_ctl -i $iface -r 1
+}
+
 log_system(){
     journalctl -xef -n 1000 | grep 2110
 }

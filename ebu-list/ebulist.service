@@ -1,7 +1,7 @@
 [Unit]
 Description=EBU LIST
 After=docker.service st2110.service ptp.service
-Requires=docker.servicest2110.service ptp.service
+Requires=docker.service st2110.service ptp.service
 
 [Service]
 Type=oneshot
