@@ -5,7 +5,7 @@ usage()
     echo "$0 is a wrapper script that manages EBU-LIST
 and related sub-services (DB, backend, UI, etc.)
 Usage:
-    $0 [-v] {start|stop|status|log}
+    $0 [-v][-f] {start|stop|status|log}
         start    start docker containers and server
         stop     stop docker containers and server
         status   check the status of all the st 2110 services
@@ -28,6 +28,9 @@ if [ -z $1 ]; then
 elif [ $1 = "-v" ]; then
     DEBUG=true
     set -x
+    shift
+elif [ $1 = "-f" ]; then
+    FOREGROUND=true
     shift
 fi
 
@@ -131,7 +134,9 @@ start()
             log_ebu_list "Waiting for Mongo"
             sleep 1
         done
-        sleep 1
+
+        log_ebu_list "Start stream pre-processor"
+        $LIST_PATH/build/bin/stream_pre_processor amqp://localhost:5672 2>&1 > /tmp/list-pre-processor.log &
 
         log_ebu_list "Start the server"
         cd $LIST_PATH/apps/listwebserver
@@ -140,16 +145,25 @@ start()
             s,\(webappDomain:\).*,\1 http://$MGMT_IP:$LIST_GUI_PORT,;
             " ./config.yml > ./running_config.yml
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$LIST_PATH/build/lib/
-        npm run dev -- ./running_config.yml --dev --live 2>&1 > /tmp/list-server.log &
+        if [ -z $FOREGROUND ]; then
+            npm run dev -- ./running_config.yml --dev --live 2>&1 > /tmp/list-server.log &
+        else
+            npm run dev -- ./running_config.yml --dev --live 2>&1 > /tmp/list-server.log
+            exit $?
+        fi
 
-        log_ebu_list "Start stream pre-processor"
-        $LIST_PATH/build/bin/stream_pre_processor amqp://localhost:5672 2>&1 > /tmp/list-pre-processor.log &
     else
         log_ebu_list "Start containers: mongo, influxdb, rabbitmq and EBU-LIST"
         cd $LIST_PATH/docs/
         export EBU_LIST_WEB_APP_DOMAIN=http://$MGMT_IP:80
         export EBU_LIST_HOST_DATA_FOLDER=$LIST_DATA_FOLDER
-        docker-compose up -d
+
+        if [ -z $FOREGROUND ]; then
+            docker-compose up -d
+        else
+            docker-compose up
+            exit $?
+        fi
     fi
 }
 
