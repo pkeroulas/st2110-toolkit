@@ -5,7 +5,7 @@ usage()
     echo "$0 is a wrapper script that manages EBU-LIST
 and related sub-services (DB, backend, UI, etc.)
 Usage:
-    $0 [-v][-f] {start|stop|status|log}
+    $0 [-v][-f] {start|stop|status|log|sniff|freerun_Start|freerun_stop|nmos}
         start    start docker containers and server
         stop     stop docker containers and server
         status   check the status of all the st 2110 services

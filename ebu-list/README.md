@@ -207,19 +207,31 @@ determines if EBU-LIST run from sources (`true`) or from docker image
 
 ### Boot sequence:
 
-1. Network and FileSystem up
+1. Network, FileSystem and other system services up
 2. st2110.service
+  - `scmroute` daemon for igmp requests
+  - media interfaces setup
+  - hugepages for media application
 3. ptp.service
-4. docker.service
-5. ebulist.service
-6. ebulist-probe.service
+  - ptp4l and phc2sys
+4. nmos.service 
+  - nmos-cpp node
+5. docker.service
+6. ebulist.service
+  - Docker service: rabbitmq, mongodb, 
+  - Prod: list-server (+nginx) container
+  - Dev:  list-server nodejs (this one always fails at connectiong to mongo at 1st attempts, whereas
+    other mongosh can. ebu_list_ctl had to be tweaked to detect the error and let systemd restart
+  the service) 
+7. ebulist-probe.service
+  - home-cooked node app that connect to amq and start dpdk sniffer
 
 ### Controls
 
-Control the service with systemctl:
+Control the services with systemctl:
 
 ```sh
-sudo systemctl status|start|stop st2110
+sudo systemctl status|start|stop st2110|ptp|nmos|ebulist|ebulist-probe
 ```
 
 EBU-LIST itself is controlled by a dedicated script:
@@ -229,7 +241,7 @@ $ ebu_list_ctl
 /usr/sbin/ebu_list_ctl is a wrapper script that manages EBU-LIST
 and related sub-services (DB, backend, UI, etc.)
 Usage:
-    /usr/sbin/ebu_list_ctl [-v] {start|stop|status|log|install|upgrade|dev}
+    /usr/sbin/ebu_list_ctl [-v][-f] {start|stop|status|log|sniff|freerun_Start|freerun_stop|nmos}
         start    start docker containers and server
         stop     stop docker containers and server
         status   check the status of all the st 2110 services
@@ -237,9 +249,6 @@ Usage:
         sniff    list incomming udp traffic
         freerun_start start a continuous analysis based on ./ebu-list/freerun.sh
         freerun_stop stop continuous analysis
-        install  install EBU-LIST for the first time
-        upgrade  upgrade to next stable version fron public Github
-        dev      upgrade to the next release from private repo
         nmos     probe local nmos RX node
 
 $ ebu_list_ctl status
