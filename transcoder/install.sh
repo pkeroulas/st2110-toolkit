@@ -1,9 +1,9 @@
 
-export FDKAAC_VERSION=0.1.4 \
+export FDKAAC_VERSION=2.0.3 \
     YASM_VERSION=1.3.0 \
-    NASM_VERSION=2.13.02 \
-    MP3_VERSION=3.99.5 \
-    FFMPEG_VERSION=5.1 \
+    NASM_VERSION=2.13 \
+    MP3_VERSION=3.100.1 \
+    FFMPEG_VERSION=8.0 \
     MAKEFLAGS="-j$[$(nproc) + 1]"
 
 if [ -z $PACKAGE_MANAGER ]; then
@@ -36,7 +36,7 @@ install_yasm()
     rm -rf $DIR
 }
 
-install_nasm()
+install_nasm() # for x264
 {
     echo "Installing NASM"
     if [ $PACKAGE_MANAGER = "yum" ]; then
@@ -44,7 +44,7 @@ install_nasm()
         cd $DIR/
         nasm_rpm=nasm-$NASM_VERSION-0.fc24.x86_64.rpm
         curl -O https://www.nasm.us/pub/nasm/releasebuilds/$NASM_VERSION/linux/$nasm_rpm
-        rpm -i $nasm_rpm
+        $PACKAGE_MANAGER -y install $nasm_rpm
         rm -f $nasm_rpm
         rm -rf $DIR
     else
@@ -155,7 +155,6 @@ install_ffmpeg()
         --enable-version3 --enable-gpl --enable-nonfree \
         --enable-postproc --enable-libsrt \
         --enable-libx264 --enable-libfdk-aac --enable-libmp3lame \
-        --disable-ffplay --disable-ffprobe \
         ${ffmpeg_gpu_options-} \
         --enable-small --disable-stripping --disable-debug
 
