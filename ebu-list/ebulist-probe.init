@@ -21,7 +21,7 @@ fi
 
 start_probe()
 {
-    log_st2110 "Start dpdk probe"
+    log_st2110 "Start $CAPTURE_ENGINE probe"
     smcrouted
 
     ifaces="$MEDIA_IFACE_0"
@@ -33,7 +33,7 @@ start_probe()
     echo 800 > /proc/sys/vm/nr_hugepages
 
     cd $LIST_PATH/apps/capture_probe/
-    cat > ./config-dpdk.yml << EOF
+    cat > ./capture-config-${CAPTURE_ENGINE}.yml << EOF
 probe:
     id: $(uuidgen)
     label: "LIST capture probe ${ifaces}: $(cat /etc/hostname)"
@@ -41,7 +41,7 @@ rabbitmq:
     hostname: localhost
     port: 5672
 capture:
-    engine: dpdk
+    engine: ${CAPTURE_ENGINE}
     interfaces: ${ifaces}
     destination: ${LIST_DATA_FOLDER}/pcap
 EOF
@@ -51,13 +51,13 @@ EOF
         sleep 1
     done
 
-    node ./server.js ./config-dpdk.yml 2>&1 > /tmp/list-dpdk.log &
+    node ./server.js ./capture-config-${CAPTURE_ENGINE}.yml 2>&1 > /tmp/list-capture.log &
 }
 
 stop_probe() {
-    log_st2110 "Stop dpdk probe"
+    log_st2110 "Stop $CAPTURE_ENGINE probe"
     smcroutectl kill
-    pid=$(ps aux | grep "[n]ode.*dpdk.*yml" | tr -s ' ' | cut -d ' ' -f2)
+    pid=$(ps aux | grep "[n]ode.*${CAPTURE_ENGINE}.yml" | tr -s ' ' | cut -d ' ' -f2)
     if [ ! -z $pid ]; then kill -9 $pid; fi
 }
 
