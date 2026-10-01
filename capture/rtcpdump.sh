@@ -51,7 +51,7 @@ Script execution steps:
     - clean up monitor session on wireshark exit
 
 Tested:
-    - Localhost: Linux, Windows (WSL2 installed)
+    - Localhost: Linux, Windows (WSL2 installed), MacOS
     - Arista switches (EOS-4.29.3M): DCS-7060SX2-48YC6, DCS-7280CR2A-30 DCS-7280SR2-48YC6,
     DCS-7280TR-48C6, DCS-7280CR3K-32D4, DCS-7020TR-48
     - Not supported: Arista sw like CCS-720XP-48ZC2, CCS-720XP-48Y6, DCS-7050SX-64 are not
@@ -165,9 +165,14 @@ if mount | grep -q  "^C:\\\ on"; then
     echo "Host: WSL"
     wireshark="/mnt/c/Progra~1/Wireshark/Wireshark.exe"
     # wireshark may complain about IOR.txt wrong permission but the capture works fine
-else
+elif uname | grep -q Linux; then
     echo "Host: Linux"
     wireshark=$(which wireshark)
+elif uname | grep -q Darwin; then
+    echo "Host: MacOS"
+    wireshark="/Applications/Wireshark.app/Contents/MacOS/Wireshark "
+else
+    echo "Host: OS not found / supported"
 fi
 
 if [ ! -f  "$wireshark" ]; then
